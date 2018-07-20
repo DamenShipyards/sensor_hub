@@ -12,6 +12,7 @@ VOID WINAPI ServiceCtrlHandler (DWORD);
 DWORD WINAPI ServiceWorkerThread (LPVOID lpParam);
 
 #define SERVICE_NAME  _T("Damen Sensor Hub")
+#define SERVICE_DESCR _T("Processes and redistributes sensor data")
 #define check_error(var) \
   if ((var) == 0) { \
     ret = GetLastError(); \
@@ -21,7 +22,9 @@ DWORD WINAPI ServiceWorkerThread (LPVOID lpParam);
   if ((retval) != 0) { \
     goto exit; \
   }
-#define  kServiceDependencies TEXT("Tcpip\0\0")
+#define SERVICE_DEPENDENCIES TEXT("Tcpip\0\0")
+#define ERROR_INVALID_COMMAND 1;
+#define ERROR_TOO_MANY_PARAMETERS 2;
 
 
 void print_usage()
@@ -30,10 +33,16 @@ void print_usage()
             << " sensor_hub <command>" << std::endl
             << "   Commands:" << std::endl
             << "     install: Install the service" << std::endl
-            << "     uninstall: Remove the service" << std::endl
-            << "     status: Report service status" << std::endl;                
+            << "     uninstall: Remove the service" << std::endl;
 }
 
+void print_error(int error)
+{
+  TCHAR err[256];
+  FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error,
+                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), err, 255, NULL);
+  _tprintf(_T("Error: %s\n"), err);
+}
 
 static int ServiceSetupEventLogging()
 {
@@ -107,27 +116,6 @@ static void ReportStatus(int inType, const char *inFormat, ...)
   va_end(args);
 }
 
-
-int _tmain (int argc, TCHAR *argv[])
-{
-  OutputDebugString(_T("Damen Sensor Hub: Main: Entry"));
-
-  SERVICE_TABLE_ENTRY ServiceTable[] = 
-  {
-    {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
-    {NULL, NULL}
-  };
-
-  if (StartServiceCtrlDispatcher (ServiceTable) == FALSE)
-  {
-    OutputDebugString(_T("Damen Sensor Hub: Main: StartServiceCtrlDispatcher returned error"));
-    print_usage();
-    return GetLastError ();
-  }
-
-  OutputDebugString(_T("Damen Sensor Hub: Main: Exit"));
-  return 0;
-}
 
 
 VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
@@ -364,7 +352,7 @@ static int InstallService(LPCTSTR inName, LPCTSTR inDisplayName, LPCTSTR inDescr
   check_error(scm);
 
   service = CreateService( scm, inName, inDisplayName, SERVICE_ALL_ACCESS, SERVICE_WIN32_SHARE_PROCESS, 
-      SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, fullPath, NULL, NULL, kServiceDependencies, 
+      SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, fullPath, NULL, NULL, SERVICE_DEPENDENCIES, 
       NULL, NULL );
   check_error(service);
 
@@ -436,4 +424,55 @@ exit:
 }
 
 
+int _tmain (int argc, TCHAR *argv[])
+{
+  int ret = ERROR_SUCCESS;
+
+  OutputDebugString(_T("Damen Sensor Hub: Main: Entry"));
+
+  SERVICE_TABLE_ENTRY ServiceTable[] = 
+  {
+    {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
+    {NULL, NULL}
+  };
+
+
+  if (argc > 1) {
+    if (argc > 2) {
+      print_usage();
+      return ERROR_TOO_MANY_PARAMETERS;
+    }
+    else if (_tcscmp(argv[1], _T("install")) == 0) {
+      ret = InstallService(SERVICE_NAME, SERVICE_NAME, SERVICE_DESCR, argv[0]);
+      if (ret != 0) {
+        print_error(ret);
+      }
+      return ret;
+    } 
+    else if (_tcscmp(argv[1], _T("uninstall")) == 0) {
+      ret = RemoveService(SERVICE_NAME);
+      if (ret != 0) {
+        print_error(ret);
+      }
+      return ret;
+    }
+    else {
+      print_usage();
+      return ERROR_INVALID_COMMAND;
+    }
+  }
+
+  if (StartServiceCtrlDispatcher (ServiceTable) == FALSE)
+  {
+    OutputDebugString(_T("Damen Sensor Hub: Main: StartServiceCtrlDispatcher returned error"));
+    print_usage();
+    return GetLastError ();
+  }
+  else {
+    ServiceSetupEventLogging();
+  }
+
+  OutputDebugString(_T("Damen Sensor Hub: Main: Exit"));
+  return ret;
+}
 
