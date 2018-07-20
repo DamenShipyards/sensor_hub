@@ -1,0 +1,5 @@
+<Include>
+  <?define FileExt=".sensorlog" ?>
+  <?define ShortName="SensorHub" ?>
+  <?define LongName="Sensor Hub" ?> 
+</Include>

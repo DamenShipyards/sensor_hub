@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include config.wxi ?>
+  <Product Id="*" UpgradeCode="{a63fce4e-8bfa-11e8-8127-408d5cb38438}" Version="$(var.Version)" Language="1033" Name="Damen $(var.LongName)" Manufacturer="Damen Shipyards Gorinchem">
+    <Package InstallerVersion="300" Compressed="yes" Description="Ship $(var.LongName) analyses" />
+    <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes" IgnoreRemoveFailure="yes" DowngradeErrorMessage="A later version of [ProductName] is already installed. Uninstall it first if you want to use this version. Setup will now exit." />
+    <Condition Message="This application is only supported on Windows 7, or higher."><![CDATA[Installed OR (VersionNT >= 600)]]></Condition>
+    <Condition Message="This application is only supported on 64 bit Windows."><![CDATA[Installed OR VersionNT64]]></Condition>
+    <Media Id="1" Cabinet="$(var.ShortName).cab" EmbedCab="yes" />
+    <Icon Id="ProductIcon" SourceFile="..\Resources\$(var.ShortName).ico" />
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon"/>
+    <Property Id="ARPHELPLINK" Value="http://svn.damen.local"/>
+    <Property Id="ARPURLINFOABOUT" Value="http://svn.damen.local"/>
+    <Property Id="ARPNOMODIFY" Value="yes" />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="DamenShipyardsFolder" Name="Damen Shipyards">
+          <Directory Id="APPLICATIONROOTDIRECTORY" Name="$(var.LongName)" />
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ProgramMenuDamenShipyards" Name="Damen Shipyards">
+          <Directory Id="ProgramMenu$(var.ShortName)" Name="$(var.LongName)" />
+        </Directory>
+      </Directory>
+    </Directory>
+    <DirectoryRef Id="APPLICATIONROOTDIRECTORY">
+      <Component Id="$(var.ShortName).exe" Guid="{0db1be5c-8bfb-11e8-9516-408d5cb38438}" Win64="no">
+        <File Id="$(var.ShortName).exe" Source="..\Exe\$(var.ShortName).exe" KeyPath="yes" Checksum="yes" />
+      </Component>
+      <Component Id="Documents" Guid="{20ef5452-8bfb-11e8-89d3-408d5cb38438}" Win64="no">
+        <File Id="RN$(var.ShortName).pdf" Source="..\Documents\RN-$(var.ShortName).pdf" KeyPath="yes" />
+        <File Id="UM$(var.ShortName).pdf" Source="..\Help\Output\UM-$(var.ShortName).pdf" />
+        <File Id="$(var.ShortName).chm" Source="..\Help\Output\chm\$(var.ShortName).chm" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="ProgramMenu$(var.ShortName)">
+      <Component Id="ApplicationShortcuts" Guid="{2aa381b2-8bfb-11e8-9551-408d5cb38438}">
+        <Shortcut Id="$(var.ShortName)Shortcut" Name="$(var.LongName)" Description="$(var.LongName)" Target="[APPLICATIONROOTDIRECTORY]\$(var.ShortName).exe" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+        <Shortcut Id="UserManualShortcut" Name="User Manual" Description="$(var.LongName) User Manual" Target="[APPLICATIONROOTDIRECTORY]\UM-$(var.ShortName).pdf" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+        <Shortcut Id="ReleaseNotesShortcut" Name="Release Notes" Description="$(var.LongName) Release Notes" Target="[APPLICATIONROOTDIRECTORY]\RN-$(var.ShortName).pdf" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+        <util:InternetShortcut Id="ReportIssueShortcut" Name="Report Issue" Target="https://damen.orca-st.com/wiki/IssueReporting" />
+        <RegistryValue Root="HKCU" Key="Software\Damen\$(var.ShortName)" Name="msi_installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+    <Feature Id="MainApplication" Title="Damen $(var.LongName)" Level="1">
+      <ComponentRef Id="$(var.ShortName).exe" />
+    </Feature>
+    <!-- Install the windows service -->
+    <SetProperty Id="InstallService" Value="sc create "Damen Sensor Hub" binPath=[APPLICATIONROOTDIRECTORY]\$(var.ShortName).exe" After="CostFinalize" />
+    <CustomAction Id="InstallService" BinaryKey="WixCA" DllEntry="CAQuietExec" Impersonate="no" Execute="deferred" Return="ignore" />
+    <InstallExecuteSequence>
+      <Custom Action="InstallService" After="InstallFinalize" />
+    </InstallExecuteSequence>
+  </Product>
+</Wix>
