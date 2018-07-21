@@ -8,7 +8,7 @@ if ERRORLEVEL 1 goto versionerror
 :normal
 if not exist "%WIX%/bin/candle.exe" goto nothing
 
-"%WIX%\bin\candle.exe" -arch x64 -ext WixUtilExtension.dll -o Output\setup.wixobj setup.wxs @setup.resp
+"%WIX%\bin\candle.exe" -arch x64 -ext WixUtilExtension.dll -o output\setup.wixobj setup.wxs @setup.resp
 if ERRORLEVEL 1 goto wixerror 
 
 rem suppress ICE09 I *do* want to install a non permanent dll in the system folder. Sorry about that. Windows
@@ -17,12 +17,12 @@ rem suppress ICE61 because I do want to allow same version upgrades
 rem suppress ICE03 because the string lengths should not be a problem
 rem suppress ICE80 64 bit madness: don't know how to get around this one, so disable it.
 rem suppress ICE82 not sure if duplicate sequence numbers are a problem. They don't appear to be. Apparently some issue with mergemod.dll
-"%WIX%\bin\light.exe" -ext WixUtilExtension.dll -sice:ICE09 -sice:ICE61 -sice:ICE03 -sice:ICE80 -sice:ICE82 Output\setup.wixobj @msi.resp
+"%WIX%\bin\light.exe" -ext WixUtilExtension.dll -sice:ICE09 -sice:ICE61 -sice:ICE03 -sice:ICE80 -sice:ICE82 output\setup.wixobj @msi.resp
 if ERRORLEVEL 1 goto wixerror 
 
-for %%m in (Output\*.msi) do set msifile=%%m
+for %%m in (output\*.msi) do set msifile=%%m
 echo MSI package: %msifile%
-call "%SWDROOT%\Scripts\Sign.bat" %msifile% "Sensor Hub Windows Installer"
+call "..\tools\sign.bat" %msifile% "Sensor Hub Windows Installer"
 goto end
 
 :nothing
