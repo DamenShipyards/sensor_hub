@@ -68,7 +68,6 @@ static int ServiceSetupEventLogging()
   check_noerror(ret);
 
   // Set the supported event types in the TypesSupported subkey.
-
   typesSupported = 0
   				 | EVENTLOG_SUCCESS
   				 | EVENTLOG_ERROR_TYPE
@@ -80,7 +79,6 @@ static int ServiceSetupEventLogging()
   check_noerror(ret);
 
   // Set up the event source.
-
   g_ServiceEventSource = RegisterEventSource(NULL, SERVICE_NAME);
   check_error(g_ServiceEventSource);
 
@@ -146,9 +144,7 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
     OutputDebugString(_T("Damen Sensor Hub: ServiceMain: SetServiceStatus returned error"));
   }
 
-  /* 
-   * Perform tasks necessary to start the service here
-   */
+   // Perform tasks necessary to start the service here
   OutputDebugString(_T("Damen Sensor Hub: ServiceMain: Performing Service Start Operations"));
 
   // Create stop event to wait on later.
@@ -190,10 +186,7 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
 
   OutputDebugString(_T("Damen Sensor Hub: ServiceMain: Worker Thread Stop Event signaled"));
 
-
-  /* 
-   * Perform any cleanup tasks
-   */
+  // Cleanup
   OutputDebugString(_T("Damen Sensor Hub: ServiceMain: Performing Cleanup Operations"));
 
   CloseHandle (g_ServiceStopEvent);
@@ -228,10 +221,7 @@ VOID WINAPI ServiceCtrlHandler (DWORD CtrlCode)
       if (g_ServiceStatus.dwCurrentState != SERVICE_RUNNING)
         break;
 
-      /* 
-       * Perform tasks neccesary to stop the service here 
-       */
-
+      // Get ready to stop the service 
       g_ServiceStatus.dwControlsAccepted = 0;
       g_ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
       g_ServiceStatus.dwWin32ExitCode = 0;
