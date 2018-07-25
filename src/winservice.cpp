@@ -11,7 +11,6 @@ HANDLE g_ServiceEventSource = NULL;
 VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv);
 VOID WINAPI ServiceCtrlHandler (DWORD);
 DWORD WINAPI ServiceWorkerThread (LPVOID lpParam);
-extern void mainloop();
 
 #define SERVICE_NAME  _T("Damen Sensor Hub")
 #define SERVICE_DESCR _T("Processes and redistributes sensor data")
@@ -213,7 +212,7 @@ DWORD WINAPI ServiceWorkerThread (LPVOID lpParam)
   while (WaitForSingleObject(g_ServiceStopEvent, 0) != WAIT_OBJECT_0)
   {        
     try {
-      mainloop();
+      Sleep(1000);
     }
     catch (std::exception& e) {
       ReportStatus(EVENTLOG_ERROR_TYPE, "Unexpected error in Damen Sensor Hub: %s", e.what());
