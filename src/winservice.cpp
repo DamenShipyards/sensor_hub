@@ -26,8 +26,6 @@ DWORD WINAPI ServiceWorkerThread (LPVOID lpParam);
 #define SERVICE_DEPENDENCIES TEXT("Tcpip\0\0")
 #define ERROR_INVALID_COMMAND 1;
 #define ERROR_TOO_MANY_PARAMETERS 2;
-#define ERROR_EXCEPTION_IN_SERVICE 3;
-
 
 void print_usage()
 {
