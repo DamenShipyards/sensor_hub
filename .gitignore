@@ -1,6 +1,11 @@
-/msvc/Release
-/msvc/sensor_hub.VC.VC.opendb
-/msvc/sensor_hub.VC.db
 /doc/output
 /setup/output
 /setup/*.resp
+
+# Visual studio output and cruft
+/msvc/Release
+/msvc/sensor_hub.VC.VC.opendb
+/msvc/sensor_hub.VC.db
+/msvc/.vs/sensor_hub/v15/Browse.VC.db
+/msvc/.vs/sensor_hub/v15/ipch/
+/msvc/sensor_hub.vcxproj.user
