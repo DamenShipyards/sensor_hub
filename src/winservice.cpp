@@ -1,6 +1,7 @@
 #include <iostream>
 #include <Windows.h>
 #include <tchar.h>
+#include <exception>
 
 SERVICE_STATUS g_ServiceStatus = {0};
 SERVICE_STATUS_HANDLE g_StatusHandle = NULL;
@@ -10,6 +11,7 @@ HANDLE g_ServiceEventSource = NULL;
 VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv);
 VOID WINAPI ServiceCtrlHandler (DWORD);
 DWORD WINAPI ServiceWorkerThread (LPVOID lpParam);
+extern void mainloop();
 
 #define SERVICE_NAME  _T("Damen Sensor Hub")
 #define SERVICE_DESCR _T("Processes and redistributes sensor data")
@@ -25,6 +27,7 @@ DWORD WINAPI ServiceWorkerThread (LPVOID lpParam);
 #define SERVICE_DEPENDENCIES TEXT("Tcpip\0\0")
 #define ERROR_INVALID_COMMAND 1;
 #define ERROR_TOO_MANY_PARAMETERS 2;
+#define ERROR_EXCEPTION_IN_SERVICE 3;
 
 
 void print_usage()
@@ -120,14 +123,9 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
 {
   DWORD Status = E_FAIL;
 
-  OutputDebugString(_T("Damen Sensor Hub: ServiceMain: Entry"));
-
   g_StatusHandle = RegisterServiceCtrlHandler (SERVICE_NAME, ServiceCtrlHandler);
-
-  if (g_StatusHandle == NULL) 
-  {
-    OutputDebugString(_T("Damen Sensor Hub: ServiceMain: RegisterServiceCtrlHandler returned error"));
-    goto EXIT;
+  if (g_StatusHandle == NULL) {
+    return;
   }
 
   // Tell the service controller we are starting
@@ -139,30 +137,18 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
   g_ServiceStatus.dwServiceSpecificExitCode = 0;
   g_ServiceStatus.dwCheckPoint = 0;
 
-  if (SetServiceStatus (g_StatusHandle, &g_ServiceStatus) == FALSE) 
-  {
-    OutputDebugString(_T("Damen Sensor Hub: ServiceMain: SetServiceStatus returned error"));
-  }
-
-   // Perform tasks necessary to start the service here
-  OutputDebugString(_T("Damen Sensor Hub: ServiceMain: Performing Service Start Operations"));
+  SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
 
   // Create stop event to wait on later.
   g_ServiceStopEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
-  if (g_ServiceStopEvent == NULL) 
-  {
-    OutputDebugString(_T("Damen Sensor Hub: ServiceMain: CreateEvent(g_ServiceStopEvent) returned error"));
-
+  if (g_ServiceStopEvent == NULL) {
     g_ServiceStatus.dwControlsAccepted = 0;
     g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
     g_ServiceStatus.dwWin32ExitCode = GetLastError();
     g_ServiceStatus.dwCheckPoint = 1;
 
-    if (SetServiceStatus (g_StatusHandle, &g_ServiceStatus) == FALSE)
-    {
-      OutputDebugString(_T("Damen Sensor Hub: ServiceMain: SetServiceStatus returned error"));
-    }
-    goto EXIT; 
+    SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
+    return;
   }    
 
   // Tell the service controller we are started
@@ -170,24 +156,14 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
   g_ServiceStatus.dwCurrentState = SERVICE_RUNNING;
   g_ServiceStatus.dwWin32ExitCode = 0;
   g_ServiceStatus.dwCheckPoint = 0;
-
-  if (SetServiceStatus (g_StatusHandle, &g_ServiceStatus) == FALSE)
-  {
-    OutputDebugString(_T("Damen Sensor Hub: ServiceMain: SetServiceStatus returned error"));
-  }
+  ReportStatus(EVENTLOG_SUCCESS, "Damen Sensor Hub started.\n");
+  SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
 
   // Start the thread that will perform the main task of the service
   HANDLE hThread = CreateThread (NULL, 0, ServiceWorkerThread, NULL, 0, NULL);
 
-  OutputDebugString(_T("Damen Sensor Hub: ServiceMain: Waiting for Worker Thread to complete"));
-
-  // Wait until our worker thread exits effectively signalling that the service needs to stop
+  // Wait until our worker thread exits
   WaitForSingleObject (hThread, INFINITE);
-
-  OutputDebugString(_T("Damen Sensor Hub: ServiceMain: Worker Thread Stop Event signaled"));
-
-  // Cleanup
-  OutputDebugString(_T("Damen Sensor Hub: ServiceMain: Performing Cleanup Operations"));
 
   CloseHandle (g_ServiceStopEvent);
 
@@ -195,29 +171,21 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
   g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
   g_ServiceStatus.dwWin32ExitCode = 0;
   g_ServiceStatus.dwCheckPoint = 3;
-
-  if (SetServiceStatus (g_StatusHandle, &g_ServiceStatus) == FALSE)
-  {
-    OutputDebugString(_T("Damen Sensor Hub: ServiceMain: SetServiceStatus returned error"));
-  }
-
-EXIT:
-  OutputDebugString(_T("Damen Sensor Hub: ServiceMain: Exit"));
-
-  return;
+  ReportStatus(EVENTLOG_SUCCESS, "Damen Sensor Hub stopped.\n");
+  SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
 }
 
 
 VOID WINAPI ServiceCtrlHandler (DWORD CtrlCode)
 {
-  OutputDebugString(_T("Damen Sensor Hub: ServiceCtrlHandler: Entry"));
-
   switch (CtrlCode) 
   {
-    case SERVICE_CONTROL_STOP :
+    case SERVICE_CONTROL_INTERROGATE:
+      SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
+      break;
 
-      OutputDebugString(_T("Damen Sensor Hub: ServiceCtrlHandler: SERVICE_CONTROL_STOP Request"));
-
+    case SERVICE_CONTROL_SHUTDOWN:
+    case SERVICE_CONTROL_STOP:
       if (g_ServiceStatus.dwCurrentState != SERVICE_RUNNING)
         break;
 
@@ -227,40 +195,31 @@ VOID WINAPI ServiceCtrlHandler (DWORD CtrlCode)
       g_ServiceStatus.dwWin32ExitCode = 0;
       g_ServiceStatus.dwCheckPoint = 4;
 
-      if (SetServiceStatus (g_StatusHandle, &g_ServiceStatus) == FALSE)
-      {
-        OutputDebugString(_T("Damen Sensor Hub: ServiceCtrlHandler: SetServiceStatus returned error"));
-      }
-
+      SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
+      
       // This will signal the worker thread to start shutting down
       SetEvent (g_ServiceStopEvent);
-
       break;
 
     default:
       break;
   }
-
-  OutputDebugString(_T("Damen Sensor Hub: ServiceCtrlHandler: Exit"));
 }
 
 
 DWORD WINAPI ServiceWorkerThread (LPVOID lpParam)
 {
-  OutputDebugString(_T("Damen Sensor Hub: ServiceWorkerThread: Entry"));
-
   //  Periodically check if the service has been requested to stop
   while (WaitForSingleObject(g_ServiceStopEvent, 0) != WAIT_OBJECT_0)
   {        
-    /* 
-     * Perform main service function here
-     */
-
-    //  Simulate some work by sleeping
-    Sleep(3000);
+    try {
+      mainloop();
+    }
+    catch (std::exception& e) {
+      ReportStatus(EVENTLOG_ERROR_TYPE, "Unexpected error in Damen Sensor Hub: %s", e.what());
+      return ERROR_EXCEPTION_IN_SERVICE;
+    }    
   }
-
-  OutputDebugString(_T("Damen Sensor Hub: ServiceWorkerThread: Exit"));
 
   return ERROR_SUCCESS;
 }
@@ -355,7 +314,7 @@ static int InstallService(LPCTSTR inName, LPCTSTR inDisplayName, LPCTSTR inDescr
   ok = StartService( service, 0, NULL );
   check_error(ok);
 
-  ReportStatus(EVENTLOG_SUCCESS, "Installed service\n" );
+  ReportStatus(EVENTLOG_SUCCESS, "Installed Damen Sensor Hub service\n" );
 
 exit:
   if(service)
@@ -398,7 +357,7 @@ static int RemoveService(LPCTSTR inName)
   ok = DeleteService(service);
   check_error(ok);
 
-  ReportStatus(EVENTLOG_SUCCESS, "Removed service\n");
+  ReportStatus(EVENTLOG_SUCCESS, "Removed Damen Sensor Hub service\n");
   ret = ERROR_SUCCESS;
 
 exit:
@@ -418,7 +377,7 @@ int _tmain (int argc, TCHAR *argv[])
 {
   int ret = ERROR_SUCCESS;
 
-  OutputDebugString(_T("Damen Sensor Hub: Main: Entry"));
+  ServiceSetupEventLogging();
 
   SERVICE_TABLE_ENTRY ServiceTable[] = 
   {
@@ -452,17 +411,12 @@ int _tmain (int argc, TCHAR *argv[])
     }
   }
 
-  if (StartServiceCtrlDispatcher (ServiceTable) == FALSE)
+  if (StartServiceCtrlDispatcher(ServiceTable) == FALSE)
   {
-    OutputDebugString(_T("Damen Sensor Hub: Main: StartServiceCtrlDispatcher returned error"));
     print_usage();
-    return GetLastError ();
-  }
-  else {
-    ServiceSetupEventLogging();
+    return GetLastError();
   }
 
-  OutputDebugString(_T("Damen Sensor Hub: Main: Exit"));
   return ret;
 }
 
