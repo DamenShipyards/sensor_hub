@@ -1,0 +1,22 @@
+/**
+ * \file usb.h
+ * \brief Provide interface to libusb-1.0
+ *
+ * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
+ * \copyright
+ * (C) 2018 Damen Shipyards. All rights reserved.
+ * \license
+ * This software is proprietary. Any use without written
+ * permission from the copyright holder is strictly 
+ * forbidden.
+ */
+
+#include <libusb-1.0/libusb.h>
+
+struct Usb {
+  Usb();
+  bool open_device(int vendor_id, int device_id, int seq=0);
+  void close_device();
+  private:
+    libusb_context* ctx_;
+};
