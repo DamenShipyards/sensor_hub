@@ -1,16 +1,24 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 project(SensorHub)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+
 add_subdirectory(doc)
 
-find_package(Boost
+find_package(
+  Boost
   1.67.0
   REQUIRED
   system date_time filesystem unit_test_framework
 )
 
-set(CXX11_FLAGS "-std=gnu++11")
+find_package(
+  libusb-1.0
+  REQUIRED
+)
+
+set (CMAKE_CXX_STANDARD 11)
 
 set(SENSORHUB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(SENSORHUB_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test)
@@ -24,11 +32,18 @@ set(CPP_SOURCES
 
 include_directories(
   ${Boost_INCLUDE_DIR}
+  ${LIBUSB_1_INCLUDE_DIRS}
 )
 
 link_directories(
   ${Boost_LIBRARY_DIR_RELEASE}
+  ${LIBUSB_1_LIBRARIES}
 )
+
+link_libraries(
+  ${LIBUSB_1_LIBRARY}
+)
+
 
 add_executable(sensor_hub
   ${SENSORHUB_SOURCE_DIR}/daemon.cpp
