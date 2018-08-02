@@ -6,17 +6,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 add_subdirectory(doc)
 
-find_package(
-  Boost
-  1.67.0
-  REQUIRED
-  system date_time filesystem unit_test_framework
+find_package(Boost 1.67.0 REQUIRED 
+  system date_time filesystem log log_setup unit_test_framework thread
 )
 
-find_package(
-  libusb-1.0
-  REQUIRED
-)
+find_package(libusb-1.0 REQUIRED)
+
+find_package(Threads REQUIRED)
 
 set (CMAKE_CXX_STANDARD 11)
 
@@ -25,7 +21,10 @@ set(SENSORHUB_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test)
 
 enable_testing()
 
+add_definitions(-DBOOST_LOG_DYN_LINK)
+
 set(CPP_SOURCES
+  ${SENSORHUB_SOURCE_DIR}/log.cpp
   ${SENSORHUB_SOURCE_DIR}/usb.cpp
   ${SENSORHUB_SOURCE_DIR}/xsens.cpp
 )
@@ -41,7 +40,9 @@ link_directories(
 )
 
 link_libraries(
+  ${CMAKE_THREAD_LIBS_INIT}
   ${LIBUSB_1_LIBRARY}
+  boost_system boost_date_time boost_filesystem boost_log boost_log_setup boost_thread
 )
 
 
@@ -61,10 +62,12 @@ macro(new_test NEW_TEST)
     RUNTIME_OUTPUT_DIRECTORY test
   )
   target_link_libraries(${NEW_TEST} 
-    boost_system boost_date_time boost_filesystem boost_unit_test_framework
+    ${Boost_LIBRARIES}
   )
+  add_definitions(-DBOOST_TEST_DYN_LINK)
   add_test(${NEW_TEST} test/${NEW_TEST})
 endmacro()
 
 new_test(test_asio_buffer)
+new_test(test_log)
 

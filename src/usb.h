@@ -11,6 +11,9 @@
  * forbidden.
  */
 
+#ifndef USB_H_
+#define USB_H_
+
 #include <libusb-1.0/libusb.h>
 
 struct Usb {
@@ -20,3 +23,5 @@ struct Usb {
   private:
     libusb_context* ctx_;
 };
+
+#endif
