@@ -12,6 +12,7 @@
  */
 
 #include "usb.h"
+#include "log.h"
 
 static int ctx_refcnt_ = 0;
 static libusb_context* single_ctx_ = nullptr;
@@ -20,6 +21,7 @@ libusb_context* get_ctx() {
   if (ctx_refcnt_ == 0) {
     int r = libusb_init(&single_ctx_);
     if (r < 0) {
+      log(level::error, "Failed to acquire USB context. Error %.", r);
       return nullptr;
     }
     ++ctx_refcnt_;
