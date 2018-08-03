@@ -16,7 +16,9 @@
 
 #include <sstream>
 
+#include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
+
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
@@ -25,8 +27,14 @@
 #include <boost/log/utility/manipulators/to_log.hpp>
 #include <boost/log/support/date_time.hpp>
 
+#ifdef __WIN32__
+#include <shlobj.h>
+#include <objbase.h>
+#endif
 
 using namespace boost::log;
+namespace fs = boost::filesystem;
+using pth = boost::filesystem::path;
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level);
 
@@ -64,15 +72,15 @@ struct Logger {
   Logger(): log_() {
     add_common_attributes();
     add_file_log(
-        keywords::file_name = "sensor_hub_%N.log",
+        keywords::file_name = get_log_filename(),
         keywords::rotation_size = 10 * 1024 * 1024,
         keywords::format =  
-        expressions::stream 
-          << expressions::format_date_time<boost::posix_time::ptime>(
+          expressions::stream 
+            << expressions::format_date_time<boost::posix_time::ptime>(
               "TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
-          << expressions::attr<level, level_tag>("Severity")
-          << expressions::smessage
-        );
+            << expressions::attr<level, level_tag>("Severity")
+            << expressions::smessage
+    );
   }
   Logger(Logger const&) = delete;
   void operator=(Logger const&) = delete;
@@ -84,8 +92,20 @@ struct Logger {
   sources::severity_logger_mt<level>& get_log() {
     return log_;
   }
-  private:
+private:
   sources::severity_logger_mt<level> log_;
+  
+  pth get_log_dir() {
+#   ifdef __WIN32__
+    PWSTR* szPath;
+    SHGetKnownFolderPath(FOLDERID_LocalAppData, CSIDL_APPDATA, NULL, 0, szPath);
+    CoTaskMemFree(szPath);
+#   else
+#   endif
+  }
+  pth get_log_filename() {
+    return  get_log_dir() / "sensor_hub_%N.log";
+  }
 };
 
 
