@@ -15,7 +15,9 @@
 #define LOG_H_
 
 #include <string>
+#include <iostream>
 #include <ostream>
+#include <sstream>
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>

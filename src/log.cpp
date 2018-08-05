@@ -27,7 +27,7 @@
 #include <boost/log/utility/manipulators/to_log.hpp>
 #include <boost/log/support/date_time.hpp>
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #include <shlobj.h>
 #include <objbase.h>
 #endif
@@ -96,12 +96,17 @@ private:
   sources::severity_logger_mt<level> log_;
   
   pth get_log_dir() {
-#   ifdef __WIN32__
-    PWSTR* szPath;
-    SHGetKnownFolderPath(FOLDERID_LocalAppData, CSIDL_APPDATA, NULL, 0, szPath);
+#   ifdef _WIN32
+    PWSTR* szPath = nullptr;
+    SHGetKnownFolderPath(FOLDERID_LocalAppData, NULL, 0, szPath);
+    pth p(*szPath);
     CoTaskMemFree(szPath);
 #   else
+    pth p("/var/log");
 #   endif
+    p /= "sensor_hub";
+    fs::create_directories(p);
+    return p;
   }
   pth get_log_filename() {
     return  get_log_dir() / "sensor_hub_%N.log";

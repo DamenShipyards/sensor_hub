@@ -45,6 +45,8 @@
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>sensor_hub</TargetName>
+    <IncludePath>..\3rdparty\libusb\include;C:\boost_1_67_0;$(IncludePath)</IncludePath>
+    <LibraryPath>..\3rdparty\libusb\lib;C:\boost_1_67_0\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>sensor_hub</TargetName>
@@ -59,6 +61,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -66,10 +69,18 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalDependencies>libusb-1.0.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\log.cpp" />
+    <ClCompile Include="..\src\usb.cpp" />
     <ClCompile Include="..\src\winservice.cpp" />
+    <ClCompile Include="..\src\xsens.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\log.h" />
+    <ClInclude Include="..\src\usb.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

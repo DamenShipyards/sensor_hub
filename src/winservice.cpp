@@ -16,6 +16,8 @@
 #include <tchar.h>
 #include <exception>
 
+#include "log.h"
+
 SERVICE_STATUS g_ServiceStatus = {0};
 SERVICE_STATUS_HANDLE g_StatusHandle = NULL;
 HANDLE g_ServiceStopEvent = INVALID_HANDLE_VALUE;
@@ -147,6 +149,7 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
   g_ServiceStatus.dwServiceSpecificExitCode = 0;
   g_ServiceStatus.dwCheckPoint = 0;
 
+  log(level::info, "Starting service");
   SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
 
   // Create stop event to wait on later.
@@ -167,6 +170,7 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
   g_ServiceStatus.dwWin32ExitCode = 0;
   g_ServiceStatus.dwCheckPoint = 0;
   ReportStatus(EVENTLOG_SUCCESS, "Damen Sensor Hub started.\n");
+  log(level::info, "Service started");
   SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
 
   // Start the thread that will perform the main task of the service
@@ -182,6 +186,7 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
   g_ServiceStatus.dwWin32ExitCode = 0;
   g_ServiceStatus.dwCheckPoint = 3;
   ReportStatus(EVENTLOG_SUCCESS, "Damen Sensor Hub stopped.\n");
+  log(level::info, "Service stopped");
   SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
 }
 
@@ -205,6 +210,7 @@ VOID WINAPI ServiceCtrlHandler (DWORD CtrlCode)
       g_ServiceStatus.dwWin32ExitCode = 0;
       g_ServiceStatus.dwCheckPoint = 4;
 
+      log(level::info, "Stopping service");
       SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
       
       // This will signal the worker thread to start shutting down
@@ -406,12 +412,18 @@ int _tmain (int argc, TCHAR *argv[])
       if (ret != 0) {
         print_error(ret);
       }
+      else {
+        std::cout << "Service installed." << std::endl;
+      }
       return ret;
     } 
     else if (_tcscmp(argv[1], _T("uninstall")) == 0) {
       ret = RemoveService(SERVICE_NAME);
       if (ret != 0) {
         print_error(ret);
+      }
+      else {
+        std::cout << "Service removed." << std::endl;
       }
       return ret;
     }
