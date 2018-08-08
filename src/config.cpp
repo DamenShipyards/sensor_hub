@@ -28,7 +28,7 @@ namespace pt = boost::property_tree;
 
 struct Config {
   Config(): config_() {
-    set_default();
+    set_defaults();
     pth config_file = get_config_file();
     pth defaults_file{config_file.string() + ".default"};
     log(level::info, "Using configuration file: %", config_file);
@@ -88,10 +88,12 @@ private:
     pt::write_ini(p.string(), config_);
   }
 
-  void set_default() {
+  void set_defaults() {
+    config_.put("www.active", true);
     config_.put("www.port", 10080);
   }
 };
+
 
 pt::ptree& get_config() {
   return Config::get_instance().get_config();

@@ -29,6 +29,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/config.cpp
   ${SENSORHUB_SOURCE_DIR}/xsens.cpp
   ${SENSORHUB_SOURCE_DIR}/loop.cpp
+  ${SENSORHUB_SOURCE_DIR}/www.cpp
 )
 
 include_directories(
