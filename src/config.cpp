@@ -30,6 +30,7 @@ struct Config {
   Config(): config_() {
     set_default();
     pth config_file = get_config_file();
+    log(level::info, "Using configuration file: %", config_file);
     if (fs::exists(config_file)) {
       load(config_file);
     }
