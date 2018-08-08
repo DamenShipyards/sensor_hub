@@ -104,10 +104,18 @@ private:
     CoTaskMemFree(szPath);
     p /= "Damen";
     p /= "SensorHub";
+    fs::create_directories(p);
 #   else
     pth p("/var/log/sensor_hub");
+    try {
+      fs::create_directories(p);
+    }
+    catch(fs::filesystem_error) {
+      p = getenv("HOME");
+      p /= ".local/var/log/sensor_hub";
+      fs::create_directories(p);
+    }
 #   endif
-    fs::create_directories(p);
     return p;
   }
   pth get_log_filename() {
