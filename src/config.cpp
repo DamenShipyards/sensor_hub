@@ -30,11 +30,15 @@ struct Config {
   Config(): config_() {
     set_default();
     pth config_file = get_config_file();
+    pth defaults_file{config_file.string() + ".default"};
     log(level::info, "Using configuration file: %", config_file);
     if (fs::exists(config_file)) {
       load(config_file);
+      save(defaults_file);
     }
-    save(config_file);
+    else {
+      save(config_file);
+    }
   }
   Config(Config const&) = delete;
   void operator=(Config const&) = delete;
