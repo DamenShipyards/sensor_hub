@@ -26,6 +26,7 @@ add_definitions(-DBOOST_LOG_DYN_LINK)
 set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/log.cpp
   ${SENSORHUB_SOURCE_DIR}/usb.cpp
+  ${SENSORHUB_SOURCE_DIR}/config.cpp
   ${SENSORHUB_SOURCE_DIR}/xsens.cpp
 )
 
