@@ -15,8 +15,12 @@
 #include <Windows.h>
 #include <tchar.h>
 #include <exception>
+#include <locale>
+#include <codecvt>
 
 #include "log.h"
+
+
 
 SERVICE_STATUS g_ServiceStatus = {0};
 SERVICE_STATUS_HANDLE g_StatusHandle = NULL;
@@ -395,6 +399,10 @@ int _tmain (int argc, TCHAR *argv[])
 
   ServiceSetupEventLogging();
 
+  std::wstring_convert<std::codecvt_utf8_utf16<TCHAR>, TCHAR> conv_utf8;
+
+  log(level::info, "Starting %", conv_utf8.to_bytes(argv[0]));
+
   SERVICE_TABLE_ENTRY ServiceTable[] = 
   {
     {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
@@ -405,15 +413,18 @@ int _tmain (int argc, TCHAR *argv[])
   if (argc > 1) {
     if (argc > 2) {
       print_usage();
+      log(level::error, "Invalid command line parameters.");
       return ERROR_TOO_MANY_PARAMETERS;
     }
     else if (_tcscmp(argv[1], _T("install")) == 0) {
       ret = InstallService(SERVICE_NAME, SERVICE_NAME, SERVICE_DESCR, argv[0]);
       if (ret != 0) {
         print_error(ret);
+        log(level::error, "Failed to install service: %", ret);
       }
       else {
         std::cout << "Service installed." << std::endl;
+        log(level::info, "Service installed.");
       }
       return ret;
     } 
@@ -421,14 +432,17 @@ int _tmain (int argc, TCHAR *argv[])
       ret = RemoveService(SERVICE_NAME);
       if (ret != 0) {
         print_error(ret);
+        log(level::error, "Failed to remove service: %", ret);
       }
       else {
         std::cout << "Service removed." << std::endl;
+        log(level::info, "Service removed.");
       }
       return ret;
     }
     else {
       print_usage();
+      log(level::error, "Invalid command line parameter: %", conv_utf8.to_bytes(argv[1]));
       return ERROR_INVALID_COMMAND;
     }
   }
@@ -436,9 +450,12 @@ int _tmain (int argc, TCHAR *argv[])
   if (StartServiceCtrlDispatcher(ServiceTable) == FALSE)
   {
     print_usage();
-    return GetLastError();
+    auto err = GetLastError();
+    log(level::error, "Failed to start service control dispatcher: %", err);
+    return err;
   }
 
+  log(level::info, "Returning from main.");
   return ret;
 }
 

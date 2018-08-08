@@ -72,7 +72,8 @@ struct Logger {
   Logger(): log_() {
     add_common_attributes();
     add_file_log(
-        keywords::file_name = get_log_filename(),
+      keywords::file_name = get_log_filename(),
+      keywords::open_mode = std::ios_base::app,
         keywords::rotation_size = 10 * 1024 * 1024,
         keywords::format =  
           expressions::stream 
@@ -97,14 +98,15 @@ private:
   
   pth get_log_dir() {
 #   ifdef _WIN32
-    PWSTR* szPath = nullptr;
-    SHGetKnownFolderPath(FOLDERID_LocalAppData, NULL, 0, szPath);
-    pth p(*szPath);
+    PWSTR szPath = nullptr;
+    SHGetKnownFolderPath(FOLDERID_LocalAppData, NULL, 0, &szPath);
+    pth p(szPath);
     CoTaskMemFree(szPath);
+    p /= "Damen";
+    p /= "SensorHub";
 #   else
-    pth p("/var/log");
+    pth p("/var/log/sensor_hub");
 #   endif
-    p /= "sensor_hub";
     fs::create_directories(p);
     return p;
   }
