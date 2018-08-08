@@ -14,18 +14,34 @@
 #include "loop.h"
 #include "log.h"
 
-#include <boost/asio.hpp>
 
 namespace asio = boost::asio;
 
+struct Service {
+  Service(): srvc_() {
+  }
+  Service(Service const&) = delete;
+  void operator=(Service const&) = delete;
+
+  static Service& get_instance() {
+    static Service instance; 
+    return instance;
+  }
+  asio::io_service& get_service() {
+    return srvc_;
+  }
+private:
+  asio::io_service srvc_;
+};
+
 int enter_loop() {
-  asio::io_service srvc;
-
-  srvc.run();
-
-
-  return 0;
+  return Service::get_instance().get_service().run();
 }
 
 void stop_loop() {
+  Service::get_instance().get_service().stop();
+}
+
+asio::io_service& get_service() {
+  return Service::get_instance().get_service();
 }

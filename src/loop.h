@@ -14,7 +14,10 @@
 #ifndef LOOP_H_
 #define LOOP_H_
 
+#include <boost/asio.hpp>
+
 extern int enter_loop();
 extern void stop_loop();
+extern boost::asio::io_service& get_service();
 
 #endif
