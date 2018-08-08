@@ -18,11 +18,14 @@
 
 namespace asio = boost::asio;
 
-int mainloop() {
+int enter_loop() {
   asio::io_service srvc;
 
   srvc.run();
 
 
   return 0;
+}
+
+void stop_loop() {
 }

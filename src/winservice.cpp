@@ -19,12 +19,11 @@
 #include <codecvt>
 
 #include "log.h"
-
+#include "loop.h"
 
 
 SERVICE_STATUS g_ServiceStatus = {0};
 SERVICE_STATUS_HANDLE g_StatusHandle = NULL;
-HANDLE g_ServiceStopEvent = INVALID_HANDLE_VALUE;
 HANDLE g_ServiceEventSource = NULL;
 
 VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv);
@@ -156,17 +155,6 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
   log(level::info, "Starting service");
   SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
 
-  // Create stop event to wait on later.
-  g_ServiceStopEvent = CreateEvent (NULL, TRUE, FALSE, NULL);
-  if (g_ServiceStopEvent == NULL) {
-    g_ServiceStatus.dwControlsAccepted = 0;
-    g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-    g_ServiceStatus.dwWin32ExitCode = GetLastError();
-    g_ServiceStatus.dwCheckPoint = 1;
-
-    SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
-    return;
-  }    
 
   // Tell the service controller we are started
   g_ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
@@ -182,8 +170,6 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
 
   // Wait until our worker thread exits
   WaitForSingleObject (hThread, INFINITE);
-
-  CloseHandle (g_ServiceStopEvent);
 
   g_ServiceStatus.dwControlsAccepted = 0;
   g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
@@ -218,7 +204,7 @@ VOID WINAPI ServiceCtrlHandler (DWORD CtrlCode)
       SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
       
       // This will signal the worker thread to start shutting down
-      SetEvent (g_ServiceStopEvent);
+      stop_loop();
       break;
 
     default:
@@ -229,19 +215,16 @@ VOID WINAPI ServiceCtrlHandler (DWORD CtrlCode)
 
 DWORD WINAPI ServiceWorkerThread (LPVOID lpParam)
 {
-  //  Periodically check if the service has been requested to stop
-  while (WaitForSingleObject(g_ServiceStopEvent, 0) != WAIT_OBJECT_0)
-  {        
-    try {
-      Sleep(1000);
-    }
-    catch (std::exception& e) {
-      ReportStatus(EVENTLOG_ERROR_TYPE, "Unexpected error in Damen Sensor Hub: %s", e.what());
-      return ERROR_EXCEPTION_IN_SERVICE;
-    }    
+  DWORD result = ERROR_SUCCESS;
+  try {
+    result = enter_loop();
   }
+  catch (std::exception& e) {
+    ReportStatus(EVENTLOG_ERROR_TYPE, "Unexpected error in Damen Sensor Hub: %s", e.what());
+    result = ERROR_EXCEPTION_IN_SERVICE;
+  }    
 
-  return ERROR_SUCCESS;
+  return result;
 }
 
 

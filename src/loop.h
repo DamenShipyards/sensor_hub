@@ -14,6 +14,7 @@
 #ifndef LOOP_H_
 #define LOOP_H_
 
-extern int mainloop();
+extern int enter_loop();
+extern void stop_loop();
 
 #endif
