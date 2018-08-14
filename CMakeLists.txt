@@ -17,6 +17,8 @@ find_package(Threads REQUIRED)
 set (CMAKE_CXX_STANDARD 11)
 
 set(SENSORHUB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(FMTLIB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/src)
+set(FMTLIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include)
 set(SENSORHUB_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test)
 
 enable_testing()
@@ -32,9 +34,15 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/www.cpp
 )
 
+file(GLOB FMTLIB_SOURCES
+  ${FMTLIB_SOURCE_DIR}/*.cc
+)
+
+
 include_directories(
   ${Boost_INCLUDE_DIR}
   ${LIBUSB_1_INCLUDE_DIRS}
+  ${FMTLIB_INCLUDE_DIR}
 )
 
 link_directories(
@@ -52,12 +60,14 @@ link_libraries(
 add_executable(sensor_hub
   ${SENSORHUB_SOURCE_DIR}/daemon.cpp
   ${CPP_SOURCES}
+  ${FMTLIB_SOURCES}
 )
 
 macro(new_test NEW_TEST)
   add_executable(${NEW_TEST} 
     ${SENSORHUB_TEST_DIR}/${NEW_TEST}.cpp
     ${CPP_SOURCES}
+    ${FMTLIB_SOURCES}
   )
   set_target_properties(${NEW_TEST} PROPERTIES 
     LINK_FLAGS "-Wl,--no-as-needed"

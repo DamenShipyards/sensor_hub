@@ -11,8 +11,9 @@
  * forbidden.
  */
 
-#include "loop.h"
 #include "log.h"
+#include "www.h"
+#include "loop.h"
 
 
 namespace asio = boost::asio;
@@ -27,21 +28,24 @@ struct Service {
     static Service instance; 
     return instance;
   }
-  asio::io_service& get_service() {
+  asio::io_context& get_context() {
     return srvc_;
   }
 private:
-  asio::io_service srvc_;
+  asio::io_context srvc_;
 };
 
 int enter_loop() {
-  return Service::get_instance().get_service().run();
+  asio::io_context& ctx = Service::get_instance().get_context();
+  Www_server www_server{ctx, "localhost", "11180"};
+  return ctx.run();
 }
 
 void stop_loop() {
-  Service::get_instance().get_service().stop();
+  Service::get_instance().get_context().stop();
 }
 
-asio::io_service& get_service() {
-  return Service::get_instance().get_service();
+asio::io_context& get_context() {
+  return Service::get_instance().get_context();
 }
+

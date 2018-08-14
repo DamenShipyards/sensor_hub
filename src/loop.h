@@ -18,6 +18,6 @@
 
 extern int enter_loop();
 extern void stop_loop();
-extern boost::asio::io_service& get_service();
+extern boost::asio::io_context& get_context();
 
 #endif
