@@ -226,6 +226,7 @@ DWORD WINAPI ServiceWorkerThread (LPVOID lpParam)
     result = enter_loop();
   }
   catch (std::exception& e) {
+    log(level::error, "Exception from main loop: %", e.what());
     ReportStatus(EVENTLOG_ERROR_TYPE, "Unexpected error in Damen Sensor Hub: %s", e.what());
     result = ERROR_EXCEPTION_IN_SERVICE;
   }    
@@ -447,7 +448,7 @@ int _tmain (int argc, TCHAR *argv[])
     return err;
   }
 
-  log(level::info, "Returning from main.");
+  log(level::info, "Returning from main");
   return ret;
 }
 

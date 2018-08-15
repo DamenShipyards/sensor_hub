@@ -20,8 +20,9 @@
 
 
 struct Www_server {
-  explicit Www_server(boost::asio::io_context& ctx, const std::string& address, const std::string& port);
+  explicit Www_server(boost::asio::io_context& ctx, const std::string& address, const int port);
   ~Www_server();
+  void stop();
 private:
   struct Server;
   std::unique_ptr<Server> server_;

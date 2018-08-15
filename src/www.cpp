@@ -681,19 +681,19 @@ struct Connection_manager {
   Connection_manager(): connections_() {}
 
   void start(Connection_ptr c) {
-	connections_.insert(c);
-	c->start();
+	  connections_.insert(c);
+	  c->start();
   }
 
   void stop(Connection_ptr c) {
-	connections_.erase(c);
-	c->stop();
+	  connections_.erase(c);
+	  c->stop();
   }
 
   void stop_all() {
-	for (auto c: connections_)
-	  c->stop();
-	connections_.clear();
+	  for (auto c: connections_)
+	    c->stop();
+	  connections_.clear();
   }
 
 private:
@@ -754,13 +754,12 @@ struct Www_server::Server {
   Server(const Server&) = delete;
   Server& operator=(const Server&) = delete;
 
-  explicit Server(boost::asio::io_context& ctx, const std::string& address, const std::string& port);
+  explicit Server(boost::asio::io_context& ctx, const std::string& address, const int port);
 
   void stop() {
-	acceptor_.close();
-	connection_manager_.stop_all();
+	  acceptor_.close();
+	  connection_manager_.stop_all();
   }
-
 
 private:
   void do_accept();
@@ -773,13 +772,13 @@ private:
 };
 
 
-Www_server::Server::Server(boost::asio::io_context& ctx, const std::string& address, const std::string& port)
+Www_server::Server::Server(boost::asio::io_context& ctx, const std::string& address, const int port)
   : io_context_(ctx), acceptor_(io_context_),
     connection_manager_(), request_handler_() {
   // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
   boost::asio::ip::tcp::resolver resolver(io_context_);
   boost::asio::ip::tcp::endpoint endpoint =
-      *resolver.resolve(address, port).begin();
+      *resolver.resolve(address, fmt::format("{:d}", port)).begin();
   acceptor_.open(endpoint.protocol());
   acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
   acceptor_.bind(endpoint);
@@ -808,9 +807,13 @@ void Www_server::Server::do_accept() {
   );
 }
 
-Www_server::Www_server(boost::asio::io_context& ctx, const std::string& address, const std::string& port)
+Www_server::Www_server(boost::asio::io_context& ctx, const std::string& address, const int port)
   : server_{new Server{ctx, address, port}} {
 }
 
 Www_server::~Www_server() = default;
+
+void Www_server::stop() {
+  server_->stop();
+}
 
