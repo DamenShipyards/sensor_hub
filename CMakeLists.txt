@@ -7,14 +7,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 add_subdirectory(doc)
 
 find_package(Boost 1.67.0 REQUIRED 
-  system date_time filesystem log log_setup unit_test_framework thread
+  system date_time filesystem log log_setup unit_test_framework thread regex
 )
 
 find_package(libusb-1.0 REQUIRED)
 
 find_package(Threads REQUIRED)
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 
 set(SENSORHUB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(FMTLIB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/src)

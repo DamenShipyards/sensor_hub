@@ -39,7 +39,7 @@ private:
 static std::unique_ptr<Www_server> www_server;
 
 int enter_loop() {
-  int result = ERROR_SUCCESS;
+  int result = 0;
   asio::io_context& ctx = Service::get_instance().get_context();
 
   boost::property_tree::ptree& cfg = get_config();

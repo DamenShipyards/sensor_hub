@@ -69,7 +69,7 @@ private:
     }
     catch(fs::filesystem_error) {
       p = getenv("HOME");
-      p /= ".local/etc/sensor_hub";
+      p /= ".config/sensor_hub";
       fs::create_directories(p);
     }
 #   endif
