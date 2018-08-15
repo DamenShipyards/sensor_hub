@@ -90,6 +90,9 @@
     <ClInclude Include="..\src\usb.h" />
     <ClInclude Include="..\src\www.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="version.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
