@@ -14,31 +14,101 @@
 #include "usb.h"
 #include "log.h"
 
-static int ctx_refcnt_ = 0;
-static libusb_context* single_ctx_ = nullptr;
+#include <exception>
 
-libusb_context* get_ctx() {
-  if (ctx_refcnt_ == 0) {
-    int r = libusb_init(&single_ctx_);
+using std::runtime_error;
+
+class Usb_exception: public runtime_error {
+  using runtime_error::runtime_error;
+};
+
+struct Usb_context {
+  Usb_context(Usb_context const&) = delete;
+  void operator=(Usb_context const&) = delete;
+  static Usb_context& get_instance() {
+    static Usb_context instance;
+    return instance;
+  }
+  libusb_context* get_context() {
+    return ctx_;
+  }
+private:
+  Usb_context(): ctx_(nullptr) {
+    int r = libusb_init(&ctx_);
     if (r < 0) {
       log(level::error, "Failed to acquire USB context. Error %.", r);
-      return nullptr;
+      throw Usb_exception("Failed to acquire USB context");
     }
-    ++ctx_refcnt_;
-    return single_ctx_;
+    log(level::info, "Acquired USB context");
   }
+  ~Usb_context() {
+    libusb_exit(ctx_);
+    log(level::info, "Released USB context");
+  }
+  libusb_context* ctx_;
+};
+
+
+Usb::Usb(): ctx_(nullptr), device_(nullptr) {
+  ctx_ = Usb_context::get_instance().get_context();
 }
 
-Usb::Usb(): ctx_(nullptr) {
-  ctx_ = get_ctx();
-}
+bool Usb::open_device(int vendor_id, int product_id, int seq) {
+  libusb_device** devs;
 
-bool Usb::open_device(int vendor_id, int device_id, int seq) {
-  libusb_device **devs;
-  
-  
+  if (device_ != nullptr) {
+    close_device();
+  }
 
+  auto cnt = libusb_get_device_list(ctx_, &devs); 
+  if (cnt < 0) {
+    log(level::error, "Get device list error %", cnt);
+    return false;
+  }
+
+  for(int i = 0; i < cnt; i++) {
+    libusb_device* dev = devs[i];
+    libusb_device_descriptor desc;
+    int r = libusb_get_device_descriptor(dev, &desc);
+    if (r < 0) {
+      log(level::error, "Failed to get device descriptor, error %", r);
+      continue;
+    }
+    if (desc.idVendor == vendor_id && desc.idProduct == product_id) {
+      --seq;
+      if (seq < 0) {
+        uint8_t bus = libusb_get_bus_number(dev);
+        uint8_t port = libusb_get_port_number(dev);
+        log(level::info, "Found usb device at position %, bus %, port %", i, bus, port);
+        r = libusb_open(dev, &device_);
+        if (r < 0) {
+          log(level::error, "Failed to open device, error %", r);
+          continue;
+        }
+        // On Linux, we want to detach any kernel driver. Shouldn't do any harm on Windows
+        libusb_set_auto_detach_kernel_driver(device_, 1);
+        r = libusb_claim_interface(device_, 0); 
+        if (r != LIBUSB_SUCCESS) {
+          log(level::error, "Failed to claim USB interface, error %", r);
+          close_device();
+          break;
+        }
+        log(level::info, "Successfully opened USB device");
+        break;
+      }
+    }
+  }
+  libusb_free_device_list(devs, 1);
+  return device_ != nullptr;
 }
 
 void Usb::close_device() {
+  if (device_ != nullptr) {
+    int r = libusb_release_interface(device_, 0);
+    if(r != 0) {
+      log(level::error, "Cannot release USB interface, error %", r);
+    }
+    libusb_close(device_);
+    device_ = nullptr;
+  }
 }

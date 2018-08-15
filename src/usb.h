@@ -18,10 +18,11 @@
 
 struct Usb {
   Usb();
-  bool open_device(int vendor_id, int device_id, int seq=0);
+  bool open_device(int vendor_id, int product_id, int seq=0);
   void close_device();
-  private:
-    libusb_context* ctx_;
+private:
+  libusb_context* ctx_;
+  libusb_device_handle* device_;
 };
 
 #endif
