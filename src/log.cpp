@@ -69,6 +69,17 @@ formatting_ostream& operator<< (formatting_ostream& strm, to_log_manip<level, ta
 struct level_tag;
 
 struct Logger {
+  Logger(Logger const&) = delete;
+  void operator=(Logger const&) = delete;
+
+  static Logger& get_instance() {
+    static Logger instance; 
+    return instance;
+  }
+  sources::severity_logger_mt<level>& get_log() {
+    return log_;
+  }
+private:
   Logger(): log_() {
     add_common_attributes();
     add_file_log(
@@ -83,17 +94,7 @@ struct Logger {
             << expressions::smessage
     );
   }
-  Logger(Logger const&) = delete;
-  void operator=(Logger const&) = delete;
 
-  static Logger& get_instance() {
-    static Logger instance; 
-    return instance;
-  }
-  sources::severity_logger_mt<level>& get_log() {
-    return log_;
-  }
-private:
   sources::severity_logger_mt<level> log_;
   
   pth get_log_dir() {

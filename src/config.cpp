@@ -27,6 +27,17 @@ using pth = boost::filesystem::path;
 namespace pt = boost::property_tree;
 
 struct Config {
+  Config(Config const&) = delete;
+  void operator=(Config const&) = delete;
+
+  static Config& get_instance() {
+    static Config instance; 
+    return instance;
+  }
+  pt::ptree& get_config() {
+    return config_;
+  }
+private:
   Config(): config_() {
     set_defaults();
     pth config_file = get_config_file();
@@ -40,17 +51,7 @@ struct Config {
       save(config_file);
     }
   }
-  Config(Config const&) = delete;
-  void operator=(Config const&) = delete;
 
-  static Config& get_instance() {
-    static Config instance; 
-    return instance;
-  }
-  pt::ptree& get_config() {
-    return config_;
-  }
-private:
   pt::ptree config_;
 
   pth get_config_dir() {
