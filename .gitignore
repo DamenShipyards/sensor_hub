@@ -8,4 +8,6 @@
 /msvc/sensor_hub.VC.db
 /msvc/.vs/sensor_hub/v15/Browse.VC.db
 /msvc/.vs/sensor_hub/v15/ipch/
+/msvc/.vs/sensor_hub/v15/Browse.VC.opendb
 /msvc/sensor_hub.vcxproj.user
+/msvc/version.aps
