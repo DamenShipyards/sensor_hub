@@ -56,7 +56,7 @@ private:
   pth get_config_dir() {
 #   ifdef _WIN32
     PWSTR szPath = nullptr;
-    SHGetKnownFolderPath(FOLDERID_AppData, NULL, 0, &szPath);
+    SHGetKnownFolderPath(FOLDERID_ProgramData, NULL, 0, &szPath);
     pth p(szPath);
     CoTaskMemFree(szPath);
     p /= "Damen";

@@ -45,7 +45,7 @@
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>sensor_hub</TargetName>
-    <IncludePath>..\3rdparty\libusb\include;C:\boost_1_67_0;$(IncludePath)</IncludePath>
+    <IncludePath>..\3rdparty\fmt\include;..\3rdparty\libusb\include;C:\boost_1_67_0;$(IncludePath)</IncludePath>
     <LibraryPath>..\3rdparty\libusb\lib;C:\boost_1_67_0\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -55,7 +55,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>x64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>x64;_WIN32_WINNT=0x0601;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader />
@@ -73,14 +73,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\3rdparty\fmt\src\format.cc" />
+    <ClCompile Include="..\3rdparty\fmt\src\posix.cc" />
+    <ClCompile Include="..\src\config.cpp" />
     <ClCompile Include="..\src\log.cpp" />
+    <ClCompile Include="..\src\loop.cpp" />
     <ClCompile Include="..\src\usb.cpp" />
     <ClCompile Include="..\src\winservice.cpp" />
+    <ClCompile Include="..\src\www.cpp" />
     <ClCompile Include="..\src\xsens.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\log.h" />
+    <ClInclude Include="..\src\loop.h" />
     <ClInclude Include="..\src\usb.h" />
+    <ClInclude Include="..\src\www.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

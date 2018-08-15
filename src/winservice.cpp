@@ -12,7 +12,6 @@
  */
 
 #include <iostream>
-#include <Windows.h>
 #include <tchar.h>
 #include <exception>
 #include <locale>
@@ -21,6 +20,13 @@
 #include "log.h"
 #include "loop.h"
 
+#include <Windows.h>
+
+#include <boost/filesystem.hpp>
+
+
+namespace fs = boost::filesystem;
+using pth = boost::filesystem::path;
 
 SERVICE_STATUS g_ServiceStatus = {0};
 SERVICE_STATUS_HANDLE g_StatusHandle = NULL;
@@ -382,16 +388,19 @@ int _tmain (int argc, TCHAR *argv[])
 
   ServiceSetupEventLogging();
 
+  // TCHAR* to utf8 char* converter
   std::wstring_convert<std::codecvt_utf8_utf16<TCHAR>, TCHAR> conv_utf8;
 
-  log(level::info, "Starting %", conv_utf8.to_bytes(argv[0]));
+  pth p{argv[0]};
+  p = fs::canonical(p);
+  p.make_preferred();
+  log(level::info, "Starting %", p);
 
   SERVICE_TABLE_ENTRY ServiceTable[] = 
   {
     {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
     {NULL, NULL}
   };
-
 
   if (argc > 1) {
     if (argc > 2) {

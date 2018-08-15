@@ -19,6 +19,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <set>
 
 #include <fmt/core.h>
 
@@ -628,7 +629,7 @@ bool Request_parser::is_digit(int c) {
 }
 
 
-class Connection_manager;
+struct Connection_manager;
 
 
 class Connection
