@@ -19,7 +19,7 @@ VALUE "OriginalFilename", "sensor_hub.exe"
 VALUE "Comments", "Log and redistribute sensor data"
 VALUE "ProductName", "Sensor Hub"
 VALUE "ProductVersion", "0.1.0.0"
-VALUE "SourceRevision", "4968d89
+VALUE "SourceRevision", "e7e7bc0
 "
 }
 }

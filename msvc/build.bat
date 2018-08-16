@@ -5,6 +5,9 @@ if not '%SIGNSHA1%'=='' goto havekey
 set SIGNSHA1=742ECBBE6C66BB716C80C1FEA18FAB8FFEBC15BA
 :havekey
 
+rem Configure first...
+call configure.bat
+
 rem Get visual studio environment
 call %VCVARS%
 rem Build the project
