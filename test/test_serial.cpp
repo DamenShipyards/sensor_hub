@@ -1,5 +1,6 @@
 /**
  * This test requires a serial USB adapter connected at /dev/ttyUSB0
+ * or other port indicated by $SERIAL/%SERIAL% environment variable
  * The adapter should have pins 2 and 3 shorted so it becomes a loopback
  * device.
  */
@@ -20,11 +21,16 @@ namespace fs = boost::filesystem;
 using pth = boost::filesystem::path;
 
 tt::assertion_result serial_available(ut::test_unit_id test_id) {
-  bool serial_present = fs::exists(pth("/dev/ttyUSB0"));
+  std::string port{getenv("SERIAL")};
+  if (port == "") {
+    port = "/dev/ttyUSB0";
+  }
+  bool serial_present = fs::exists(pth(port));
   return serial_present;
 }
 
 asio::io_context ctx;
+asio::io_context::strand strnd(ctx);
 asio::serial_port serial(ctx);
 asio::streambuf response_buf;
 std::string error_message;
@@ -63,7 +69,7 @@ BOOST_AUTO_TEST_CASE(serial_loopback_test,
     *ut::precondition(serial_available))
 {
   serial.open("/dev/ttyUSB0");
-  asio::spawn(ctx, loopback);
+  asio::spawn(strnd, loopback);
   ctx.run();
   BOOST_TEST(bytes_written == message.size());
   BOOST_TEST(!cancelled, error_message);
