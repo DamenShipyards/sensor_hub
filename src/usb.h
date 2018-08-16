@@ -14,12 +14,14 @@
 #ifndef USB_H_
 #define USB_H_
 
+#include <string>
 #include <libusb-1.0/libusb.h>
 
 struct Usb {
   Usb();
   ~Usb();
   bool open_device(int vendor_id, int product_id, int seq=0);
+  bool open_device(const std::string& device_str, int seq=0);
   void close_device();
 private:
   libusb_context* ctx_;

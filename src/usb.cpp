@@ -15,6 +15,7 @@
 #include "log.h"
 
 #include <exception>
+#include <cstdlib>
 
 using std::runtime_error;
 
@@ -52,6 +53,13 @@ private:
 Usb::Usb(): ctx_(nullptr), device_(nullptr) {
   ctx_ = Usb_context::get_instance().get_context();
 }
+
+
+Usb::~Usb() {
+  close_device();
+  // Context will be freed by Usb_context singleton
+}
+
 
 bool Usb::open_device(int vendor_id, int product_id, int seq) {
   libusb_device** devs;
@@ -102,10 +110,18 @@ bool Usb::open_device(int vendor_id, int product_id, int seq) {
   return device_ != nullptr;
 }
 
-Usb::~Usb() {
-  close_device();
-  // Context will be freed by Usb_context singleton
+bool Usb::open_device(const std::string& device_str, int seq) {
+  if (device_str.size() != 9) 
+    return false;
+  const char* device_cstr = device_str.c_str();
+  char* endp;
+  int vendor_id = std::strtol(device_cstr, &endp, 16);
+  // Skip colon
+  ++endp;
+  int product_id = std::strtol(endp, &endp, 16);
+  return open_device(vendor_id, product_id, seq);
 }
+
 
 void Usb::close_device() {
   if (device_ != nullptr) {
