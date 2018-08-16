@@ -18,6 +18,7 @@
 
 struct Usb {
   Usb();
+  ~Usb();
   bool open_device(int vendor_id, int product_id, int seq=0);
   void close_device();
 private:

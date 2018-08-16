@@ -77,8 +77,8 @@ bool Usb::open_device(int vendor_id, int product_id, int seq) {
     if (desc.idVendor == vendor_id && desc.idProduct == product_id) {
       --seq;
       if (seq < 0) {
-        uint8_t bus = libusb_get_bus_number(dev);
-        uint8_t port = libusb_get_port_number(dev);
+        int bus = static_cast<int>(libusb_get_bus_number(dev));
+        int port = static_cast<int>(libusb_get_port_number(dev));
         log(level::info, "Found usb device at position %, bus %, port %", i, bus, port);
         r = libusb_open(dev, &device_);
         if (r < 0) {
@@ -102,6 +102,11 @@ bool Usb::open_device(int vendor_id, int product_id, int seq) {
   return device_ != nullptr;
 }
 
+Usb::~Usb() {
+  close_device();
+  // Context will be freed by Usb_context singleton
+}
+
 void Usb::close_device() {
   if (device_ != nullptr) {
     int r = libusb_release_interface(device_, 0);
@@ -109,6 +114,7 @@ void Usb::close_device() {
       log(level::error, "Cannot release USB interface, error %", r);
     }
     libusb_close(device_);
+    log(level::info, "Closed USB device");
     device_ = nullptr;
   }
 }
