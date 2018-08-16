@@ -7,10 +7,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 add_subdirectory(doc)
 
 find_package(Boost 1.67.0 REQUIRED 
-  system date_time filesystem log log_setup unit_test_framework thread regex
+  system date_time filesystem log log_setup unit_test_framework thread regex coroutine
 )
 
-find_package(libusb-1.0 REQUIRED)
+find_package(libusb-1.0 1.0.22 REQUIRED)
 
 find_package(Threads REQUIRED)
 
@@ -71,11 +71,12 @@ macro(new_test NEW_TEST)
   )
   set_target_properties(${NEW_TEST} PROPERTIES 
     LINK_FLAGS "-Wl,--no-as-needed"
-    #COMPILE_FLAGS " "
+    COMPILE_FLAGS "-ggdb"
     RUNTIME_OUTPUT_DIRECTORY test
   )
   target_link_libraries(${NEW_TEST} 
     ${Boost_LIBRARIES}
+    ${LIBUSB_1_LIBRARY}
   )
   add_definitions(-DBOOST_TEST_DYN_LINK)
   add_test(${NEW_TEST} test/${NEW_TEST})
@@ -83,4 +84,6 @@ endmacro()
 
 new_test(test_asio_buffer)
 new_test(test_log)
+new_test(test_usb)
+new_test(test_serial)
 
