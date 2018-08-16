@@ -10,6 +10,9 @@ var verfile = FSO.OpenTextFile(CD + "\\..\\version.ini", ForReading);
 var verlines = verfile.ReadAll().split("\r\n");
 var version = "0.0.0.0";
 var product = "Unknown"
+var gitrevfile = FSO.OpenTextFile(CD + "\\gitrev.txt", ForReading);
+var gitrev = gitrevfile.ReadAll();
+
 
 for (i = 0; i < verlines.length; i++) {
   var verline = verlines[i].split('=');
@@ -23,6 +26,7 @@ for (i = 0; i < verlines.length; i++) {
 
 StdOut.WriteLine("Found product: " + product);
 StdOut.WriteLine("Found version: " + version);
+StdOut.WriteLine("Git revision : " + gitrev);
 
 var verdigits = version.split(".");
 var shortver = verdigits[0] + "." + verdigits[1] + "." + verdigits[2];
@@ -41,7 +45,7 @@ outfile.WriteLine("{");
 outfile.WriteLine("BLOCK \"040904E4\"");
 outfile.WriteLine("{");
 outfile.WriteLine("VALUE \"CompanyName\", \"Damen Shipyards\"");
-outfile.WriteLine("VALUE \"FileVersion\", \"" + version +"\"");
+outfile.WriteLine("VALUE \"FileVersion\", \"" + version + "\"");
 outfile.WriteLine("VALUE \"FileDescription\", \"Sensor logging service\"");
 outfile.WriteLine("VALUE \"InternalName\", \"SensorHub\"");
 outfile.WriteLine("VALUE \"LegalCopyright\", \"\251 2018-2018 Damen Shipyards\"");
@@ -49,6 +53,7 @@ outfile.WriteLine("VALUE \"OriginalFilename\", \"sensor_hub.exe\"");
 outfile.WriteLine("VALUE \"Comments\", \"Log and redistribute sensor data\"");
 outfile.WriteLine("VALUE \"ProductName\", \"" + product + "\"");
 outfile.WriteLine("VALUE \"ProductVersion\", \"" + shortver + ".0\"");
+outfile.WriteLine("VALUE \"SourceRevision\", \"" + gitrev + "\"");
 outfile.WriteLine("}");
 outfile.WriteLine("}");
 outfile.WriteLine("BLOCK \"VarFileInfo\"");

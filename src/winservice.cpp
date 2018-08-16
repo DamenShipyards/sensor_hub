@@ -28,6 +28,8 @@
 namespace fs = boost::filesystem;
 using pth = boost::filesystem::path;
 
+typedef std::wstring_convert<std::codecvt_utf8_utf16<TCHAR>, TCHAR> utf_converter;
+
 SERVICE_STATUS g_ServiceStatus = {0};
 SERVICE_STATUS_HANDLE g_StatusHandle = NULL;
 HANDLE g_ServiceEventSource = NULL;
@@ -58,6 +60,29 @@ void print_usage()
             << "   Commands:" << std::endl
             << "     install: Install the service" << std::endl
             << "     uninstall: Remove the service" << std::endl;
+}
+
+void print_version_info(const TCHAR* exe, utf_converter& conv_utf8) {
+  DWORD dummy;
+  int version_buf_len = GetFileVersionInfoSize(exe, &dummy);
+  char* version_buf = (char*)malloc(version_buf_len);
+  if (version_buf != NULL) {
+    if (GetFileVersionInfo(exe, dummy, version_buf_len, version_buf)) {
+      TCHAR* value;
+      unsigned value_len;
+      if (VerQueryValue(version_buf,
+          _T("\\StringFileInfo\\040904E4\\FileVersion"),
+        (LPVOID*)&value, &value_len)) {
+        std::cout << "File version: " << conv_utf8.to_bytes(value) << std::endl;
+      };
+      if (VerQueryValue(version_buf,
+          _T("\\StringFileInfo\\040904E4\\SourceRevision"),
+          (LPVOID*)&value, &value_len)) {
+        std::cout << "Build from revision: " << conv_utf8.to_bytes(value) << std::endl;
+      }
+    }
+    free(version_buf);
+  }
 }
 
 void print_error(int error)
@@ -383,6 +408,7 @@ exit:
 }
 
 
+
 int _tmain (int argc, TCHAR *argv[])
 {
   int ret = ERROR_SUCCESS;
@@ -390,7 +416,9 @@ int _tmain (int argc, TCHAR *argv[])
   ServiceSetupEventLogging();
 
   // TCHAR* to utf8 char* converter
-  std::wstring_convert<std::codecvt_utf8_utf16<TCHAR>, TCHAR> conv_utf8;
+  utf_converter conv_utf8;
+
+  print_version_info(argv[0], conv_utf8);
 
   pth p{argv[0]};
   p = fs::canonical(p);
