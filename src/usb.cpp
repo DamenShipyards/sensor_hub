@@ -134,3 +134,56 @@ void Usb::close_device() {
     device_ = nullptr;
   }
 }
+
+void handle_transfer(libusb_transfer* trnsfr) {
+  std::cout << "Called back!" << std::endl;
+  Usb* usb = (Usb*)(trnsfr->user_data);
+  usb->called_back = true;
+}
+
+bool Usb::read() {
+  libusb_transfer* trnsfr = libusb_alloc_transfer(0);
+  if (trnsfr == nullptr) {
+    log(level::error, "Failed to allocate USB transfer buffer");
+    return false;
+  }
+  std::cout << "Checkpoint 1" << std::endl;
+  // TODO need to setup endpoints properly: 
+  // Get descriptors:
+  // * Device Descriptor
+  // * Config Descriptor
+  // * Interface Descriptor -> Endpoints
+  unsigned char endpoints[] = "\0";
+  int stream_id = libusb_alloc_streams(device_, 1, endpoints, 1);
+  if (stream_id < 0) {
+    log(level::error, "Failed to allocate USB streams, error %", stream_id);
+    return false;
+  }
+  std::cout << "Checkpoint 2: " << stream_id << std::endl;
+  called_back = false;
+  unsigned char* buf = (unsigned char*)malloc(0x1000);
+  libusb_fill_bulk_stream_transfer(
+      trnsfr, 
+      device_,
+      0,
+      stream_id,
+      buf,
+      0x1000,
+      &handle_transfer,
+      this,
+      100);
+
+  std::cout << "Checkpoint 3" << std::endl;
+  int r = libusb_submit_transfer(trnsfr);
+  if(r != 0) {
+    log(level::error, "Failed to submit USB transfer, error %", r);
+    return false;
+  }
+  std::cout << "Checkpoint 4" << std::endl;
+  while (!called_back) {
+    libusb_handle_events(ctx_);
+  }
+  std::cout << "Checkpoint 5" << std::endl;
+  data = (char*)buf;
+}
+

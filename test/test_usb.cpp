@@ -20,7 +20,6 @@ namespace tt = boost::test_tools;
 std::string usb_device;
 
 tt::assertion_result usb_available(ut::test_unit_id test_id) {
-  std::cout << "Checking USB available" << std::endl;
   const char* device_str = getenv("USB");
   if (device_str != nullptr) {
     usb_device = device_str;
@@ -55,4 +54,10 @@ BOOST_AUTO_TEST_CASE(usb_connection_test, *ut::precondition(usb_available))
 {
   Usb usb;
   BOOST_TEST(usb.open_device(usb_device) == true);
+}
+
+BOOST_AUTO_TEST_CASE(usb_read_test, *ut::precondition(usb_available))
+{
+  Usb usb;
+  BOOST_TEST(usb.read() == true);
 }
