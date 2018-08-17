@@ -14,6 +14,8 @@
 #include "usb.h"
 #include "log.h"
 
+#include <fmt/core.h>
+
 #include <exception>
 #include <cstdlib>
 
@@ -60,6 +62,36 @@ Usb::~Usb() {
   // Context will be freed by Usb_context singleton
 }
 
+struct Usb::Usb_descriptors {
+  Usb_descriptors() = delete;
+  Usb_descriptors(libusb_device_handle* device_handle) {
+    libusb_device* device = libusb_get_device(device_handle);
+    int r = libusb_get_device_descriptor(device, &device_descriptor);
+    if (r != LIBUSB_SUCCESS) {
+      throw Usb_exception("Failed to get device descriptor");
+    }
+    r = libusb_get_active_config_descriptor(device, &active_config);
+    if (r != LIBUSB_SUCCESS) {
+      throw Usb_exception("Failed to get active config descriptor");
+    }
+  }
+  ~Usb_descriptors() {
+    if (active_config != nullptr) {
+      libusb_free_config_descriptor(active_config);
+    }
+  }
+  std::string get_string_descriptor(libusb_device_handle* device_handle, uint8_t index) {
+    unsigned char str[256];
+    int len = libusb_get_string_descriptor_ascii(device_handle, index, str, sizeof(str));
+    if (len < 0) {
+      return fmt::format("Failed to get string at index {}", index);
+    }
+    return std::string{str, str + len};
+  }
+  libusb_device_descriptor device_descriptor;
+  libusb_config_descriptor* active_config;
+  libusb_interface_descriptor* interface_descriptor;
+};
 
 bool Usb::open_device(int vendor_id, int product_id, int seq) {
   libusb_device** devs;

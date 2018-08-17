@@ -15,6 +15,7 @@
 #define USB_H_
 
 #include <string>
+#include <memory>
 #include <libusb-1.0/libusb.h>
 
 struct Usb {
@@ -29,6 +30,8 @@ struct Usb {
 private:
   libusb_context* ctx_;
   libusb_device_handle* device_;
+  struct Usb_descriptors;
+  std::unique_ptr<Usb_descriptors> descriptors_;
 };
 
 #endif
