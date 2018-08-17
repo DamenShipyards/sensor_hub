@@ -23,8 +23,7 @@ On linux:
 
 On Windows:
 * Requirements: Visual Studio 2017 (Community Edition),  Boost 1.67+
-* Execute ``configure.bat`` in the "msvc" directory
-* Open ``sensor_hub.sln`` in Visual Studio and select "Build" from the "Project" menu.
+* Execute ``build.bat`` in the "msvc" directory. In case of build errors, open sensor_hub.sln in Visual Studio
 * Run ``build_msi.bat`` in the "setup" directory
 
 
