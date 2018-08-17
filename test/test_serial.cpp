@@ -21,7 +21,14 @@ namespace fs = boost::filesystem;
 using pth = boost::filesystem::path;
 
 tt::assertion_result serial_available(ut::test_unit_id test_id) {
-  std::string port{getenv("SERIAL")};
+  const char* port_env = getenv("SERIAL");
+  std::string port;
+  if (port_env != nullptr) {
+    port = port_env;
+  }
+  else {
+    port = "/dev/ttyUSB0";
+  }
   if (port == "") {
     port = "/dev/ttyUSB0";
   }
