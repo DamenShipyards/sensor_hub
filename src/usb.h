@@ -21,9 +21,9 @@
 struct Usb {
   Usb();
   ~Usb();
-  bool open_device(int vendor_id, int product_id, int seq=0);
-  bool open_device(const std::string& device_str, int seq=0);
-  void close_device();
+  bool open(int vendor_id, int product_id, int seq=0);
+  bool open(const std::string& device_str, int seq=0);
+  void close();
   bool read();
   std::string data;
   bool called_back;

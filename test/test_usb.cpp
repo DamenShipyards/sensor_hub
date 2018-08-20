@@ -50,14 +50,23 @@ tt::assertion_result usb_available(ut::test_unit_id test_id) {
   return usb_present;
 }
 
+/*
 BOOST_AUTO_TEST_CASE(usb_connection_test, *ut::precondition(usb_available))
 {
   Usb usb;
-  BOOST_TEST(usb.open_device(usb_device) == true);
+  BOOST_TEST(usb.open(usb_device) == true);
 }
+*/
 
 BOOST_AUTO_TEST_CASE(usb_read_test, *ut::precondition(usb_available))
 {
   Usb usb;
-  BOOST_TEST(usb.read() == true);
+  if (usb.open(usb_device)) {
+    BOOST_TEST(usb.read() == true);
+    usb.close();
+  }
+  else {
+    BOOST_TEST(false);
+  }
+  std::cout << usb.data << std::endl;
 }
