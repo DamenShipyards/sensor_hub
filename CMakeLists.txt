@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 add_subdirectory(doc)
 
 find_package(Boost 1.67.0 REQUIRED 
-  system date_time filesystem log log_setup unit_test_framework thread regex coroutine
+  system date_time filesystem log log_setup unit_test_framework thread regex coroutine chrono
 )
 
 find_package(libusb-1.0 1.0.22 REQUIRED)
