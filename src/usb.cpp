@@ -20,6 +20,7 @@
 #include <cstdlib>
 
 using std::runtime_error;
+namespace asio = boost::asio;
 
 
 class Usb_exception: public runtime_error {
@@ -153,7 +154,8 @@ struct Usb::Usb_descriptors {
 };
 
 
-Usb::Usb(): ctx_(nullptr), device_(nullptr), descriptors_(nullptr) {
+Usb::Usb(asio::io_context& io_context)
+    : io_ctx_(io_context), ctx_(nullptr), device_(nullptr), descriptors_(nullptr) {
   ctx_ = Usb_context::get_instance().get_context();
 }
 
@@ -260,14 +262,9 @@ void Usb::close() {
 
 void handle_transfer(libusb_transfer* trnsfr) {
   Usb* usb = (Usb*)(trnsfr->user_data);
-  usb->called_back = true;
   switch(trnsfr->status) {
 	case LIBUSB_TRANSFER_COMPLETED:
       std::cout << "Called back with " << trnsfr->actual_length << " bytes of data!" << std::endl;
-	  // Success here, data transfered are inside 
-	  // xfr->buffer
-	  // and the length is
-	  // xfr->actual_length
 	  break;
 	case LIBUSB_TRANSFER_CANCELLED:
       std::cout << "Called back with " << trnsfr->actual_length << " bytes of data!" << std::endl;
@@ -286,7 +283,6 @@ void handle_transfer(libusb_transfer* trnsfr) {
       break;
 	case LIBUSB_TRANSFER_OVERFLOW:
       std::cout << "Called back with transfer overflow" << std::endl;
-	  // Various type of errors here
 	  break;
     default:
       std::cout << "Called back with unexpected status" << std::endl;
@@ -300,7 +296,6 @@ bool Usb::read() {
     return false;
   }
 
-  called_back = false;
   unsigned char* buf = (unsigned char*)malloc(0x100);
   if (buf == nullptr) {
     log(level::error, "Failed to allocate buffer for transfer data");
@@ -323,14 +318,12 @@ bool Usb::read() {
     return false;
   }
 
-  while (!called_back) {
-    r = libusb_handle_events_completed(ctx_, nullptr);
-    if (r != 0) {
-      log(level::error, "Failed to handle USB events, error %", r);
-      return false;
-    }
+  r = libusb_handle_events_completed(ctx_, nullptr);
+  if (r != 0) {
+    log(level::error, "Failed to handle USB events, error %", r);
+    return false;
   }
-  data = (char*)buf;
+
   return true;
 }
 

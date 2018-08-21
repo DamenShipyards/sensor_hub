@@ -7,6 +7,9 @@
  */
 #define BOOST_TEST_MODULE usb_test
 #include <boost/test/unit_test.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/spawn.hpp>
+#include <boost/bind.hpp>
 #include <iostream>
 
 #include <stdio.h>
@@ -50,23 +53,19 @@ tt::assertion_result usb_available(ut::test_unit_id test_id) {
   return usb_present;
 }
 
-/*
-BOOST_AUTO_TEST_CASE(usb_connection_test, *ut::precondition(usb_available))
-{
-  Usb usb;
-  BOOST_TEST(usb.open(usb_device) == true);
+void read(Usb& usb, boost::asio::yield_context yield) {
 }
-*/
 
 BOOST_AUTO_TEST_CASE(usb_read_test, *ut::precondition(usb_available))
 {
-  Usb usb;
+  boost::asio::io_context io_context;
+  Usb usb(io_context);
   if (usb.open(usb_device)) {
-    BOOST_TEST(usb.read() == true);
+    boost::asio::spawn(io_context, boost::bind(read, std::ref(usb), _1));
+    io_context.run();
     usb.close();
   }
   else {
     BOOST_TEST(false);
   }
-  std::cout << usb.data << std::endl;
 }
