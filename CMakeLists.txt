@@ -82,7 +82,7 @@ macro(new_test NEW_TEST)
   add_test(${NEW_TEST} test/${NEW_TEST})
 endmacro()
 
-new_test(test_asio_buffer)
+new_test(test_asio)
 new_test(test_log)
 new_test(test_usb)
 new_test(test_serial)
