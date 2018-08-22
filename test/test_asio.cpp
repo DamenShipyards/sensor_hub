@@ -34,7 +34,8 @@ BOOST_AUTO_TEST_CASE(buffer_test) {
 struct Test_io {
   Test_io() = delete;
   Test_io(asio::io_context& io_ctx)
-      : io_ctx_(io_ctx) {}
+      : io_ctx_(io_ctx), work_guard_(asio::make_work_guard(io_ctx_)) {
+  }
   typedef asio::io_context::executor_type executor_type;
   executor_type get_executor() {
     return io_ctx_.get_executor();
@@ -50,6 +51,7 @@ struct Test_io {
           handler(ec, bytes_transferred);
         }
     );
+    work_guard_.reset();
   }
   template <typename MutableBufferSequence, typename ReadHandler>
   BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
@@ -60,6 +62,9 @@ struct Test_io {
     // If you get an error on the following line it means that your handler does
     // not meet the documented type requirements for a ReadHandler.
     BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+
+    typedef boost::asio::executor_work_guard<
+          boost::asio::io_context::executor_type> io_context_work;
 
     boost::asio::async_completion<ReadHandler,
       void (boost::system::error_code, std::size_t)> init(handler);
@@ -76,8 +81,12 @@ struct Test_io {
     std::cout << "Returning async_completion" << std::endl;
     return init.result.get();
   }
+  void close() {
+    work_guard_.reset();
+  }
 private:
   asio::io_context& io_ctx_;
+  asio::executor_work_guard<asio::io_context::executor_type> work_guard_;
 };
 
 
@@ -98,6 +107,7 @@ BOOST_AUTO_TEST_CASE(completion_from_thread_test) {
   Test_io test_io{io_ctx};
   asio::spawn(io_ctx, boost::bind(read_data, boost::ref(test_io), _1));
   std::cout << "Running io context" << std::endl;
+
   io_ctx.run();
   std::cout << "Done running io context" << std::endl;
 }
