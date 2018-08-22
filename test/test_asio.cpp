@@ -40,15 +40,19 @@ struct Test_io {
   executor_type get_executor() {
     return io_ctx_.get_executor();
   }
-  template <typename HandlerType>
-  void thread_fun(HandlerType handler) {
+  template <typename HandlerType, typename MutableBufferSequence>
+  void thread_fun(HandlerType handler, const MutableBufferSequence& buffers) {
     std::cout << "Entering thread_fun" << std::endl;
+    std::cout << "Thread fun thread id: " << boost::this_thread::get_id() << std::endl;
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
     std::cout << "Posting result" << std::endl;
-    asio::post(io_ctx_, [handler]() mutable {
-          boost::system::error_code ec;
-          std::size_t bytes_transferred = 0;
-          handler(ec, bytes_transferred);
+    // This is our fake input data that we 'got' after one second of waiting
+    asio::buffer_copy(buffers, asio::buffer("Hello, World!"));
+    auto bufsize = buffers.size();
+    asio::post(io_ctx_, [handler, bufsize]() mutable {
+          boost::system::error_code ec = boost::system::errc::make_error_code(boost::system::errc::success);
+          std::cout << "Completion handler thread id: " << boost::this_thread::get_id() << std::endl;
+          handler(ec, bufsize);
         }
     );
     work_guard_.reset();
@@ -63,9 +67,6 @@ struct Test_io {
     // not meet the documented type requirements for a ReadHandler.
     BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
 
-    typedef boost::asio::executor_work_guard<
-          boost::asio::io_context::executor_type> io_context_work;
-
     boost::asio::async_completion<ReadHandler,
       void (boost::system::error_code, std::size_t)> init(handler);
 
@@ -74,15 +75,13 @@ struct Test_io {
 
     std::cout << "Starting completion thread" << std::endl;
     boost::thread thr(boost::bind(
-          &Test_io::thread_fun<completion_handler_t>, 
+          &Test_io::thread_fun<completion_handler_t, MutableBufferSequence>, 
           this, 
-          init.completion_handler));
+          init.completion_handler,
+          buffers));
 
     std::cout << "Returning async_completion" << std::endl;
     return init.result.get();
-  }
-  void close() {
-    work_guard_.reset();
   }
 private:
   asio::io_context& io_ctx_;
@@ -91,13 +90,18 @@ private:
 
 
 void read_data(Test_io& io, asio::yield_context yield) {
-  asio::streambuf b;
+  asio::streambuf buffer;
+  std::string expected = "Hello, World!";
   std::cout << "Yielding from coro" << std::endl;
-  size_t bytes_read = asio::async_read(io, b, yield);
-  std::cout << "Returning to coro" << std::endl;
-  asio::streambuf::const_buffers_type bufs = b.data();
+  std::cout << "Coro thread id: " << boost::this_thread::get_id() << std::endl;
+  size_t bytes_read = asio::async_read(io, buffer.prepare(expected.size()), yield);
+  std::cout << "Returning to coro with: " << bytes_read << std::endl;
+  std::cout << "Coro thread id: " << boost::this_thread::get_id() << std::endl;
+  BOOST_TEST(bytes_read == expected.size());
+  buffer.commit(bytes_read);
+  asio::streambuf::const_buffers_type bufs = buffer.data();
   std::string str(asio::buffers_begin(bufs),
-                  asio::buffers_begin(bufs) + b.size());
+                  asio::buffers_begin(bufs) + buffer.size());
   std::cout << str << std::endl;
 }
 
