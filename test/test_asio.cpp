@@ -39,15 +39,24 @@ struct Test_io {
   executor_type get_executor() {
     return io_ctx_.get_executor();
   }
-  template <typename AC>
-  void thread_fun(AC& async_completion) {
+  template <typename HandlerType>
+  void thread_fun(HandlerType handler) {
+    std::cout << "Entering thread_fun" << std::endl;
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+    std::cout << "Posting result" << std::endl;
+    asio::post(io_ctx_, [handler]() mutable {
+          boost::system::error_code ec;
+          std::size_t bytes_transferred = 0;
+          handler(ec, bytes_transferred);
+        }
+    );
   }
   template <typename MutableBufferSequence, typename ReadHandler>
   BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
       void (boost::system::error_code, std::size_t))
   async_read_some(const MutableBufferSequence& buffers,
       BOOST_ASIO_MOVE_ARG(ReadHandler) handler) {
+    std::cout << "async_read_some called!" << std::endl;
     // If you get an error on the following line it means that your handler does
     // not meet the documented type requirements for a ReadHandler.
     BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
@@ -55,9 +64,16 @@ struct Test_io {
     boost::asio::async_completion<ReadHandler,
       void (boost::system::error_code, std::size_t)> init(handler);
 
-    boost::thread thr(boost::bind(&Test_io::thread_fun<boost::asio::async_completion<ReadHandler,
-      void (boost::system::error_code, std::size_t)> >, this, boost::ref(init)));
+    typedef typename boost::asio::async_completion<ReadHandler,
+            void (boost::system::error_code, std::size_t)>::completion_handler_type completion_handler_t;
 
+    std::cout << "Starting completion thread" << std::endl;
+    boost::thread thr(boost::bind(
+          &Test_io::thread_fun<completion_handler_t>, 
+          this, 
+          init.completion_handler));
+
+    std::cout << "Returning async_completion" << std::endl;
     return init.result.get();
   }
 private:
@@ -67,7 +83,9 @@ private:
 
 void read_data(Test_io& io, asio::yield_context yield) {
   asio::streambuf b;
+  std::cout << "Yielding from coro" << std::endl;
   size_t bytes_read = asio::async_read(io, b, yield);
+  std::cout << "Returning to coro" << std::endl;
   asio::streambuf::const_buffers_type bufs = b.data();
   std::string str(asio::buffers_begin(bufs),
                   asio::buffers_begin(bufs) + b.size());
@@ -79,5 +97,7 @@ BOOST_AUTO_TEST_CASE(completion_from_thread_test) {
   asio::io_context io_ctx;
   Test_io test_io{io_ctx};
   asio::spawn(io_ctx, boost::bind(read_data, boost::ref(test_io), _1));
+  std::cout << "Running io context" << std::endl;
   io_ctx.run();
+  std::cout << "Done running io context" << std::endl;
 }
