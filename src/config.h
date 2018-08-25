@@ -19,3 +19,4 @@
 extern boost::property_tree::ptree& get_config();
 
 #endif
+// vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

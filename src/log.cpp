@@ -128,3 +128,4 @@ private:
 sources::severity_logger_mt<level>& get_log() {
   return Logger::get_instance().get_log();
 }
+// vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

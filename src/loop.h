@@ -21,3 +21,4 @@ extern void stop_loop();
 extern boost::asio::io_context& get_context();
 
 #endif
+// vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

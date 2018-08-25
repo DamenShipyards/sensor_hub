@@ -64,3 +64,4 @@ void log(level lvl, const char* format, const As&... args) {
 
 
 #endif
+// vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

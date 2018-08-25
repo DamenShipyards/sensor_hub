@@ -76,3 +76,4 @@ asio::io_context& get_context() {
   return Service::get_instance().get_context();
 }
 
+// vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
