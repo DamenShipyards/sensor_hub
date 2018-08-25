@@ -1,6 +1,6 @@
 /**
- * \file xsens.ccp
- * \brief Provide implementation for Xsens device base class
+ * \file xsens.h
+ * \brief Provide interface to xsens device class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
  * \copyright
