@@ -12,12 +12,17 @@
  */
 
 #include "usb.h"
-#include "log.h"
 
-#include <fmt/core.h>
+// for timeval
+#include <time.h>
 
 #include <exception>
 #include <cstdlib>
+#include <functional>
+
+#include <fmt/core.h>
+
+#include <boost/thread/thread.hpp>
 
 using std::runtime_error;
 namespace asio = boost::asio;
@@ -86,44 +91,104 @@ private:
 struct Usb::Usb_descriptors {
   Usb_descriptors() = delete;
   Usb_descriptors(libusb_device_handle* device_handle)
-      : handle(nullptr), active_config(nullptr), descriptor() {
-    handle = device_handle;
-    libusb_device* device = libusb_get_device(device_handle);
-    int r = libusb_get_device_descriptor(device, &descriptor);
+      : handle_(device_handle), active_config_(nullptr), descriptor_() {
+    libusb_device* device = libusb_get_device(handle_);
+    int r = libusb_get_device_descriptor(device, &descriptor_);
     if (r != LIBUSB_SUCCESS) {
       throw Usb_exception("Failed to get device descriptor");
     }
-    r = libusb_get_active_config_descriptor(device, &active_config);
+    r = libusb_get_active_config_descriptor(device, &active_config_);
     if (r != LIBUSB_SUCCESS) {
       throw Usb_exception("Failed to get active config descriptor");
     }
   }
+
   ~Usb_descriptors() {
-    if (active_config != nullptr) {
-      libusb_free_config_descriptor(active_config);
-    }
+    close();
   }
+
+  void close() {
+    if (active_config_ != nullptr) {
+      libusb_free_config_descriptor(active_config_);
+    }
+    active_config_ = nullptr;
+  }
+
   std::string get_string_descriptor(uint8_t index) {
     unsigned char str[256];
-    int len = libusb_get_string_descriptor_ascii(handle, index, str, sizeof(str));
+    int len = libusb_get_string_descriptor_ascii(handle_, index, str, sizeof(str));
     if (len < 0) {
       return fmt::format("Failed to get string at index {}", index);
     }
     return std::string{str, str + len};
   }
+
+  void foreach_endpoint(const std::function<void(libusb_endpoint_descriptor&)>& f) {
+    if (active_config_ == nullptr)
+      return;
+    for (int i = 0; i < active_config_->bNumInterfaces; ++i) {
+      libusb_interface iface = active_config_->interface[i];
+      for (int j = 0; j < iface.num_altsetting; ++j) {
+        libusb_interface_descriptor iface_desc = iface.altsetting[j];
+        for (int k = 0; k < iface_desc.bNumEndpoints; ++k) {
+          libusb_endpoint_descriptor endpoint = iface_desc.endpoint[k];
+          f(endpoint);
+        }
+      }
+    }
+  }
+
+  int get_read_endpoint() {
+    int result = LIBUSB_ENDPOINT_IN;
+    foreach_endpoint(
+        [&](libusb_endpoint_descriptor& endpoint) {
+          if (endpoint.bmAttributes == LIBUSB_TRANSFER_TYPE_BULK) {
+            if ((endpoint.bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK) != 0)
+              result = static_cast<int>(endpoint.bEndpointAddress);
+          }
+        }
+    );
+    return result;
+  }
+
+  size_t get_read_packet_size(int endpoint_address) {
+    int result = 512;
+    foreach_endpoint(
+        [&](libusb_endpoint_descriptor& endpoint) {
+          if (endpoint.bEndpointAddress == endpoint_address) {
+            result = static_cast<size_t>(endpoint.wMaxPacketSize);
+          }
+        }
+    );
+    return result;
+  }
+
+  int get_write_endpoint() {
+    int result = LIBUSB_ENDPOINT_OUT;
+    foreach_endpoint(
+        [&](libusb_endpoint_descriptor& endpoint) {
+          if (endpoint.bmAttributes == LIBUSB_TRANSFER_TYPE_BULK) {
+            if ((endpoint.bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK) == 0)
+              result = static_cast<int>(endpoint.bEndpointAddress);
+          }
+        }
+    );
+    return result;
+  }
+
   void log_device_info() {
-    std::string manufacturer = get_string_descriptor(descriptor.iManufacturer);
-    std::string product = get_string_descriptor(descriptor.iProduct);
-    std::string serial = get_string_descriptor(descriptor.iSerialNumber);
+    std::string manufacturer = get_string_descriptor(descriptor_.iManufacturer);
+    std::string product = get_string_descriptor(descriptor_.iProduct);
+    std::string serial = get_string_descriptor(descriptor_.iSerialNumber);
     log(level::info, "USB device: Manufacturer: %, Product: %, Serial: %, Configs: %, Class: %, SubClass: %, Protocol: %",
-        manufacturer, product, serial, static_cast<int>(descriptor.bNumConfigurations),
-        get_usb_class_string(descriptor.bDeviceClass),static_cast<int>(descriptor.bDeviceSubClass),
-        static_cast<int>(descriptor.bDeviceProtocol));
-    std::string config_name = get_string_descriptor(active_config->iConfiguration);
+        manufacturer, product, serial, static_cast<int>(descriptor_.bNumConfigurations),
+        get_usb_class_string(descriptor_.bDeviceClass),static_cast<int>(descriptor_.bDeviceSubClass),
+        static_cast<int>(descriptor_.bDeviceProtocol));
+    std::string config_name = get_string_descriptor(active_config_->iConfiguration);
     log(level::info, "  Device configuration: %, Attributes %, Interfaces: %", 
-        config_name, static_cast<int>(active_config->bmAttributes), static_cast<int>(active_config->bNumInterfaces));
-    for (int i = 0; i < active_config->bNumInterfaces; ++i) {
-      libusb_interface iface = active_config->interface[i];
+        config_name, static_cast<int>(active_config_->bmAttributes), static_cast<int>(active_config_->bNumInterfaces));
+    for (int i = 0; i < active_config_->bNumInterfaces; ++i) {
+      libusb_interface iface = active_config_->interface[i];
       for (int j = 0; j < iface.num_altsetting; ++j) {
         libusb_interface_descriptor iface_desc = iface.altsetting[j];
         std::string iface_name = get_string_descriptor(iface_desc.iInterface);
@@ -141,21 +206,64 @@ struct Usb::Usb_descriptors {
     }
   }
   int get_interface_count() {
-    if (active_config != nullptr) {
-      return static_cast<int>(active_config->bNumInterfaces);
+    if (active_config_ != nullptr) {
+      return static_cast<int>(active_config_->bNumInterfaces);
     }
     else {
       return 0;
     }
   }
-  libusb_device_handle* handle;
-  libusb_device_descriptor descriptor;
-  libusb_config_descriptor* active_config;
+private:
+  libusb_device_handle* handle_;
+  libusb_device_descriptor descriptor_;
+  libusb_config_descriptor* active_config_;
+};
+
+
+
+struct Usb::Usb_event_handler {
+  Usb_event_handler() = delete;
+  Usb_event_handler(libusb_context* usb_ctx) 
+      : handler_ctx_(), work_guard_(make_work_guard(handler_ctx_)),
+        usb_ctx_(usb_ctx), 
+        worker_(boost::bind(&asio::io_context::run, &handler_ctx_)) {
+  }
+  ~Usb_event_handler() {
+    close();
+  }
+  void close() {
+    usb_ctx_ = nullptr;
+    if (!handler_ctx_.stopped()) {
+      handler_ctx_.stop();
+      worker_.join();
+    }
+  }
+  void handle_events() {
+    if (usb_ctx_ != nullptr && !handler_ctx_.stopped())
+      handler_ctx_.post(boost::bind(&Usb_event_handler::handle_events_, this));
+  }
+private:
+  libusb_context* usb_ctx_;
+  asio::io_context handler_ctx_;
+  asio::executor_work_guard<asio::io_context::executor_type> work_guard_;
+  boost::thread worker_;
+
+  void handle_events_() {
+    timeval tv = timeval{0, 100000};
+    while (usb_ctx_ != nullptr) {
+      int r = libusb_handle_events_timeout_completed(usb_ctx_, &tv, nullptr);
+      if (r != 0) {
+        log(level::error, "Failed to handle USB events, error %", r);
+      }
+    }
+  }
+
 };
 
 
 Usb::Usb(asio::io_context& io_context)
-    : io_ctx_(io_context), ctx_(nullptr), device_(nullptr), descriptors_(nullptr) {
+    : io_ctx_(io_context), ctx_(nullptr), device_(nullptr), descriptors_(nullptr),
+      read_endpoint_(0), write_endpoint_(0), read_packet_size_(0) {
   ctx_ = Usb_context::get_instance().get_context();
 }
 
@@ -221,7 +329,15 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
           }
         }
 
-        log(level::info, "Successfully opened USB device");
+        read_endpoint_ = descriptors_->get_read_endpoint();
+        write_endpoint_ = descriptors_->get_write_endpoint();
+        read_packet_size_ = descriptors_->get_read_packet_size(read_endpoint_);
+
+        event_handler_ = std::make_unique<Usb_event_handler>(ctx_);
+        event_handler_->handle_events();
+
+        log(level::info, "Successfully opened USB device with endpoints: %, %: %", 
+            write_endpoint_, read_endpoint_, read_packet_size_);
         break;
 interface_failure:
         continue;
@@ -246,6 +362,7 @@ bool Usb::open(const std::string& device_str, int seq) {
 
 
 void Usb::close() {
+  event_handler_ = nullptr;
   if (device_ != nullptr) {
     for (int i = 0; i < descriptors_->get_interface_count(); ++i) {
       int r = libusb_release_interface(device_, i); 
@@ -258,72 +375,5 @@ void Usb::close() {
     log(level::info, "Closed USB device");
     device_ = nullptr;
   }
-}
-
-void handle_transfer(libusb_transfer* trnsfr) {
-  Usb* usb = (Usb*)(trnsfr->user_data);
-  switch(trnsfr->status) {
-	case LIBUSB_TRANSFER_COMPLETED:
-      std::cout << "Called back with " << trnsfr->actual_length << " bytes of data!" << std::endl;
-	  break;
-	case LIBUSB_TRANSFER_CANCELLED:
-      std::cout << "Called back with " << trnsfr->actual_length << " bytes of data!" << std::endl;
-      break;
-	case LIBUSB_TRANSFER_NO_DEVICE:
-      std::cout << "Called back with no device error" << std::endl;
-      break;
-	case LIBUSB_TRANSFER_TIMED_OUT:
-      std::cout << "Called back with transfer timeout" << std::endl;
-      break;
-	case LIBUSB_TRANSFER_ERROR:
-      std::cout << "Called back with transfer error" << std::endl;
-      break;
-	case LIBUSB_TRANSFER_STALL:
-      std::cout << "Called back with transfer stall" << std::endl;
-      break;
-	case LIBUSB_TRANSFER_OVERFLOW:
-      std::cout << "Called back with transfer overflow" << std::endl;
-	  break;
-    default:
-      std::cout << "Called back with unexpected status" << std::endl;
-  }
-}
-
-bool Usb::read() {
-  libusb_transfer* trnsfr = libusb_alloc_transfer(1);
-  if (trnsfr == nullptr) {
-    log(level::error, "Failed to allocate USB transfer buffer");
-    return false;
-  }
-
-  unsigned char* buf = (unsigned char*)malloc(0x100);
-  if (buf == nullptr) {
-    log(level::error, "Failed to allocate buffer for transfer data");
-    return false;
-  }
-  libusb_fill_bulk_transfer(
-      trnsfr, 
-      device_,
-      131,
-      buf,
-      0x80,
-      &handle_transfer,
-      this,
-      5000);
-
-
-  int r = libusb_submit_transfer(trnsfr);
-  if (r != 0) {
-    log(level::error, "Failed to submit USB transfer, error %", r);
-    return false;
-  }
-
-  r = libusb_handle_events_completed(ctx_, nullptr);
-  if (r != 0) {
-    log(level::error, "Failed to handle USB events, error %", r);
-    return false;
-  }
-
-  return true;
 }
 
