@@ -100,3 +100,18 @@ if(DOXYGEN_FOUND)
     VERBATIM
   )
 endif()
+
+if(BUILD_MANUAL)
+  set(MANUAL_FILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/manual/manual.texi.in)
+  set(MANUAL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/manual/manual.texi)
+  set(MANUAL_MAKE_IN ${CMAKE_CURRENT_SOURCE_DIR}/manual/Makefile.in)
+  set(MANUAL_MAKE ${CMAKE_CURRENT_BINARY_DIR}/manual/Makefile)
+  configure_file(${MANUAL_FILE_IN} ${MANUAL_FILE} @ONLY)
+  configure_file(${MANUAL_MAKE_IN} ${MANUAL_MAKE} @ONLY)
+  add_custom_target(
+    manual ALL
+    COMMAND make >/dev/null
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/manual
+    COMMENT "Generating Manual with TexInfo"
+  )
+endif()

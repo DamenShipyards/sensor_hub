@@ -1,0 +1,16 @@
+all: html info pdf
+
+html: 
+	@CMAKE_CURRENT_SOURCE_DIR@/manual/texi2html --init-file @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.init --css-ref=@CMAKE_CURRENT_SOURCE_DIR@/manual/styles/styles.css --split=chapter --use-nodes --top-file=index.html --output=@CMAKE_CURRENT_BINARY_DIR@/manual/html @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.texi
+	mkdir -p @CMAKE_CURRENT_BINARY_DIR@/manual/html/images
+	mkdir -p @CMAKE_CURRENT_BINARY_DIR@/manual/html/styles
+	cp @CMAKE_CURRENT_SOURCE_DIR@/manual/images/* @CMAKE_CURRENT_BINARY_DIR@/manual/html/images/
+	cp @CMAKE_CURRENT_SOURCE_DIR@/manual/styles/* @CMAKE_CURRENT_BINARY_DIR@/manual/html/styles/
+
+info: 
+	makeinfo --output=@CMAKE_CURRENT_BINARY_DIR@/manual/sensor_hub.info @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.texi
+
+pdf: 
+	texi2dvi --build-dir=/tmp --output=@CMAKE_CURRENT_BINARY_DIR@/manual/sensor_hub.pdf --pdf @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.texi 
+
+.PHONY: pdf info html

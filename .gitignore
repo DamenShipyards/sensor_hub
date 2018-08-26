@@ -1,5 +1,4 @@
-/doc/manual/output
-/doc/doxygen
+/manual/manual.texi
 
 /setup/output
 /setup/*.resp
