@@ -1,0 +1,55 @@
+\input texinfo @c -*-texinfo-*-
+  
+@c %**start of header
+@setfilename sensor_hub.info
+@settitle Sensor Hub
+@afourpaper
+@include macros.texi
+@c %**end of header
+
+@copying
+This manual is for Sensor Hub version @VERSION@
+
+Copyright @copyright{} 2018 Damen Shipyards Gorinchem
+@end copying
+
+@titlepage
+@title Sensor Hub
+@subtitle Daemon for collecting and redistributing sensor data
+@author J.R. Versteegh <j.r.versteegh@@orca-st.com>
+
+@page
+@vskip 0pt plus 1 filll
+@insertcopying
+
+Published by Orca Software
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top Sensor Hub @VERSION@, Manual revision 1
+
+This manual is for Sensor Hub version @VERSION@
+@end ifnottex
+
+@menu
+* Introduction:: Welcome
+@end menu
+
+@node Introduction
+@chapter Introduction
+@include introduction.texi
+
+
+@node Index
+@unnumbered Index
+
+@printindex cp
+
+@node References
+@unnumbered References
+@include references.texi
+
+@bye

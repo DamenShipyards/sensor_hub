@@ -1,0 +1,22 @@
+html {
+  background-image: url('../images/bg.jpg');
+}
+body {
+/*  background-image: url('../images/bg.jpg'); */
+  border: 0;
+  margin: 0;
+  font-family: sans-serif;
+}
+p {
+}
+
+.navigation {
+  width: 64px;
+}
+.bgdiv {
+  background-image: url('../images/bg_man.png');
+  width: 1024px;
+  height: 742px;
+  position: absolute;
+  z-index: -1;
+}

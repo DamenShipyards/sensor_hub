@@ -1,0 +1,64 @@
+sub foot_nav {
+  my $fh = shift;
+  print $fh "<hr>\n";
+}
+
+$VERTICAL_HEAD_NAVIGATION=1;
+$ICONS=1;
+$print_foot_navigation=\&foot_nav;
+$AFTER_BODY_OPEN='<div class=bgdiv></div>';
+$SECTION_NAVIGATION=0;
+
+# insert here name of icon images for buttons
+# Icons are used, if $ICONS and resp. value are set
+%ACTIVE_ICONS =
+    (
+     'Top',         'images/a_top.png',
+     'Contents',    'images/a_tableofcon.png',
+     'Overview',    'images/a_document.png',
+     'Index',       'images/a_index.png',
+     'This',        'images/a_page.png',
+     'Back',        'images/a_left.png',
+     'FastBack',    'images/a_leftdouble.png',
+     'Prev',        'images/a_left.png',
+     'Up',          'images/a_up.png',
+     'Next',        'images/a_right.png',
+     'NodeUp',      'images/a_up.png',
+     'NodeNext',    'images/a_right.png',
+     'NodePrev',    'images/a_left.png',
+     'Following',   'images/a_right.png',
+     'Forward',     'images/a_right.png',
+     'FastForward', 'images/a_rightdouble.png',
+     'About' ,      'images/a_help.png',
+     'First',       'images/a_begin.png',
+     'Last',        'images/a_end.png',
+     'NextFile',    '',
+     'PrevFile',    '',
+     ' ',           'images/spacer3.png',
+    );
+
+# insert here name of icon images for these, if button is inactive
+%PASSIVE_ICONS =
+    (
+     'Top',         'images/a_top_na.png',
+     'Contents',    'images/a_tableofcon_na.png',
+     'Overview',    'images/a_document_na.png',
+     'Index',       'images/a_index_na.png',
+     'This',        'images/a_page_na.png',
+     'Back',        'images/a_left_na.png',
+     'FastBack',    'images/a_leftdouble_na.png',
+     'Prev',        'images/a_left_na.png',
+     'Up',          'images/a_up_na.png',
+     'Next',        'images/a_right_na.png',
+     'NodeUp',      'images/a_up_na.png',
+     'NodeNext',    'images/a_right_na.png',
+     'NodePrev',    'images/a_left_na.png',
+     'Following',   'images/a_right_na.png',
+     'Forward',     'images/a_right_na.png',
+     'FastForward', 'images/a_rightdouble_na.png',
+     'About' ,      'images/a_help_na.png',
+     'First',       'images/a_begin_na.png',
+     'Last',        'images/a_end_na.png',
+     'NextFile',    '',
+     'PrevFile',    '',
+    );

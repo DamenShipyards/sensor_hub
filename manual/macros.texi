@@ -1,0 +1,21 @@
+@c \input texinfo   @c -*-texinfo-*-
+
+@macro bibcite{ref}
+@ref{\ref\, \ref\}
+@end macro
+
+@macro bibitem{ref}
+@item @anchor{\ref\}[\ref\]
+@end macro
+
+@macro variable{name}
+@anchor{\name\}\name\
+@end macro
+
+@macro varref{name}
+@ref{\name\, \name\}
+@end macro
+
+@macro varquote{name}
+\name\
+@end macro

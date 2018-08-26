@@ -1,0 +1,4 @@
+This is the user manual for Sensor Hub. 
+
+Sensor Hub is a daemon for collecting and redistributing sensor data.
+

@@ -1,0 +1,324 @@
+# -*-perl-*-
+
+#+##############################################################################
+#
+# chm.init: convert to chm intermediate formats hhp, hhc, hhk and html files
+#
+#    Copyright (C) 2004-2008  Patrice Dumas <dumas@centre-cired.fr>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+#    02110-1301  USA
+#
+#-##############################################################################
+
+#$SECTION_NAVIGATION = 0; # to avoid headers in normal elements
+$SHOW_MENU = 0;
+$SPLIT = 'node';
+$DO_CONTENT = 1;
+$SPLIT_INDEX = undef;
+$IDX_SUMMARY = 1;
+
+$SMALL_RULE = '';
+$DEFAULT_RULE = '';
+$MIDDLE_RULE = '';
+$BIG_RULE = '';
+
+$DOCUMENT_DESCRIPTION = '';
+$SEPARATED_FOOTNOTES = 0;
+
+push @command_handler_process, \&chm_initialize_variables;
+
+$index_summary_file_entry = \&chm_index_summary_file_entry;
+$index_summary_file_begin = \&chm_index_summary_file_begin;
+$index_summary_file_end = \&chm_index_summary_file_end;
+
+$print_page_foot = \&chm_print_page_foot;
+# no-ops to avoid headers and footers
+$print_head_navigation = \&chm_noop;
+#$print_Top_footer = \&chm_noop;
+$print_foot_navigation = \&chm_noop;
+$print_element_header = \&chm_noop;
+
+my $default_toc_body = $toc_body;
+$toc_body = \&chm_toc_body;
+
+$finish_out = \&chm_finish_out;
+my $default_init_out = $init_out;
+
+$init_out = \&chm_init_out;
+
+my %chm_languages = (
+    'en'         => '0x409 English (United States)',
+);
+
+my %hhk_global_property = (
+   'ImageType' => 'Folder',
+);
+
+my %hhc_global_property = (
+   'ImageType' => 'Folder',
+);
+
+
+######################################### not used
+#
+# if needed texi to unicode, maybe this could be in utf8.init, but currently
+# no unicode
+my %chm_texi_map = %texi_map;
+my %chm_simple_map_texi = %simple_map_texi;
+my %chm_style_map_texi = ();
+
+foreach my $command (keys(%style_map_texi))
+{
+    $chm_style_map_texi{$command} = {}; 
+    foreach my $key (keys (%{$style_map_texi{$command}}))
+    {
+#print STDERR "$command, $key, $style_map_texi{$command}->{$key}\n";
+         $chm_style_map_texi{$command}->{$key} = 
+              $style_map_texi{$command}->{$key};
+    }
+}
+
+foreach my $key (keys(%unicode_accents))
+{
+#    $chm_style_map{$key}->{'function'} = \&t2h_utf8_accent;
+    $chm_style_map_texi{$key}->{'function'} = \&t2h_utf8_accent;
+}
+
+foreach my $key (%things_map)
+{
+    if (exists($unicode_map{$key}) and ($unicode_map{$key} ne ''))
+    {
+#        $chm_things_map{$key} = chr(hex($unicode_map{$key}));
+        $chm_texi_map{$key} = chr(hex($unicode_map{$key}));
+    }
+}
+
+$chm_simple_map_texi{"\n"} = ' ';
+######################################### end not used
+
+# at least kchmviewer has trouble with the corresponding textual entities
+foreach my $thing ('OE', 'oe', 'euro')
+{
+     $things_map{$thing} = $numeric_entity_map{$thing};
+     $pre_map{$thing} = $numeric_entity_map{$thing};
+     $simple_format_texi_map{$thing} = $numeric_entity_map{$thing};
+}
+
+my $hhp_lines;
+# this cannot be in chm_init_out, because it should be before toc_body
+# call.
+sub chm_initialize_variables()
+{
+    $hhp_lines = '';
+}
+
+sub chm_init_out()
+{
+    &$default_init_out();
+# Setting out file encoding to utf8 doesn't work. Seen on the web that 
+# htmlhelp 1.x isn't utf8 aware
+#   $Texi2HTML::THISDOC{'OUT_ENCODING'} = 'utf8';
+
+    my $hhk_file = "$Texi2HTML::THISDOC{'destination_directory'}$Texi2HTML::THISDOC{'file_base_name'}" . ".hhk";
+    open (IDXFILE, ">$hhk_file") or
+        die "Can't open $hhk_file for writing: $!\n";
+    if ($USE_UNICODE and defined($Texi2HTML::THISDOC{'OUT_ENCODING'}) and $Texi2HTML::THISDOC{'OUT_ENCODING'} ne '')
+    {
+        binmode(IDXFILE, ":encoding($Texi2HTML::THISDOC{'OUT_ENCODING'})");
+    }
+    
+    print "# writing HTML Help index in $hhk_file...\n" if $VERBOSE;
+    print IDXFILE "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<HTML>\n";
+    print IDXFILE "<HEAD>\n<meta name=\"GENERATOR\" content=\"$Texi2HTML::THISDOC{program}\">\n";
+    print IDXFILE "<!-- Sitemap 1.0 -->\n</HEAD>\n<BODY>\n";
+    print IDXFILE "<OBJECT type=\"text/site properties\">\n";
+    foreach my $property (keys(%hhk_global_property))
+    {
+        print IDXFILE "<param name=\"$property\" value=\"$hhk_global_property{$property}\">\n";
+       
+    }
+    print IDXFILE "</OBJECT>\n";
+
+    my $hhp_file = "$Texi2HTML::THISDOC{'destination_directory'}$Texi2HTML::THISDOC{'file_base_name'}.hhp";
+    print "# writing HTML Help project in $hhp_file...\n" if $VERBOSE;
+    open (HHPFILE, ">$hhp_file") or
+        die "Can't open $hhp_file for writing: $!\n";
+    if ($USE_UNICODE and defined($Texi2HTML::THISDOC{'OUT_ENCODING'}) and $Texi2HTML::THISDOC{'OUT_ENCODING'} ne '')
+    {
+        binmode(HHPFILE, ":encoding($Texi2HTML::THISDOC{'OUT_ENCODING'})");
+    }
+    my $language = $chm_languages{'en'};
+    if (exists ($chm_languages{$LANG}))
+    {
+        $language = $chm_languages{$LANG};
+    }
+    my $title = main::remove_texi($Texi2HTML::THISDOC{'title_texi'});
+    my $top_file = $Texi2HTML::THISDOC{'filename'}->{'top'};
+    print HHPFILE <<EOT;
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=$Texi2HTML::THISDOC{'file_base_name'}.chm
+Contents file=$Texi2HTML::THISDOC{'file_base_name'}.hhc
+Default Window=Default
+Default topic=$top_file
+Display compile progress=No
+Full-text search=Yes
+Index file=$Texi2HTML::THISDOC{'file_base_name'}.hhk
+Language=$language
+Title=$title
+
+[WINDOWS]
+Default=,"$Texi2HTML::THISDOC{'file_base_name'}.hhc","$Texi2HTML::THISDOC{'file_base_name'}.hhk","$top_file","$top_file",,,,,0x22520,,0x384e,,,,,,,,0
+
+[FILES]
+EOT
+}
+
+sub chm_print_page_foot($)
+{
+    my $fh = shift;
+    print $fh <<EOT;
+<p>
+$PRE_BODY_CLOSE
+</p>
+</body>
+</html>
+EOT
+}
+
+sub chm_noop($$)
+{
+    return '';
+}
+
+# Convert texi to string
+sub chm_text($)
+{
+    my $text = shift;
+    return main::simple_format(undef,undef,$text);
+}
+
+
+my @hhc_lines;
+
+sub chm_toc_body($)
+{
+    my $elements_ref = shift;
+    &$default_toc_body($elements_ref);
+    my $level = 0;
+    my %chm_files;
+    @hhc_lines = ();
+    foreach my $element (@$elements_ref)
+    {
+        while ($level != $element->{'toc_level'})
+        {
+            if ($level < $element->{'toc_level'})
+            {
+                 push (@hhc_lines, "<UL>\n");
+                 $level++;
+            }
+            elsif ($level > $element->{'toc_level'})
+            {
+                 push (@hhc_lines, "</UL>\n");
+                 $level--;
+            }
+        }
+        my $text = '';
+        if ($NUMBER_SECTIONS)
+        {
+             $text .= $element->{'number'} . " ";
+             
+        }
+        $text .= chm_text($element->{'texi'});
+        $text =~ s/^\s*//;
+        push (@hhc_lines, "<LI> <OBJECT type=\"text/sitemap\">\n<param name=\"Name\" value=\"$text\">\n<param name=\"Local\" value=\"$element->{'file'}#$element->{'target'}\">\n</OBJECT> </LI>\n");
+        if (!$chm_files{$element->{'file'}})
+        {
+             $hhp_lines .= "$element->{'file'}\n";
+             $chm_files{$element->{'file'}} = 1;
+        }
+    }
+    while ($level > 0)
+    {
+         push (@hhc_lines, "</UL>\n");
+         $level--;
+    }
+}
+
+# key:          
+# origin_href:  
+# entry:        
+# texi entry: 
+# element_href: 
+# element_text: 
+sub chm_index_summary_file_entry ($$$$$$$$)
+{
+    my $name = shift;
+    my $key = shift;
+    my $origin_href = shift;
+    my $entry = shift;
+    my $text = '';
+    #$entry = &$protect_text($key);
+    my $texi_entry = shift;
+    my $element_href = shift;
+    my $element_text = shift;
+    my $is_printed = shift;
+    $entry = chm_text($texi_entry);
+    print IDXFILE "<LI> <OBJECT type=\"text/sitemap\">\n<param name=\"Name\" value=\"$entry\">\n<param name=\"Local\" value=\"$origin_href\">\n</OBJECT> </LI>\n";
+}
+
+sub chm_index_summary_file_begin($$)
+{
+    my $name = shift;
+    my $is_printed = shift;
+}
+
+# file is not closed here but in finish_out.
+sub chm_index_summary_file_end($$)
+{
+    my $name = shift;
+    my $is_printed = shift;
+}
+
+sub chm_finish_out()
+{
+    print IDXFILE "</BODY>\n</HTML>\n";
+    close (IDXFILE);
+    my $hhc_file = "$Texi2HTML::THISDOC{'destination_directory'}$Texi2HTML::THISDOC{'file_base_name'}.hhc";
+    open (HHCFILE, ">$hhc_file") or
+        die "Can't open $hhc_file for writing: $!\n";
+    if ($USE_UNICODE and defined($Texi2HTML::THISDOC{'OUT_ENCODING'}) and $Texi2HTML::THISDOC{'OUT_ENCODING'} ne '')
+    {
+        binmode(HHCFILE, ":encoding($Texi2HTML::THISDOC{'OUT_ENCODING'})");
+    }
+    
+    print HHCFILE "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<HTML>\n";
+    print HHCFILE "<HEAD>\n<meta name=\"GENERATOR\" content=\"$Texi2HTML::THISDOC{program}\">\n";
+    print HHCFILE "<!-- Sitemap 1.0 -->\n</HEAD>\n<BODY>\n";
+    print HHCFILE "<OBJECT type=\"text/site properties\">\n";
+    foreach my $property (keys(%hhc_global_property))
+    {
+        print HHCFILE "<param name=\"$property\" value=\"$hhc_global_property{$property}\">\n";
+       
+    }
+    print HHCFILE "</OBJECT>\n";
+    main::print_lines(\*HHCFILE, \@hhc_lines);
+    print HHCFILE "</HTML>\n</BODY>\n";
+    print HHPFILE $hhp_lines;
+    close (HHPFILE);
+}
+
+1;

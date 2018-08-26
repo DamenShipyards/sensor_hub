@@ -1,0 +1,9 @@
+h1 {  font-family: Arial, Helvetica, sans-serif; color: #2244AA}
+h2 {  font-family: Arial, Helvetica, sans-serif; color: #2244AA}
+h3 {  font-family: Arial, Helvetica, sans-serif; color: #2244AA}
+p {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #336699; list-style-image: url(/Images/Bullet.gif); list-style-position: outside; list-style-type: none}
+a:link {  color: #225588; cursor: hand}
+a:visited {  cursor: hand; color: #003366}
+a:active {  cursor: hand; font-style: italic}
+a:hover {  cursor: hand; font-weight: normal; color: #6699AA}
+

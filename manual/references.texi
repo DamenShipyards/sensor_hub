@@ -1,0 +1,3 @@
+@table @asis
+@bibitem{XSENS_MTLL} Xsens, "MT Low Level Communication Documentation", 2017
+@end table
