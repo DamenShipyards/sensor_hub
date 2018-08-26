@@ -10,4 +10,19 @@
  * permission from the copyright holder is strictly 
  * forbidden.
  */
+
+#ifndef DEVICE_H_
+#define DEVICE_H_
+
+#include <vector>
+#include <memory>
+
+#include "quantities.h"
+
+struct Device {
+};
+
+using Devices = std::vector<std::unique_ptr<Device>>;
+
+#endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
