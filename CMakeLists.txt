@@ -4,8 +4,6 @@ project(SensorHub)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-add_subdirectory(doc)
-
 find_package(Boost 1.67.0 REQUIRED 
   system date_time filesystem log log_setup unit_test_framework thread regex coroutine chrono
 )
@@ -13,6 +11,7 @@ find_package(Boost 1.67.0 REQUIRED
 find_package(libusb-1.0 1.0.22 REQUIRED)
 
 find_package(Threads REQUIRED)
+find_package(Doxygen)
 
 set (CMAKE_CXX_STANDARD 14)
 
@@ -30,6 +29,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/usb.cpp
   ${SENSORHUB_SOURCE_DIR}/config.cpp
   ${SENSORHUB_SOURCE_DIR}/xsens.cpp
+  ${SENSORHUB_SOURCE_DIR}/device.cpp
   ${SENSORHUB_SOURCE_DIR}/loop.cpp
   ${SENSORHUB_SOURCE_DIR}/www.cpp
 )
@@ -87,3 +87,16 @@ new_test(test_log)
 new_test(test_usb)
 new_test(test_serial)
 
+if(DOXYGEN_FOUND)
+  set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
+  set(DOXYFILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+  configure_file(${DOXYFILE_IN} ${DOXYFILE} @ONLY)
+
+  add_custom_target(
+    doc ALL
+    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE}
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM
+  )
+endif()

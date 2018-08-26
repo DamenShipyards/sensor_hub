@@ -1,4 +1,6 @@
-/doc/output
+/doc/manual/output
+/doc/doxygen
+
 /setup/output
 /setup/*.resp
 
