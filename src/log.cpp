@@ -36,7 +36,7 @@ using namespace boost::log;
 namespace fs = boost::filesystem;
 using pth = boost::filesystem::path;
 
-BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level);
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level)
 
 static const char* level_strings[] = {
   " - DEBUG   - ",

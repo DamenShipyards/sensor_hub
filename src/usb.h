@@ -18,7 +18,10 @@
 #include <memory>
 #include <iostream>
 #include <boost/asio.hpp>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include <libusb-1.0/libusb.h>
+#pragma GCC diagnostic pop
 
 #include "log.h"
 
@@ -70,16 +73,16 @@ struct Operation_context {
         }
     );
   }
-  typedef std::vector<unsigned char> data_type;
-  data_type& get_data() {
+  typedef std::vector<unsigned char> Data_type;
+  Data_type& get_data() {
     return data_;
   }
 private:
   boost::asio::io_context& ctx_;
   boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_;
-  data_type data_;
   BufferSequence buffers_;
   Handler handler_;
+  Data_type data_;
 };
 
 

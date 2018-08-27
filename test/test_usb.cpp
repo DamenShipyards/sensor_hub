@@ -162,9 +162,9 @@ BOOST_AUTO_TEST_CASE(usb_read_test, *ut::precondition(usb_available)) {
       std::cout << "Exception: " << e.what() << std::endl;
       std::cout.flush();
     }
-    BOOST_TEST(bytes_handled == 128);
+    BOOST_TEST(bytes_handled == 128U);
     BOOST_TEST(read_returned == true);
-    BOOST_TEST(bytes_read == 128);
+    BOOST_TEST(bytes_read == 128U);
     usb.close();
   }
   else {

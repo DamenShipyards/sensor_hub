@@ -91,7 +91,7 @@ private:
 struct Usb::Usb_descriptors {
   Usb_descriptors() = delete;
   Usb_descriptors(libusb_device_handle* device_handle)
-      : handle_(device_handle), active_config_(nullptr), descriptor_() {
+      : handle_(device_handle), descriptor_(), active_config_(nullptr) {
     libusb_device* device = libusb_get_device(handle_);
     int r = libusb_get_device_descriptor(device, &descriptor_);
     if (r != LIBUSB_SUCCESS) {
@@ -224,8 +224,8 @@ private:
 struct Usb::Usb_event_handler {
   Usb_event_handler() = delete;
   Usb_event_handler(libusb_context* usb_ctx) 
-      : handler_ctx_(), work_guard_(make_work_guard(handler_ctx_)),
-        usb_ctx_(usb_ctx), 
+      : usb_ctx_(usb_ctx),
+        handler_ctx_(), work_guard_(make_work_guard(handler_ctx_)),
         worker_(boost::bind(&asio::io_context::run, &handler_ctx_)) {
   }
   ~Usb_event_handler() {

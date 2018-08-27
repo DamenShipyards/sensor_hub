@@ -19,11 +19,11 @@ namespace asio = boost::asio;
 BOOST_AUTO_TEST_CASE(buffer_test) {
   asio::streambuf b;
   auto mut = b.prepare(13);
-  BOOST_TEST(mut.size() == 13);
+  BOOST_TEST(mut.size() == 13U);
   b.commit(13);
-  BOOST_TEST(b.size() == 13);
+  BOOST_TEST(b.size() == 13U);
   b.consume(13);
-  BOOST_TEST(b.size() == 0);
+  BOOST_TEST(b.size() == 0U);
   std::ostream os(&b);
   os << "Hello, World!\nThis is me.";
   b.consume(7);
