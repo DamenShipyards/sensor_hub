@@ -16,10 +16,37 @@
 
 #include <vector>
 #include <memory>
+#include <exception>
+
+#include <fmt/core.h>
 
 #include "quantities.h"
 
+
 struct Device {
+  Device(): id_(fmt::format("device_{:d}", seq_++)) {
+  }
+  virtual ~Device() {
+  }
+  const std::string& get_id() const {
+    return id_;
+  }
+  virtual bool get_value(const Quantity& quantity, Value_type& value) {
+    return false;
+  }
+  Value_type get_value(const Quantity& quantity) {
+    Value_type value;
+    if (!get_value(quantity, value))
+      throw Quantity_not_available();
+    return value;
+  }
+protected:
+  void set_id(const std::string& id) {
+    id_ = id;
+  }
+private:
+  static int seq_;
+  std::string id_;
 };
 
 using Devices = std::vector<std::unique_ptr<Device>>;

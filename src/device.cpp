@@ -13,4 +13,6 @@
 
 #include "device.h"
 
+int Device::seq_ = 0;
+
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
