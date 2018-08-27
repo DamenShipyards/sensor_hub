@@ -111,7 +111,7 @@ private:
     try {
       fs::create_directories(p);
     }
-    catch(fs::filesystem_error) {
+    catch(fs::filesystem_error& fse) {
       p = getenv("HOME");
       p /= ".local/var/log/sensor_hub";
       fs::create_directories(p);
