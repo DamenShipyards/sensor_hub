@@ -71,7 +71,7 @@ macro(new_test NEW_TEST)
   )
   set_target_properties(${NEW_TEST} PROPERTIES 
     LINK_FLAGS "-Wl,--no-as-needed"
-    COMPILE_FLAGS "-ggdb"
+    COMPILE_FLAGS "-ggdb -Wall -pedantic"
     RUNTIME_OUTPUT_DIRECTORY test
   )
   target_link_libraries(${NEW_TEST} 
@@ -86,6 +86,8 @@ new_test(test_asio)
 new_test(test_log)
 new_test(test_usb)
 new_test(test_serial)
+new_test(test_device)
+new_test(test_quantities)
 
 if(DOXYGEN_FOUND)
   set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
@@ -110,7 +112,7 @@ if(BUILD_MANUAL)
   configure_file(${MANUAL_MAKE_IN} ${MANUAL_MAKE} @ONLY)
   add_custom_target(
     manual ALL
-    COMMAND make >/dev/null
+    COMMAND make -j1 >/dev/null
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/manual
     COMMENT "Generating Manual with TexInfo"
   )
