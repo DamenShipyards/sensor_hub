@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.1)
 
 project(SensorHub)
 
+# Use compilers on the path, not /usr/bin/(g++|gcc) perse. cmake is stupid that way
+execute_process(COMMAND which gcc OUTPUT_VARIABLE CMAKE_C_COMPILER)
+execute_process(COMMAND which g++ OUTPUT_VARIABLE CMAKE_CXX_COMPILER)
+string(STRIP ${CMAKE_C_COMPILER} CMAKE_C_COMPILER)
+string(STRIP ${CMAKE_CXX_COMPILER} CMAKE_CXX_COMPILER)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 find_package(Boost 1.67.0 REQUIRED 
