@@ -11,6 +11,18 @@
  * forbidden.
  */
 
+#ifndef QUANTITIES_H_
+#define QUANTITIES_H_
+
+#include <exception>
+
+#include "tools.h"
+
+using Value_type = double;
+
+struct Quantity_not_available: public std::exception {
+};
+
 /**
  * \brief Enumeration of available quantities
  *
@@ -23,37 +35,78 @@
  * and the Z axis down.
  */
 enum class Quantity {
-  la,  ///<  0: Latitude with respect to WGS84 ellipsoid (GPS)
-  lo,  ///<  1: Longitude with respect to WGS84 ellipsoid (GPS)
-  h1,  ///<  2: Height with respect to WGS84 ellipsoid (GPS)
-  h2,  ///<  3: Height with respect to MSL/Geoid99
-  vog, ///<  4: Absolute value of speed vector over ground
-  vtw, ///<  5: Absolute value of speed vector through water
-  hdg, ///<  6: Yaw angle with respect to true north
-  crs, ///<  7: Angle of speed over ground vector with respect to true north
-  mn,  ///<  8: Angle of magnetic north with respect to plane through X axis and vertical
-  mx,  ///<  9: X component of magnetic flux vector
-  my,  ///< 10: Y component of magnetic flux vector
-  mz,  ///< 11: Z component of magnetic flux vector
-  x,   ///< 12: X position with respect to some reference point
-  y,   ///< 13: Y position with respect to some reference point
-  z,   ///< 14: Z position with respect to some reference point
-  vx,  ///< 15: X component of velocity
-  vy,  ///< 16: Y component of velocity
-  vz,  ///< 17: Z component of velocity
-  ax,  ///< 18: X component of acceleration
-  ay,  ///< 19: Y component of acceleration
-  az,  ///< 20: Z component of acceleration
-  ro,  ///< 21: Roll, rotation about X axis with respect to some reference
-  pi,  ///< 22: Pitch, rotation about Y axis with respect to some reference
-  ya,  ///< 23: Yaw, rotation about Z axis with respect to some reference
-  q1,  ///< 24: Orientation quaternion component 1
-  q2,  ///< 25: Orientation quaternion component 2
-  q3,  ///< 26: Orientation quaternion component 3
-  q4,  ///< 27: Orientation quaternion component 4
-  rr,  ///< 28: Roll rate, angular velocity about X axis
-  pr,  ///< 29: Pitch rate, angular velocity about Y axis
-  yr,  ///< 30: Yaw rate, angular velocity about Z axis
+  ut,  ///<  0: Unix/POSIX time
+  la,  ///<  1: Latitude with respect to WGS84 ellipsoid (GPS)
+  lo,  ///<  2: Longitude with respect to WGS84 ellipsoid (GPS)
+  h1,  ///<  3: Height with respect to WGS84 ellipsoid (GPS)
+  h2,  ///<  4: Height with respect to MSL/Geoid99
+  vog, ///<  5: Absolute value of speed vector over ground
+  vtw, ///<  6: Absolute value of speed vector through water
+  hdg, ///<  7: Heading, angle of plain through X axes and vertical with respect to true north
+  crs, ///<  8: Angle of velocity over ground vector with respect to true north
+  mn,  ///<  9: Angle of magnetic north with respect to plane through X axis and vertical
+  mx,  ///< 10: X component of magnetic flux vector
+  my,  ///< 11: Y component of magnetic flux vector
+  mz,  ///< 12: Z component of magnetic flux vector
+  x,   ///< 13: X position with respect to some reference point
+  y,   ///< 14: Y position with respect to some reference point
+  z,   ///< 15: Z position with respect to some reference point
+  vx,  ///< 16: X component of velocity
+  vy,  ///< 17: Y component of velocity
+  vz,  ///< 18: Z component of velocity
+  ax,  ///< 19: X component of acceleration
+  ay,  ///< 20: Y component of acceleration
+  az,  ///< 21: Z component of acceleration
+  ro,  ///< 22: Roll, rotation about X axis with respect to some reference
+  pi,  ///< 23: Pitch, rotation about Y axis with respect to some reference
+  ya,  ///< 24: Yaw, rotation about Z axis with respect to some reference
+  q1,  ///< 25: Orientation quaternion component 1
+  q2,  ///< 26: Orientation quaternion component 2
+  q3,  ///< 27: Orientation quaternion component 3
+  q4,  ///< 28: Orientation quaternion component 4
+  rr,  ///< 29: Roll rate, angular velocity about X axis
+  pr,  ///< 30: Pitch rate, angular velocity about Y axis
+  yr,  ///< 31: Yaw rate, angular velocity about Z axis
+  end, ///< Enumeration end marker. Do not use.
 };
 
+using Quantity_iter = Enum_iter<Quantity>;
+
+
+template <Quantity quantity> struct Quantity_name { };
+#define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static constexpr char value[] = #NAME; }
+QUANTITY_NAME(ut);
+QUANTITY_NAME(la);
+QUANTITY_NAME(lo);
+QUANTITY_NAME(h1);
+QUANTITY_NAME(h2);
+QUANTITY_NAME(vog);
+QUANTITY_NAME(vtw);
+QUANTITY_NAME(hdg);
+QUANTITY_NAME(crs);
+QUANTITY_NAME(mn);
+QUANTITY_NAME(mx);
+QUANTITY_NAME(my);
+QUANTITY_NAME(mz);
+QUANTITY_NAME(x);
+QUANTITY_NAME(y);
+QUANTITY_NAME(z);
+QUANTITY_NAME(vx);
+QUANTITY_NAME(vy);
+QUANTITY_NAME(vz);
+QUANTITY_NAME(ax);
+QUANTITY_NAME(ay);
+QUANTITY_NAME(az);
+QUANTITY_NAME(ro);
+QUANTITY_NAME(pi);
+QUANTITY_NAME(ya);
+QUANTITY_NAME(q1);
+QUANTITY_NAME(q2);
+QUANTITY_NAME(q3);
+QUANTITY_NAME(q4);
+QUANTITY_NAME(rr);
+QUANTITY_NAME(pr);
+QUANTITY_NAME(yr);
+
+#endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
