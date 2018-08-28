@@ -74,7 +74,7 @@ using Quantity_iter = Enum_iter<Quantity>;
 
 
 template <Quantity quantity> struct Quantity_name { };
-#define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static constexpr char value[] = #NAME; }
+#define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static inline constexpr char value[] = #NAME; }
 QUANTITY_NAME(ut);
 QUANTITY_NAME(la);
 QUANTITY_NAME(lo);
