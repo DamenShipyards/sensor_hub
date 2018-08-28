@@ -18,8 +18,8 @@
 
 template <typename E, E begin_val=static_cast<E>(0), E end_val=E::end>
 struct Enum_iter {
-  Enum_iter(const E &e) : val_(static_cast<val_t>(e)) {}
-  Enum_iter() : val_(static_cast<val_t>(begin_val)) {}
+  Enum_iter(const E &e) : val_(static_cast<value_type>(e)) {}
+  Enum_iter() : val_(static_cast<value_type>(begin_val)) {}
   Enum_iter operator++() {
     ++val_;
     return *this;
@@ -29,8 +29,8 @@ struct Enum_iter {
   Enum_iter&& end() { return std::move(Enum_iter(end_val)); }
   bool operator!=(const Enum_iter& i) { return val_ != i.val_; }
 private:
-  typedef typename std::underlying_type<E>::type val_t;
-  int val_;
+  typedef typename std::underlying_type<E>::type value_type;
+  size_t val_;
 };
 
 #endif
