@@ -76,8 +76,10 @@
     <ClCompile Include="..\3rdparty\fmt\src\format.cc" />
     <ClCompile Include="..\3rdparty\fmt\src\posix.cc" />
     <ClCompile Include="..\src\config.cpp" />
+    <ClCompile Include="..\src\device.cpp" />
     <ClCompile Include="..\src\log.cpp" />
     <ClCompile Include="..\src\loop.cpp" />
+    <ClCompile Include="..\src\quantities.cpp" />
     <ClCompile Include="..\src\usb.cpp" />
     <ClCompile Include="..\src\winservice.cpp" />
     <ClCompile Include="..\src\www.cpp" />
@@ -85,10 +87,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\config.h" />
+    <ClInclude Include="..\src\device.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\loop.h" />
+    <ClInclude Include="..\src\quantities.h" />
+    <ClInclude Include="..\src\tools.h" />
     <ClInclude Include="..\src\usb.h" />
     <ClInclude Include="..\src\www.h" />
+    <ClInclude Include="..\src\xsens.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />
