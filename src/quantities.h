@@ -34,6 +34,7 @@ struct Quantity_not_available: public std::exception {
  * down.
  * With respect to the earth, the X axis points north, the Y axis east
  * and the Z axis down.
+ * All values are in SI units, angles are in radians.
  */
 enum class Quantity {
   ut,  ///<  0: Unix/POSIX time
