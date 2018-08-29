@@ -15,6 +15,7 @@
 #define QUANTITIES_H_
 
 #include <exception>
+#include <sstream>
 
 #include "tools.h"
 
@@ -39,7 +40,7 @@ enum class Quantity {
   la,  ///<  1: Latitude with respect to WGS84 ellipsoid (GPS)
   lo,  ///<  2: Longitude with respect to WGS84 ellipsoid (GPS)
   h1,  ///<  3: Height with respect to WGS84 ellipsoid (GPS)
-  h2,  ///<  4: Height with respect to MSL/Geoid99
+  h2,  ///<  4: Height with respect to MSL/EGM2008
   vog, ///<  5: Absolute value of speed vector over ground
   vtw, ///<  6: Absolute value of speed vector through water
   hdg, ///<  7: Heading, angle of plain through X axes and vertical with respect to true north
@@ -71,6 +72,7 @@ enum class Quantity {
 };
 
 using Quantity_iter = Enum_iter<Quantity>;
+using Quantity_type = std::underlying_type<Quantity>::type;
 
 
 template <Quantity quantity> struct Quantity_name { };
@@ -107,6 +109,40 @@ QUANTITY_NAME(q4);
 QUANTITY_NAME(rr);
 QUANTITY_NAME(pr);
 QUANTITY_NAME(yr);
+
+template <Quantity quantity>
+constexpr inline decltype(auto) get_quantity_name() {
+  return get_enum_trait<Quantity, Quantity_name, quantity>();
+}
+
+constexpr auto q_end = static_cast<Quantity_type>(Quantity::end);
+using Quantity_sequence = std::make_integer_sequence<Quantity_type, q_end>;
+constexpr auto quantity_sequence = Quantity_sequence();
+
+
+template <typename T>
+constexpr inline const char* get_quantity_name_impl(Quantity quantity) {
+  return "";
+}
+
+template <typename T, Quantity_type q2, Quantity_type... qs>
+constexpr inline const char* get_quantity_name_impl(Quantity quantity) {
+  if (static_cast<Quantity_type>(quantity) == q2) {
+    return get_quantity_name<static_cast<Quantity>(q2)>();
+  }
+  else {
+    return get_quantity_name_impl<int, qs...>(quantity);
+  }
+}
+
+template <Quantity_type... qs>
+constexpr inline const char* get_quantity_name(Quantity quantity, const std::integer_sequence<Quantity_type, qs...>) {
+  return get_quantity_name_impl<int, qs...>(quantity);
+}
+
+constexpr inline const char* get_quantity_name(Quantity quantity) {
+  return get_quantity_name(quantity, quantity_sequence);
+}
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

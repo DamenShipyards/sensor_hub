@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE log_test
+#define BOOST_TEST_MODULE quantity_test
 #include <boost/test/unit_test.hpp>
 
 #include "../src/quantities.h" 
@@ -8,17 +8,37 @@
 #include <type_traits>
 #include <string>
 
+template <typename T>
+void print_impl() {
+}
+
+template <typename T, size_t value, size_t... values>
+void print_impl() {
+  std::cout << value << std::endl;
+  print_impl<T, values...>();
+}
+
+template <size_t... values>
+void print() {
+  print_impl<int, values...>();
+}
+
+template <size_t... values>
+void print(const std::index_sequence<values...>) {
+  (std::cout << (values == 0 ? "" : ",") << values, ...);
+}
+
 
 BOOST_AUTO_TEST_CASE(iteration_test)
 {
   int count = 0;
   int sum = 0;
 
-  constexpr auto qend = static_cast<size_t>(Quantity::end);
-
-  auto qs = std::make_index_sequence<qend>();
+  print<1,2,3,4,5>();
+  print(std::make_index_sequence<10>());
 
   for (auto&& q: Quantity_iter()) {
+    std::cout << get_quantity_name(q) << std::endl;
     ++count;
   }
 
@@ -26,4 +46,8 @@ BOOST_AUTO_TEST_CASE(iteration_test)
   constexpr const char* const qn = Quantity_name<Quantity::yr>::value;
   std::string s(qn);
   BOOST_TEST(s == "yr");
+
+  Quantity q = Quantity::la;
+  s = get_quantity_name<static_cast<Quantity>(1)>();
+  BOOST_TEST(s == "la");
 }
