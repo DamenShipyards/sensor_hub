@@ -32,7 +32,6 @@ void print(const std::index_sequence<values...>) {
 BOOST_AUTO_TEST_CASE(iteration_test)
 {
   int count = 0;
-  int sum = 0;
 
   print<1,2,3,4,5>();
   print(std::make_index_sequence<10>());
@@ -48,6 +47,8 @@ BOOST_AUTO_TEST_CASE(iteration_test)
   BOOST_TEST(s == "yr");
 
   Quantity q = Quantity::la;
-  s = get_quantity_name<static_cast<Quantity>(1)>();
-  BOOST_TEST(s == "la");
+  auto s1 = get_quantity_name<static_cast<Quantity>(1)>();
+  auto s2 = get_quantity_name(q);
+  BOOST_TEST(s1 == "la");
+  BOOST_TEST(s2 == "la");
 }

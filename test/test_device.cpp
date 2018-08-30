@@ -3,6 +3,8 @@
 
 #include "../src/device.h" 
 
+#include <iostream>
+
 
 struct Port {
 };
@@ -25,6 +27,7 @@ BOOST_AUTO_TEST_CASE(container_test)
   Devices devices;
   devices.push_back(std::make_unique<MyDevice>());
   for (auto& device: devices) {
+    std::cout << device->get_id() << std::endl;
   }
 
   devices.pop_back();
