@@ -15,4 +15,15 @@
 
 int Device::seq_ = 0;
 
+Device_factory_map& get_device_factory_map() {
+  static Device_factory_map instance;
+  return instance;
+}
+
+Device_factory_ptr& add_device_factory(const std::string name, Device_factory_ptr&& factory) {
+  Device_factory_map& factories = get_device_factory_map();
+  factories.emplace(Device_factory_map::value_type(std::move(name), std::move(factory)));
+  return factories[name];
+}
+
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

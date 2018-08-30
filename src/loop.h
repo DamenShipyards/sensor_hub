@@ -16,6 +16,8 @@
 
 #include <boost/asio.hpp>
 
+namespace asio = boost::asio;
+
 /**
  * \mainpage Sensor Hub code documentation
  *

@@ -10,4 +10,19 @@
  * permission from the copyright holder is strictly 
  * forbidden.
  */
+
+#include "xsens.h"  
+
+#include <memory>
+
+using Xsens_MTi_G_710_usb = Xsens_MTi_G_710<Usb>;
+using Xsens_MTi_G_710_serial = Xsens_MTi_G_710<asio::serial_port>;
+using Xsens_MTi_G_710_usb_factory = Device_factory<Xsens_MTi_G_710_usb>;
+using Xsens_MTi_G_710_serial_factory = Device_factory<Xsens_MTi_G_710_serial>;
+
+static auto& mti_g_710_usb_factory = 
+    add_device_factory("xsens_mti_g_710_usb", std::move(std::make_unique<Xsens_MTi_G_710_usb_factory>()));
+static auto& mti_g_710_serial_factory = 
+    add_device_factory("xsens_mti_g_710_serial", std::move(std::make_unique<Xsens_MTi_G_710_serial_factory>()));
+
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

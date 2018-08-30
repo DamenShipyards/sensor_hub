@@ -27,9 +27,31 @@ BOOST_AUTO_TEST_CASE(container_test)
   Devices devices;
   devices.push_back(std::make_unique<MyDevice>());
   for (auto& device: devices) {
-    std::cout << device->get_id() << std::endl;
+    BOOST_TEST(device->get_id() == "id_0");
   }
 
   devices.pop_back();
   BOOST_TEST(destructor_called);
+}
+
+struct IdNameDevice: public MyDevice {
+  IdNameDevice(): MyDevice() {
+    set_id("test_id");
+    set_name("test_name");
+  }
+};
+
+BOOST_AUTO_TEST_CASE(id_name_test)
+{
+  MyDevice dev1;
+  MyDevice dev2;
+
+  BOOST_TEST(dev1.get_id() == "id_1");
+  BOOST_TEST(dev1.get_name() == "device_1");
+  BOOST_TEST(dev2.get_id() == "id_2");
+  BOOST_TEST(dev2.get_name() == "device_2");
+
+  IdNameDevice dev3;
+  BOOST_TEST(dev3.get_id() == "test_id");
+  BOOST_TEST(dev3.get_name() == "test_name");
 }

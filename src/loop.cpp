@@ -17,7 +17,6 @@
 #include "config.h"
 
 
-namespace asio = boost::asio;
 
 struct Service {
   Service(): srvc_() {
