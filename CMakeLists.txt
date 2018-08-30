@@ -38,6 +38,8 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/device.cpp
   ${SENSORHUB_SOURCE_DIR}/loop.cpp
   ${SENSORHUB_SOURCE_DIR}/www.cpp
+  ${SENSORHUB_SOURCE_DIR}/quantities.cpp
+  ${SENSORHUB_SOURCE_DIR}/datetime.cpp
 )
 
 file(GLOB FMTLIB_SOURCES
@@ -59,7 +61,7 @@ link_directories(
 link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBUSB_1_LIBRARY}
-  boost_system boost_date_time boost_filesystem boost_log boost_log_setup boost_thread
+  boost_system boost_date_time boost_filesystem boost_log boost_log_setup boost_thread boost_chrono
 )
 
 
@@ -94,6 +96,7 @@ new_test(test_usb)
 new_test(test_serial)
 new_test(test_device)
 new_test(test_quantities)
+new_test(test_datetime)
 
 if(DOXYGEN_FOUND)
   set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
