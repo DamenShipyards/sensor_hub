@@ -25,8 +25,27 @@
  * maintained inline with the code and processed by Doxygen.
  */
 
+/**
+ * Enter the application main loop. 
+ *
+ * This will first setup all devices from the application configuration and 
+ * then execute boost::asio::io_context::run() which will block until
+ * #stop_loop() will be called
+ */
 extern int enter_loop();
+
+/**
+ * Stop the application main loop. 
+ *
+ * This will first close all devices and services and then call 
+ * boost::asio::io_context::stop(). When all devices and services close
+ * in an orderly fashion the latter will not have been necessary. 
+ */
 extern void stop_loop();
+
+/**
+ * Get the application wide IO context
+ */
 extern boost::asio::io_context& get_context();
 
 #endif
