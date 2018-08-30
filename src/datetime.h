@@ -23,6 +23,7 @@ namespace date_time = boost::date_time;
 
 extern double get_time();
 extern void adjust_clock(const double& towards_time);
+extern void set_adjust_rate(const double& adjust_rate);
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

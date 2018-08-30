@@ -16,14 +16,13 @@
 #include <cstdint>
 
 /**
- * \brief Adjust the clock by 2.5% of clock difference with each call to "Clock::adjust"
+ * Singleton clock that serves as central time keeping device
  *
- * This value is somewhat arbitrary, but is intended to move the clock
- * towards the desired time with a reasonable pace while avoiding large
- * clock jumps.
+ * Clock that returns a POSIX/unix timestamp (seconds since 1970-01-01 00:00:00.000 UTC)
+ * in double format. The clock is monotonous and can be gradually adjusted to indicate
+ * a time from another source than the system clock while still keeping the system 
+ * clock pace. 
  */
-constexpr static double adjust_rate = 0.025;
-
 struct Clock {
   Clock(Clock const&) = delete;
   void operator=(Clock const&) = delete;
@@ -38,10 +37,13 @@ struct Clock {
   }
   void adjust(const double& towards_time) {
     double diff = towards_time - get_time();
-    offset_ += adjust_rate * diff;
+    offset_ += adjust_rate_ * diff;
+  }
+  void set_adjust_rate(const double& adjust_rate) {
+    adjust_rate_ = adjust_rate;
   }
 private:
-  Clock(): value_(0), offset_(0) {
+  Clock(): value_(0), offset_(0), adjust_rate_(0.025) {
     auto dt_now = date_time::microsec_clock<posix_time::ptime>::universal_time();
     auto sys_now = chrono::system_clock::now().time_since_epoch();
     
@@ -62,6 +64,7 @@ private:
   }
   double value_;
   double offset_;
+  double adjust_rate_;
   static const double rate_;
   static const posix_time::ptime epoch_;
 };
@@ -78,6 +81,10 @@ double get_time() {
 
 void adjust_clock(const double& towards_time) {
   Clock::get_instance().adjust(towards_time);
+}
+
+void set_adjust_rate(const double& adjust_rate) {
+  Clock::get_instance().set_adjust_rate(adjust_rate);
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
