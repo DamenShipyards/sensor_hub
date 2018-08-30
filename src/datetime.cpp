@@ -84,7 +84,8 @@ void adjust_clock(const double& towards_time) {
 }
 
 void set_adjust_rate(const double& adjust_rate) {
-  Clock::get_instance().set_adjust_rate(adjust_rate);
+  if (adjust_rate > 0.0 && adjust_rate <= 1.0)
+    Clock::get_instance().set_adjust_rate(adjust_rate);
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

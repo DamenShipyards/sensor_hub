@@ -31,8 +31,27 @@ namespace chrono = boost::chrono;
 namespace posix_time = boost::posix_time;
 namespace date_time = boost::date_time;
 
+/**
+ * Get UTC unix time stamp from central clock
+ */
 extern double get_time();
+
+/**
+ * Adjust central clock
+ *
+ * \param towards_time UTC unix timestamp to use for adjusting the clock. The clock
+ *                     will only be adjusted by a fraction that can be set with
+ *                     #set_adjust_rate
+ */
 extern void adjust_clock(const double& towards_time);
+
+/**
+ * Set adjust rate to be used by #adjust_clock
+ *
+ * \param adjust_rate Value between 0 and 1 indicating how fast the clock is adjusted
+ *                    towards the value provided to #adjust_clock. Default to 
+ *                    #DEFAULT_ADJUST_RATE
+ */
 extern void set_adjust_rate(const double& adjust_rate);
 
 #endif

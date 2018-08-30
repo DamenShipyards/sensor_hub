@@ -72,7 +72,7 @@ enum class Quantity {
   rr,  ///< 29: Roll rate, angular velocity about X axis
   pr,  ///< 30: Pitch rate, angular velocity about Y axis
   yr,  ///< 31: Yaw rate, angular velocity about Z axis
-  end, ///< Enumeration end marker. Do not use.
+  end, ///< Enumeration end marker. Do not use
 };
 
 using Quantity_iter = Enum_iter<Quantity>;
