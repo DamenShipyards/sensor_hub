@@ -16,6 +16,15 @@
 
 #include <boost/asio.hpp>
 
+/**
+ * \mainpage Sensor Hub code documentation
+ *
+ * \section Introduction
+ *
+ * Welcome to the code documentation of sensor hub. This documentation is
+ * maintained inline with the code and processed by Doxygen.
+ */
+
 extern int enter_loop();
 extern void stop_loop();
 extern boost::asio::io_context& get_context();
