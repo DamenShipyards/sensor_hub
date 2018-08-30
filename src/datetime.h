@@ -17,6 +17,16 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/chrono.hpp>
 
+
+/**
+ * Adjust the clock by 2.5% of clock difference with each call to "Clock::adjust"
+ *
+ * This value is somewhat arbitrary, but is intended to move the clock
+ * towards the desired time with a reasonable pace while avoiding large
+ * clock jumps.
+ */
+#define DEFAULT_ADJUST_RATE 0.025
+
 namespace chrono = boost::chrono;
 namespace posix_time = boost::posix_time;
 namespace date_time = boost::date_time;

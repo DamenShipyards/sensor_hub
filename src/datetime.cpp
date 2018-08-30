@@ -43,7 +43,7 @@ struct Clock {
     adjust_rate_ = adjust_rate;
   }
 private:
-  Clock(): value_(0), offset_(0), adjust_rate_(0.025) {
+  Clock(): value_(0), offset_(0), adjust_rate_(DEFAULT_ADJUST_RATE) {
     auto dt_now = date_time::microsec_clock<posix_time::ptime>::universal_time();
     auto sys_now = chrono::system_clock::now().time_since_epoch();
     
