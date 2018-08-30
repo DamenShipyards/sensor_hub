@@ -12,14 +12,15 @@
  */
 
 #include "log.h"
-#include "www.h"
+#include "http.h"
 #include "loop.h"
 #include "config.h"
 
+#include <string>
 
 
 struct Service {
-  Service(): srvc_() {
+  Service(): ctx_() {
   }
   Service(Service const&) = delete;
   void operator=(Service const&) = delete;
@@ -29,23 +30,34 @@ struct Service {
     return instance;
   }
   asio::io_context& get_context() {
-    return srvc_;
+    return ctx_;
   }
+  void start_http_server(const std::string& host, const int port) {
+    log(level::info, "Starting HTTP server");
+    http_server_ = std::make_unique<Http_server>(ctx_, host, port);
+  }
+  void stop_http_server() {
+    if (http_server_ != nullptr) {
+      log(level::info, "Stopping HTTP server");
+      http_server_->stop();
+    }
+  }
+
 private:
-  asio::io_context srvc_;
+  asio::io_context ctx_;
+  std::unique_ptr<Http_server> http_server_;
 };
 
-static std::unique_ptr<Www_server> www_server;
 
 int enter_loop() {
   int result = 0;
-  asio::io_context& ctx = Service::get_instance().get_context();
+  Service& service = Service::get_instance();
+  asio::io_context& ctx = service.get_context();
 
   boost::property_tree::ptree& cfg = get_config();
 
-  if (cfg.get("www.active", false)) {
-    log(level::info, "Starting WWW server");
-    www_server = std::make_unique<Www_server>(ctx, cfg.get("www.address", "localhost"), cfg.get("www.port", 12080));
+  if (cfg.get("http.active", false)) {
+    service.start_http_server(cfg.get("http.address", "localhost"), cfg.get("http.port", 12080));
   }
   log(level::info, "Running IO service");
   try {
@@ -59,17 +71,17 @@ int enter_loop() {
   return result;
 }
 
+
 void stop_loop() {
-  if (www_server != nullptr) {
-    log(level::info, "Stopping WWW server");
-    www_server->stop();
-  }
-  asio::io_context& ctx = Service::get_instance().get_context();
+  Service& service = Service::get_instance();
+  service.stop_http_server();
+  asio::io_context& ctx = service.get_context();
   if (!ctx.stopped()) {
     log(level::info, "Stopping IO service");
-    Service::get_instance().get_context().stop();
+    ctx.stop();
   }
 }
+
 
 asio::io_context& get_context() {
   return Service::get_instance().get_context();

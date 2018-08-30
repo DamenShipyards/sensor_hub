@@ -37,7 +37,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/xsens.cpp
   ${SENSORHUB_SOURCE_DIR}/device.cpp
   ${SENSORHUB_SOURCE_DIR}/loop.cpp
-  ${SENSORHUB_SOURCE_DIR}/www.cpp
+  ${SENSORHUB_SOURCE_DIR}/http.cpp
   ${SENSORHUB_SOURCE_DIR}/quantities.cpp
   ${SENSORHUB_SOURCE_DIR}/datetime.cpp
 )

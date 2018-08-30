@@ -1,5 +1,5 @@
 /**
- * \file www.h
+ * \file http.h
  * \brief Provide webserver interface
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
@@ -11,17 +11,17 @@
  * forbidden.
  */
 
-#ifndef WWW_H_
-#define WWW_H_
+#ifndef HTTP_H_
+#define HTTP_H_
 
 #include <string>
 #include <memory>
 #include <boost/asio.hpp>
 
 
-struct Www_server {
-  explicit Www_server(boost::asio::io_context& ctx, const std::string& address, const int port);
-  ~Www_server();
+struct Http_server {
+  explicit Http_server(boost::asio::io_context& ctx, const std::string& address, const int port);
+  ~Http_server();
   void stop();
 private:
   struct Server;

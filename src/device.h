@@ -91,6 +91,7 @@ private:
 template <typename Port>
 struct Port_device: public Device {
   Port_device(): Device(), strand_(get_context()), port_(std::make_unique<Port>(get_context())) {}
+  typedef Port port_type;
 protected:
   asio::io_context::strand strand_;
   std::unique_ptr<Port> port_;

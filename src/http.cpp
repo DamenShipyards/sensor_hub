@@ -1,5 +1,5 @@
 /**
- * \file www.cpp
+ * \file http.cpp
  * \brief Provide webserver implementation
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
@@ -11,7 +11,7 @@
  * forbidden.
  */
 
-#include "www.h"
+#include "http.h"
 #include "log.h"
 #include "loop.h"
 
@@ -750,7 +750,7 @@ void Connection::do_write()
 }
 
 
-struct Www_server::Server {
+struct Http_server::Server {
   Server(const Server&) = delete;
   Server& operator=(const Server&) = delete;
 
@@ -772,7 +772,7 @@ private:
 };
 
 
-Www_server::Server::Server(boost::asio::io_context& ctx, const std::string& address, const int port)
+Http_server::Server::Server(boost::asio::io_context& ctx, const std::string& address, const int port)
   : io_context_(ctx), acceptor_(io_context_),
     connection_manager_(), request_handler_() {
   // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
@@ -788,7 +788,7 @@ Www_server::Server::Server(boost::asio::io_context& ctx, const std::string& addr
 }
 
 
-void Www_server::Server::do_accept() {
+void Http_server::Server::do_accept() {
   acceptor_.async_accept(
       [this](boost::system::error_code ec, boost::asio::ip::tcp::socket socket) {
 		// Check whether the server was stopped by a signal before this
@@ -807,13 +807,13 @@ void Www_server::Server::do_accept() {
   );
 }
 
-Www_server::Www_server(boost::asio::io_context& ctx, const std::string& address, const int port)
+Http_server::Http_server(boost::asio::io_context& ctx, const std::string& address, const int port)
   : server_{new Server{ctx, address, port}} {
 }
 
-Www_server::~Www_server() = default;
+Http_server::~Http_server() = default;
 
-void Www_server::stop() {
+void Http_server::stop() {
   server_->stop();
 }
 

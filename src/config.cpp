@@ -90,9 +90,9 @@ private:
   }
 
   void set_defaults() {
-    config_.put("www.active", true);
-    config_.put("www.address", "localhost");
-    config_.put("www.port", 12080);    
+    config_.put("http.active", true);
+    config_.put("http.address", "localhost");
+    config_.put("http.port", 12080);    
   }
 };
 
