@@ -1,5 +1,5 @@
 /**
- * \file xsens.ccp
+ * \file xsens.cpp
  * \brief Provide implementation for Xsens device base class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>

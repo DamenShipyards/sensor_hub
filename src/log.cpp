@@ -1,5 +1,5 @@
 /**
- * \file log.ccp
+ * \file log.cpp
  * \brief Provide implementation for logging facility
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>

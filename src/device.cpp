@@ -1,5 +1,5 @@
 /**
- * \file device.ccp
+ * \file device.cpp
  * \brief Provide implementation for device base class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
