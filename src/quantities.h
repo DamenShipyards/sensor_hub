@@ -20,8 +20,10 @@
 
 #include "tools.h"
 
+//! Storage type for quantity values
 using Value_type = double;
 
+//! Exception to be thrown when a quantity is not available or supported
 struct Quantity_not_available: public std::exception {
 };
 
@@ -76,8 +78,10 @@ enum class Quantity {
 using Quantity_iter = Enum_iter<Quantity>;
 using Quantity_type = std::underlying_type<Quantity>::type;
 
-
+//! Name trait for #Quantity enum
 template <Quantity quantity> struct Quantity_name { };
+
+//! Macro for adding quantity name traits DRY style.
 #define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static inline constexpr char value[] = #NAME; }
 QUANTITY_NAME(ut);
 QUANTITY_NAME(la);
