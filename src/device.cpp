@@ -20,10 +20,15 @@ Device_factory_map& get_device_factory_map() {
   return instance;
 }
 
-Device_factory_ptr& add_device_factory(const std::string name, Device_factory_ptr&& factory) {
+Device_factory_ptr& add_device_factory(const std::string& name, Device_factory_ptr&& factory) {
   Device_factory_map& factories = get_device_factory_map();
-  factories.emplace(Device_factory_map::value_type(std::move(name), std::move(factory)));
+  factories.emplace(Device_factory_map::value_type(name, std::move(factory)));
   return factories[name];
+}
+
+Device_ptr create_device(const std::string& name) {
+  decltype(auto) factory = get_device_factory_map().at(name);
+  return factory->get_instance();
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

@@ -33,34 +33,51 @@
 struct Device {
   Device(): id_(fmt::format("id_{:d}", seq_)), name_(fmt::format("device_{:d}", seq_)),
             connected_(false) {
+    log(level::debug, "Constructing Device");
     ++seq_;
   }
+
   explicit Device(Device const&) = delete;
+
   Device& operator=(Device const&) = delete;
+
   virtual ~Device() {
+    log(level::debug, "Destroying Device");
   }
+
   const std::string& get_id() const {
     return id_;
   }
+
   const std::string& get_name() const {
     return name_;
   }
+
+  void set_name(const std::string& name) {
+    log(level::debug, "Setting device name to \"%\"", name);
+    name_ = name;
+  }
+
   virtual bool get_value(const Quantity& quantity, Value_type& value) {
     return false;
   }
+
   Value_type get_value(const Quantity& quantity) {
     Value_type value;
     if (!get_value(quantity, value))
       throw Quantity_not_available();
     return value;
   }
+
   virtual bool connect(const std::string& connection_string) {
     connected_ = true;
     return connected_;
   }
+
   virtual bool is_connected() {
     return connected_;
   }
+
   virtual void disconnect() {
     connected_ = false;
   }
@@ -68,9 +85,7 @@ protected:
   void set_id(const std::string& id) {
     id_ = id;
   }
-  void set_name(const std::string& name) {
-    name_ = name;
-  }
+
   void set_connected(const bool connected) {
     connected_ = connected;
     if (connected) {
@@ -99,28 +114,29 @@ protected:
 
 
 using Device_ptr = std::unique_ptr<Device>;
+
 //! Container with pointers to devices
 using Devices = std::vector<Device_ptr>;
 
 struct Device_factory_base {
-  virtual Device_ptr&& get_instance() {
-    return std::move(Device_ptr(nullptr));
+  virtual Device_ptr get_instance() {
+    return Device_ptr(nullptr);
   }
 };
 
 template <class DeviceType>
 struct Device_factory: public Device_factory_base {
   typedef DeviceType device_type;
-  Device_ptr&& get_instance() override {
-    Device_ptr result = std::make_unique<device_type>();
-    return std::move(result);
+  Device_ptr get_instance() override {
+    return std::make_unique<device_type>();
   }
 };
 
 using Device_factory_ptr = std::unique_ptr<Device_factory_base>;
 using Device_factory_map = std::map<std::string, Device_factory_ptr>;
 
-extern Device_factory_ptr& add_device_factory(const std::string name, Device_factory_ptr&& device_factory);
+extern Device_factory_ptr& add_device_factory(const std::string& name, Device_factory_ptr&& device_factory);
+extern Device_ptr create_device(const std::string& name);
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

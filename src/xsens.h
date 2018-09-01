@@ -13,6 +13,7 @@
 
 #include "device.h"
 #include "port.h"
+#include "log.h"
 
 template <typename Port>
 struct Xsens: public Port_device<Port> {
@@ -20,6 +21,12 @@ struct Xsens: public Port_device<Port> {
 
 template <typename Port>
 struct Xsens_MTi_G_710: public Xsens<Port> {
+  Xsens_MTi_G_710(): Xsens<Port>() {
+    log(level::info, "Constructing Xsens_MTi_G_710");
+  }
+  ~Xsens_MTi_G_710() override {
+    log(level::info, "Destroying Xsens_MTi_G_710");
+  }
 };
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

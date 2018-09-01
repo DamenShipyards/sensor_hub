@@ -93,6 +93,9 @@ private:
     config_.put("http.active", true);
     config_.put("http.address", "localhost");
     config_.put("http.port", 12080);    
+    config_.put("devices.count", 1);
+    config_.put("device0.type", "xsens_mti_g_170_usb");
+    config_.put("device0.name", "MTi-G-710");
   }
 };
 

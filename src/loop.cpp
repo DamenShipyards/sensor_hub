@@ -15,6 +15,9 @@
 #include "http.h"
 #include "loop.h"
 #include "config.h"
+#include "device.h"
+
+#include <fmt/core.h>
 
 #include <string>
 
@@ -49,6 +52,16 @@ private:
 };
 
 
+static void setup_devices(Devices& devices, boost::property_tree::ptree& cfg) {
+  int device_count = cfg.get("devices.count", 0);
+  for (int i = 0; i < device_count; ++i) {
+    std::string device_index = fmt::format("device{:d}", i);
+    std::string device_type = cfg.get(fmt::format("{:s}.type"), "device");
+    devices.emplace_back(create_device(device_type));
+  }
+}
+
+
 int enter_loop() {
   int result = 0;
   Service& service = Service::get_instance();
@@ -59,6 +72,11 @@ int enter_loop() {
   if (cfg.get("http.active", false)) {
     service.start_http_server(cfg.get("http.address", "localhost"), cfg.get("http.port", 12080));
   }
+
+  Devices devices;
+  setup_devices(devices, cfg);
+
+
   log(level::info, "Running IO service");
   try {
     result = static_cast<int>(ctx.run());

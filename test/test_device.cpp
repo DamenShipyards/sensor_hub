@@ -2,8 +2,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "../src/device.h" 
+#include "../src/usb.h"
+#include "../src/xsens.h"
 
 #include <iostream>
+#include <typeinfo>
 
 
 struct Port {
@@ -22,10 +25,10 @@ struct SomeDevice: public Device {
 
 using MyDevice = SomeDevice<Port>;
 
-BOOST_AUTO_TEST_CASE(container_test)
-{
+
+BOOST_AUTO_TEST_CASE(container_test) {
   Devices devices;
-  devices.push_back(std::make_unique<MyDevice>());
+  devices.emplace_back(std::make_unique<MyDevice>());
   for (auto& device: devices) {
     BOOST_TEST(device->get_id() == "id_0");
   }
@@ -41,8 +44,8 @@ struct IdNameDevice: public MyDevice {
   }
 };
 
-BOOST_AUTO_TEST_CASE(id_name_test)
-{
+
+BOOST_AUTO_TEST_CASE(id_name_test) {
   MyDevice dev1;
   MyDevice dev2;
 
@@ -55,3 +58,12 @@ BOOST_AUTO_TEST_CASE(id_name_test)
   BOOST_TEST(dev3.get_id() == "test_id");
   BOOST_TEST(dev3.get_name() == "test_name");
 }
+
+BOOST_AUTO_TEST_CASE(factory_test) {
+  Device_ptr dev = create_device("xsens_mti_g_710_usb");
+  dev->set_name("My XSens Sensor");
+  BOOST_TEST(typeid(*dev).hash_code() == typeid(Xsens_MTi_G_710<Usb>).hash_code());
+  dev = nullptr;
+  BOOST_TEST(dev.get() == nullptr);
+}
+
