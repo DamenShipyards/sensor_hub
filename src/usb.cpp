@@ -23,6 +23,7 @@
 #include <fmt/core.h>
 
 #include <boost/thread/thread.hpp>
+#include <boost/algorithm/string.hpp>
 
 using std::runtime_error;
 namespace asio = boost::asio;
@@ -360,6 +361,21 @@ bool Usb::open(const std::string& device_str, int seq) {
   return open(vendor_id, product_id, seq);
 }
 
+bool Usb::open(const std::string& device_str) {
+  std::vector<std::string> fields;
+  boost::split(fields, device_str, [](char c){ return c == ','; });
+  switch (fields.size()) {
+    case 1:
+      return open(fields[0], 0);
+    case 2: {
+      int seq = std::stoi(fields[1]);
+      return open(fields[0], seq);
+    }
+    default:
+      log(level::error, "Invalid USB connection string: %", device_str);
+      return false;
+  }
+}
 
 void Usb::close() {
   event_handler_ = nullptr;

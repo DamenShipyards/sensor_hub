@@ -14,6 +14,9 @@
 #ifndef LOOP_H_
 #define LOOP_H_
 
+#include <boost/chrono.hpp>
+namespace chrono = boost::chrono;
+
 #include <boost/asio.hpp>
 
 namespace asio = boost::asio;
@@ -48,7 +51,9 @@ extern void stop_loop();
 /**
  * Get the application wide IO context
  */
-extern boost::asio::io_context& get_context();
+struct Context_provider {
+  static boost::asio::io_context& get_context();
+};
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

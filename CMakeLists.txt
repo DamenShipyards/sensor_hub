@@ -61,7 +61,7 @@ link_directories(
 link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBUSB_1_LIBRARY}
-  boost_system boost_date_time boost_filesystem boost_log boost_log_setup boost_thread boost_chrono
+  boost_system boost_date_time boost_filesystem boost_log boost_log_setup boost_thread boost_chrono boost_coroutine
 )
 
 

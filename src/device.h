@@ -21,9 +21,14 @@
 
 #include <fmt/core.h>
 
+#define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
+#include <boost/asio/spawn.hpp>
+namespace asio = boost::asio;
+
 #include "quantities.h"
 #include "loop.h"
 #include "log.h"
+
 
 /**
  * Base class for all sensor devices
@@ -58,28 +63,37 @@ struct Device {
     name_ = name;
   }
 
-  virtual bool get_value(const Quantity& quantity, Value_type& value) {
+  virtual const bool get_value(const Quantity& quantity, Value_type& value) const {
     return false;
   }
 
-  Value_type get_value(const Quantity& quantity) {
+  const Value_type get_value(const Quantity& quantity) const {
     Value_type value;
     if (!get_value(quantity, value))
       throw Quantity_not_available();
     return value;
   }
 
-  virtual bool connect(const std::string& connection_string) {
-    connected_ = true;
-    return connected_;
+  virtual void connect(asio::yield_context yield) {
+    set_connected(true);
   }
 
-  virtual bool is_connected() {
+  virtual void initialize(asio::yield_context yield) {
+  }
+
+  virtual const bool is_connected() const {
     return connected_;
   }
 
   virtual void disconnect() {
-    connected_ = false;
+    set_connected(false);
+  }
+
+  const std::string& get_connection_string() const {
+    return connection_string_;
+  }
+  void set_connection_string(const std::string& connection_string) {
+    connection_string_ = connection_string;
   }
 protected:
   void set_id(const std::string& id) {
@@ -89,10 +103,10 @@ protected:
   void set_connected(const bool connected) {
     connected_ = connected;
     if (connected) {
-      log(level::info, "Device % : % connected", name_, id_);
+      log(level::info, "Device \"%\" : % connected", name_, id_);
     }
     else {
-      log(level::info, "Device % : % disconnected", name_, id_);
+      log(level::info, "Device \"%\" : % disconnected", name_, id_);
     }
   }
 private:
@@ -100,13 +114,29 @@ private:
   std::string id_;
   std::string name_;
   bool connected_;
+  std::string connection_string_;
 };
 
 
-template <typename Port>
+template <typename Port, class ContextProvider=Context_provider>
 struct Port_device: public Device {
-  Port_device(): Device(), strand_(get_context()), port_(std::make_unique<Port>(get_context())) {}
+  Port_device()
+      : Device(),
+        strand_(ContextProvider::get_context()),
+        port_(std::make_unique<Port>(ContextProvider::get_context())) {}
   typedef Port port_type;
+  void connect(asio::yield_context yield) override {
+    std::string connection_string = get_connection_string();
+    try {
+      port_->open(connection_string);
+      log(level::info, "Connected device port: %", connection_string);
+      initialize(yield);
+      set_connected(true);
+    }
+    catch (std::exception& e) {
+      log(level::error, "Failed to connect using \"%\" error \"%\"", connection_string, e.what());
+    }
+  }
 protected:
   asio::io_context::strand strand_;
   std::unique_ptr<Port> port_;

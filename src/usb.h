@@ -144,7 +144,8 @@ struct Usb {
   Usb(boost::asio::io_context& io_context);
   ~Usb();
   bool open(int vendor_id, int product_id, int seq=0);
-  bool open(const std::string& device_str, int seq=0);
+  bool open(const std::string& device_str, int seq);
+  bool open(const std::string& device_str);
   void close();
    
   template<typename OperationContext>
