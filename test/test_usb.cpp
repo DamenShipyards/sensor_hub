@@ -19,39 +19,8 @@
 #include <stdio.h>
 #include <string.h>
 
-template <class Container>
-int contains_at(const Container& container, const Container& sub_container) {
-  auto c_iter = container.cbegin();
-  auto sc_iter = sub_container.cbegin();
-  int i = 0;
-  do {
-    if (sc_iter == sub_container.cend())
-      return i;
-    if (c_iter == container.cend()) 
-      return -1;
-    if (*c_iter++ == *sc_iter) {
-      auto cc_iter = c_iter;
-      ++sc_iter;
-      do  {
-        if (sc_iter == sub_container.cend())
-          return i;
-        if (cc_iter == container.cend()) 
-          return -1;
-        if (*cc_iter++ != *sc_iter++) {
-          sc_iter = sub_container.cbegin();
-          break;
-        }
-      } while (true);
-    }
-    ++i;
-  } while (true);
-  return -1;
-}
-
-template <class Container>
-bool contains(const Container& container, const Container& sub_container) {
-  return contains_at(container, sub_container) >= 0;
-}
+#include "../src/usb.h"
+#include "../src/tools.h"
 
 // Data types for data communicated with the sensor
 typedef unsigned char byte_t;
@@ -95,7 +64,6 @@ namespace ut = boost::unit_test;
 namespace tt = boost::test_tools;
 namespace asio = boost::asio;
 
-#include "../src/usb.h" 
 
 std::string usb_device;
 
@@ -153,9 +121,9 @@ BOOST_AUTO_TEST_CASE(usb_read_test, *ut::precondition(usb_available)) {
   if (usb.open(usb_device)) {
     try {
       // One read with callback
-      boost::asio::async_read(usb, b.prepare(128), handle_read);
+      asio::async_read(usb, b.prepare(128), handle_read);
       // ... and one read with coroutine
-      boost::asio::spawn(io_context, boost::bind(read, boost::ref(usb), _1));
+      asio::spawn(io_context, boost::bind(read, boost::ref(usb), _1));
       io_context.run();
     }
     catch (std::exception& e) {

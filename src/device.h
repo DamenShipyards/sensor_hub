@@ -119,19 +119,18 @@ private:
 
 
 /**
- * Device that controls an IO port that satisfies asio's basic_io_object interface
+ * Device that controls an IO port supporting asio's basic_io_object interface
  */
 template <typename Port, class ContextProvider=Context_provider>
 struct Port_device: public Device {
   Port_device()
       : Device(),
-        strand_(ContextProvider::get_context()),
-        port_(std::make_unique<Port>(ContextProvider::get_context())) {}
+        port_(ContextProvider::get_context()){}
   typedef Port port_type;
   void connect(asio::yield_context yield) override {
     std::string connection_string = get_connection_string();
     try {
-      port_->open(connection_string);
+      port_.open(connection_string);
       log(level::info, "Connected device port: %", connection_string);
       initialize(yield);
       set_connected(true);
@@ -140,9 +139,11 @@ struct Port_device: public Device {
       log(level::error, "Failed to connect using \"%\" error \"%\"", connection_string, e.what());
     }
   }
+  Port& get_port() {
+    return port_;
+  }
 protected:
-  asio::io_context::strand strand_;
-  std::unique_ptr<Port> port_;
+  Port port_;
 };
 
 //! Unique pointer to a device

@@ -7,7 +7,7 @@
  * (C) 2018 Damen Shipyards. All rights reserved.
  * \license
  * This software is proprietary. Any use without written
- * permission from the copyright holder is strictly 
+ * permission from the copyright holder is strictly
  * forbidden.
  */
 
@@ -16,7 +16,6 @@
 // for timeval
 #include <time.h>
 
-#include <exception>
 #include <cstdlib>
 #include <functional>
 
@@ -25,14 +24,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/algorithm/string.hpp>
 
-using std::runtime_error;
 namespace asio = boost::asio;
-
-
-class Usb_exception: public runtime_error {
-  using runtime_error::runtime_error;
-};
-
 
 
 std::string get_usb_class_string(uint8_t class_enum) {
@@ -186,7 +178,7 @@ struct Usb::Usb_descriptors {
         get_usb_class_string(descriptor_.bDeviceClass),static_cast<int>(descriptor_.bDeviceSubClass),
         static_cast<int>(descriptor_.bDeviceProtocol));
     std::string config_name = get_string_descriptor(active_config_->iConfiguration);
-    log(level::info, "  Device configuration: %, Attributes %, Interfaces: %", 
+    log(level::info, "  Device configuration: %, Attributes %, Interfaces: %",
         config_name, static_cast<int>(active_config_->bmAttributes), static_cast<int>(active_config_->bNumInterfaces));
     for (int i = 0; i < active_config_->bNumInterfaces; ++i) {
       libusb_interface iface = active_config_->interface[i];
@@ -224,7 +216,7 @@ private:
 
 struct Usb::Usb_event_handler {
   Usb_event_handler() = delete;
-  Usb_event_handler(libusb_context* usb_ctx) 
+  Usb_event_handler(libusb_context* usb_ctx)
       : usb_ctx_(usb_ctx),
         handler_ctx_(), work_guard_(make_work_guard(handler_ctx_)),
         worker_(boost::bind(&asio::io_context::run, &handler_ctx_)) {
@@ -264,7 +256,8 @@ private:
 
 Usb::Usb(boost::asio::io_context& io_context)
     : io_ctx_(io_context), ctx_(nullptr), device_(nullptr), descriptors_(nullptr),
-      read_endpoint_(0), write_endpoint_(0), read_packet_size_(0) {
+      read_endpoint_(0), write_endpoint_(0), read_packet_size_(0),
+      transfers_() {
   ctx_ = Usb_context::get_instance().get_context();
 }
 
@@ -281,7 +274,7 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
   // Start by closing any previously opened device
   close();
 
-  auto cnt = libusb_get_device_list(ctx_, &devs); 
+  auto cnt = libusb_get_device_list(ctx_, &devs);
   if (cnt < 0) {
     log(level::error, "Get device list error %", cnt);
     return false;
@@ -322,7 +315,7 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
 
         // Claim interfaces
         for (int i = 0; i < descriptors_->get_interface_count(); ++i) {
-          r = libusb_claim_interface(device_, i); 
+          r = libusb_claim_interface(device_, i);
           if (r != LIBUSB_SUCCESS) {
             log(level::error, "Failed to claim USB interface %, error %", i, r);
             close();
@@ -337,7 +330,7 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
         event_handler_ = std::make_unique<Usb_event_handler>(ctx_);
         event_handler_->handle_events();
 
-        log(level::info, "Successfully opened USB device with endpoints: %, %: %", 
+        log(level::info, "Successfully opened USB device with endpoints: %, %: %",
             write_endpoint_, read_endpoint_, read_packet_size_);
         break;
 interface_failure:
@@ -350,7 +343,7 @@ interface_failure:
 }
 
 bool Usb::open(const std::string& device_str, int seq) {
-  if (device_str.size() != 9) 
+  if (device_str.size() != 9)
     return false;
   const char* device_cstr = device_str.c_str();
   char* endp;
@@ -381,7 +374,7 @@ void Usb::close() {
   event_handler_ = nullptr;
   if (device_ != nullptr) {
     for (int i = 0; i < descriptors_->get_interface_count(); ++i) {
-      int r = libusb_release_interface(device_, i); 
+      int r = libusb_release_interface(device_, i);
       if (r != LIBUSB_SUCCESS) {
         log(level::error, "Failed to release USB interface %, error %", i, r);
       }
@@ -391,6 +384,10 @@ void Usb::close() {
     log(level::info, "Closed USB device");
     device_ = nullptr;
   }
+}
+
+void Usb::cancel() {
+  transfers_.cancel();
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
