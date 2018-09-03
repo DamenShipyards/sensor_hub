@@ -31,8 +31,9 @@ namespace posix_time = boost::posix_time;
 
 
 struct Service {
-  // Disable copying and assignment for singleton service
+  //! Disable copying for singleton service
   Service(Service const&) = delete;
+  //! Disable assignment for singleton service
   void operator=(Service const&) = delete;
 
   /**
@@ -91,6 +92,13 @@ struct Service {
   }
 
   /**
+   * Close all devices
+   */
+  void close_devices() {
+    devices_.clear();
+  }
+
+  /**
    * Called every second
    */
   void one_second_service(asio::yield_context yield) {
@@ -141,8 +149,6 @@ private:
 };
 
 
-
-
 int enter_loop() {
   int result = 0;
   Service& service = Service::get_instance();
@@ -171,6 +177,7 @@ int enter_loop() {
 void stop_loop() {
   Service& service = Service::get_instance();
   service.stop_http_server();
+  service.close_devices();
   asio::io_context& ctx = service.get_context();
   if (!ctx.stopped()) {
     log(level::info, "Stopping IO service");

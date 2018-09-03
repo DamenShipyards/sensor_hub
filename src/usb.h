@@ -56,7 +56,7 @@ using Usb_transfer_ptr = std::unique_ptr<Usb_transfer>;
 
 struct Transfer_queue {
   libusb_transfer* new_transfer() {
-    transfers_.emplace_back();
+    transfers_.emplace_back(new Usb_transfer);
     return transfers_.back()->get_transfer();
   }
 

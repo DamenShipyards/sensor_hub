@@ -32,8 +32,14 @@ Device_factory_ptr& add_device_factory(const std::string& name, Device_factory_p
 }
 
 Device_ptr create_device(const std::string& name) {
-  decltype(auto) factory = get_device_factory_map().at(name);
-  return factory->get_instance();
+  try {
+    decltype(auto) factory = get_device_factory_map().at(name);
+    return factory->get_instance();
+  }
+  catch (std::out_of_range& e) {
+    log(level::error, "Device with name % does not appear to be registered", name);
+    throw;
+  }
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

@@ -81,11 +81,12 @@ struct Ctx {
 
 struct Conn_device: public Port_device<asio::serial_port, Ctx> {
   bool connected = false;
-  void initialize(asio::yield_context yield) override {
+  bool initialize(asio::yield_context yield) override {
     set_id("test_connection_device_id");
     asio::deadline_timer tmr(Ctx::get_context(), posix_time::seconds(1));
     tmr.async_wait(yield);
     connected = true;
+    return true;
   }
 };
 

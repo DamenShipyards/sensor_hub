@@ -91,10 +91,9 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return exec_command(goto_measurement_command, measurement_ok, yield);
   }
 
-  void initialize(asio::yield_context yield) override {
-    if (goto_config(yield))
-    if (goto_measurement(yield))
-      this->set_connected(true);
+  bool initialize(asio::yield_context yield) override {
+    return goto_config(yield)
+      && goto_measurement(yield);
   }
 };
 

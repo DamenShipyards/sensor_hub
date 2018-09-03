@@ -78,7 +78,8 @@ struct Device {
     set_connected(true);
   }
 
-  virtual void initialize(asio::yield_context yield) {
+  virtual bool initialize(asio::yield_context yield) {
+    return true;
   }
 
   virtual const bool is_connected() const {
@@ -101,6 +102,9 @@ protected:
   }
 
   void set_connected(const bool connected) {
+    if (connected == connected_) {
+      log(level::warning, "Connected state of device was already: %", connected);
+    }
     connected_ = connected;
     if (connected) {
       log(level::info, "Device \"%\" : % connected", name_, id_);
@@ -126,18 +130,26 @@ struct Port_device: public Device {
   Port_device()
       : Device(),
         port_(ContextProvider::get_context()){}
+  ~Port_device() {
+    disconnect();
+  }
   typedef Port port_type;
   void connect(asio::yield_context yield) override {
     std::string connection_string = get_connection_string();
     try {
       port_.open(connection_string);
       log(level::info, "Connected device port: %", connection_string);
-      initialize(yield);
-      set_connected(true);
+      bool initialized = initialize(yield);
+      set_connected(initialized);
     }
     catch (std::exception& e) {
       log(level::error, "Failed to connect using \"%\" error \"%\"", connection_string, e.what());
     }
+  }
+  void disconnect() override {
+    if (is_connected())
+      set_connected(false);
+    port_.close();
   }
   Port& get_port() {
     return port_;

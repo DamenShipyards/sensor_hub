@@ -23,8 +23,11 @@
 
 #include <boost/thread/thread.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 
 namespace asio = boost::asio;
+namespace posix_time = boost::posix_time;
 
 
 std::string get_usb_class_string(uint8_t class_enum) {
@@ -371,6 +374,7 @@ bool Usb::open(const std::string& device_str) {
 }
 
 void Usb::close() {
+  cancel();
   event_handler_ = nullptr;
   if (device_ != nullptr) {
     for (int i = 0; i < descriptors_->get_interface_count(); ++i) {
@@ -388,6 +392,8 @@ void Usb::close() {
 
 void Usb::cancel() {
   transfers_.cancel();
+  asio::deadline_timer tmr(io_ctx_, posix_time::milliseconds(50));
+  tmr.wait();
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

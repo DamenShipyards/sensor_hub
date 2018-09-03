@@ -31,15 +31,15 @@ enable_testing()
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 set(CPP_SOURCES
-  ${SENSORHUB_SOURCE_DIR}/log.cpp
-  ${SENSORHUB_SOURCE_DIR}/usb.cpp
-  ${SENSORHUB_SOURCE_DIR}/config.cpp
+  ${SENSORHUB_SOURCE_DIR}/loop.cpp
   ${SENSORHUB_SOURCE_DIR}/xsens.cpp
   ${SENSORHUB_SOURCE_DIR}/device.cpp
-  ${SENSORHUB_SOURCE_DIR}/loop.cpp
-  ${SENSORHUB_SOURCE_DIR}/http.cpp
-  ${SENSORHUB_SOURCE_DIR}/quantities.cpp
   ${SENSORHUB_SOURCE_DIR}/datetime.cpp
+  ${SENSORHUB_SOURCE_DIR}/usb.cpp
+  ${SENSORHUB_SOURCE_DIR}/http.cpp
+  ${SENSORHUB_SOURCE_DIR}/log.cpp
+  ${SENSORHUB_SOURCE_DIR}/config.cpp
+  ${SENSORHUB_SOURCE_DIR}/quantities.cpp
 )
 
 file(GLOB FMTLIB_SOURCES
@@ -70,6 +70,11 @@ add_executable(sensor_hub
   ${CPP_SOURCES}
   ${FMTLIB_SOURCES}
 )
+
+set_target_properties(sensor_hub PROPERTIES
+    LINK_FLAGS "-Wl,--no-as-needed"
+    COMPILE_FLAGS "-ggdb -Wall -pedantic"
+  )
 
 macro(new_test NEW_TEST)
   add_executable(${NEW_TEST} 
