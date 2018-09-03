@@ -43,8 +43,8 @@ extern int enter_loop();
  * Stop the application main loop. 
  *
  * This will first close all devices and services and then call 
- * boost::asio::io_context::stop(). When all devices and services close
- * in an orderly fashion the latter will not have been necessary. 
+ * boost::asio::io_context::stop(). When all devices and services closed
+ * in an orderly fashion, the latter will not have been redundant. 
  */
 extern void stop_loop();
 

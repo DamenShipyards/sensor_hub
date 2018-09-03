@@ -118,6 +118,9 @@ private:
 };
 
 
+/**
+ * Device that controls an IO port that satisfies asio's basic_io_object interface
+ */
 template <typename Port, class ContextProvider=Context_provider>
 struct Port_device: public Device {
   Port_device()
@@ -142,18 +145,24 @@ protected:
   std::unique_ptr<Port> port_;
 };
 
-
+//! Unique pointer to a device
 using Device_ptr = std::unique_ptr<Device>;
 
 //! Container with pointers to devices
 using Devices = std::vector<Device_ptr>;
 
+/**
+ * Base class for a device factory
+ */
 struct Device_factory_base {
   virtual Device_ptr get_instance() {
     return Device_ptr(nullptr);
   }
 };
 
+/**
+ * Device factory for "DeviceType"
+ */
 template <class DeviceType>
 struct Device_factory: public Device_factory_base {
   typedef DeviceType device_type;
@@ -162,10 +171,17 @@ struct Device_factory: public Device_factory_base {
   }
 };
 
+//! Unique pointer to a device factory
 using Device_factory_ptr = std::unique_ptr<Device_factory_base>;
-using Device_factory_map = std::map<std::string, Device_factory_ptr>;
 
+/**
+ * Add a device factory to the global device factory registry
+ */
 extern Device_factory_ptr& add_device_factory(const std::string& name, Device_factory_ptr&& device_factory);
+
+/**
+ * Have a factory from the factory registry create a device instance
+ */
 extern Device_ptr create_device(const std::string& name);
 
 #endif

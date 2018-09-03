@@ -15,6 +15,11 @@
 
 int Device::seq_ = 0;
 
+using Device_factory_map = std::map<std::string, Device_factory_ptr>;
+
+/**
+ * Return singleton device factory registry
+ */
 Device_factory_map& get_device_factory_map() {
   static Device_factory_map instance;
   return instance;
