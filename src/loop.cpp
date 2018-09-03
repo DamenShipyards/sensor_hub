@@ -31,31 +31,53 @@ namespace posix_time = boost::posix_time;
 
 
 struct Service {
-  Service(): ctx_(), http_server_(nullptr), devices_() {
-  }
+  // Disable copying and assignment for singleton service
   Service(Service const&) = delete;
   void operator=(Service const&) = delete;
 
+  /**
+   * Return singleton instance
+   */
   static Service& get_instance() {
     static Service instance; 
     return instance;
   }
+
+  /**
+   * Get service IO context
+   */
   asio::io_context& get_context() {
     return ctx_;
   }
+
+  /**
+   * Start built-in HTTP server
+   */
   void start_http_server(const std::string& host, const int port) {
     log(level::info, "Starting HTTP server");
     http_server_ = std::make_unique<Http_server>(ctx_, host, port);
   }
+
+  /**
+   * Stop built-in HTTP server
+   */
   void stop_http_server() {
     if (http_server_ != nullptr) {
       log(level::info, "Stopping HTTP server");
       http_server_->stop();
     }
   }
+
+  /**
+   * Returns device list associated with this service
+   */
   Devices& get_devices() {
     return devices_;
   }
+
+  /**
+   * Setup the service device list from provided configuration
+   */
   void setup_devices(boost::property_tree::ptree& cfg) {
     int device_count = cfg.get("devices.count", 0);
     for (int i = 0; i < device_count; ++i) {
@@ -67,11 +89,22 @@ struct Service {
       devices_.push_back(std::move(device));
     }
   }
+
+  /**
+   * Called every second
+   */
   void one_second_service(asio::yield_context yield) {
     asio::deadline_timer tmr(ctx_, posix_time::seconds(1));
     tmr.async_wait(yield);
     asio::spawn(ctx_, boost::bind(&Service::one_second_service, this, _1));
   }
+
+  /**
+   * Called every ten seconds
+   *
+   * Checks all devices for their connection status and tries to connect
+   * them if they weren't already
+   */
   void ten_seconds_service(asio::yield_context yield) {
     asio::deadline_timer tmr(ctx_, posix_time::seconds(10));
     tmr.async_wait(yield);
@@ -82,12 +115,26 @@ struct Service {
       }
     }
   }
+
+  /**
+   * Run service
+   *
+   * Sets up 1 and 10 second clocks for doing regular servicing and
+   * calls run on boost::asio's io_context. Blocks until explicitly 
+   * stopped.
+   */
   int run() {
     asio::spawn(ctx_, boost::bind(&Service::one_second_service, this, _1));
     asio::spawn(ctx_, boost::bind(&Service::ten_seconds_service, this, _1));
     return static_cast<int>(ctx_.run());
   }
+
 private:
+  /**
+   * Private default constructor for singleton
+   */
+  Service(): ctx_(), http_server_(nullptr), devices_() {
+  }
   asio::io_context ctx_;
   std::unique_ptr<Http_server> http_server_;
   Devices devices_;
