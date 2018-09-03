@@ -62,6 +62,7 @@ void log(level lvl, const char* format, const As&... args) {
   log(lvl, ss.str());
 }
 
+extern void flush_log();
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

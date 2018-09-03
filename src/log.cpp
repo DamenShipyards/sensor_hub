@@ -15,6 +15,7 @@
 #include "log.h"
 
 #include <sstream>
+#include <memory>
 
 #include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -79,23 +80,28 @@ struct Logger {
   sources::severity_logger_mt<level>& get_log() {
     return log_;
   }
+  void flush() {
+    file_sink_->flush();
+  }
 private:
   Logger(): log_() {
     add_common_attributes();
-    add_file_log(
-      keywords::file_name = get_log_filename(),
-      keywords::open_mode = std::ios_base::app,
-        keywords::rotation_size = 10 * 1024 * 1024,
-        keywords::format =  
-          expressions::stream 
-            << expressions::format_date_time<boost::posix_time::ptime>(
-              "TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
-            << expressions::attr<level, level_tag>("Severity")
-            << expressions::smessage
-    );
+    file_sink_ = 
+        add_file_log(
+            keywords::file_name = get_log_filename(),
+            keywords::open_mode = std::ios_base::app,
+              keywords::rotation_size = 10 * 1024 * 1024,
+              keywords::format =  
+                expressions::stream 
+                  << expressions::format_date_time<boost::posix_time::ptime>(
+                    "TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
+                  << expressions::attr<level, level_tag>("Severity")
+                  << expressions::smessage
+        );
   }
 
   sources::severity_logger_mt<level> log_;
+  boost::shared_ptr<sinks::synchronous_sink<sinks::text_file_backend> > file_sink_;
   
   pth get_log_dir() {
 #   ifdef _WIN32
@@ -127,5 +133,9 @@ private:
 
 sources::severity_logger_mt<level>& get_log() {
   return Logger::get_instance().get_log();
+}
+
+void flush_log() {
+  Logger::get_instance().flush();
 }
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
