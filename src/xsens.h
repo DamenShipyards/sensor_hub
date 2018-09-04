@@ -27,9 +27,9 @@ typedef const byte_t cbyte_t;
 typedef std::vector<byte_t> data_t;
 typedef const data_t cdata_t;
 
-cbyte_t packet_start = 0xFA;
-cbyte_t sys_command = 0xFF;
-cbyte_t conf_command = 0x01;
+extern cbyte_t packet_start;
+extern cbyte_t sys_command;
+extern cbyte_t conf_command;
 
 extern cdata_t goto_config_command;
 extern cdata_t goto_measurement_command;

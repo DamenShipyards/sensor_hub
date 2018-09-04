@@ -26,6 +26,10 @@ static auto& mti_g_710_serial_factory =
     add_device_factory("xsens_mti_g_710_serial", std::move(std::make_unique<Xsens_MTi_G_710_serial_factory>()));
 
 
+cbyte_t packet_start = 0xFA;
+cbyte_t sys_command = 0xFF;
+cbyte_t conf_command = 0x01;
+
 cdata_t goto_config_command = {packet_start, sys_command, 0x30, 0x00, 0xD1};
 cdata_t goto_measurement_command = {packet_start, sys_command, 0x10, 0x00, 0xF1};
 cdata_t config_ok = { packet_start, sys_command, 0x31, 0x00, 0xD0};
