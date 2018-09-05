@@ -103,6 +103,7 @@ new_test(test_device)
 new_test(test_quantities)
 new_test(test_datetime)
 new_test(test_xsens)
+new_test(test_tools)
 
 if(DOXYGEN_FOUND)
   set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)

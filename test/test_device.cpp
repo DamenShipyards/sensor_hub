@@ -1,5 +1,4 @@
 #define BOOST_TEST_MODULE log_test
-#include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
 
@@ -9,6 +8,11 @@
 
 #include <iostream>
 #include <typeinfo>
+
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include "test_common.h"
 
 namespace posix_time = boost::posix_time;
 
@@ -72,14 +76,15 @@ BOOST_AUTO_TEST_CASE(factory_test) {
 }
 
 
-struct Ctx {
-  static asio::io_context& get_context() {
-    static asio::io_context instance;
-    return instance;
+struct File: public asio::posix::stream_descriptor {
+  using asio::posix::stream_descriptor::stream_descriptor;
+  void open(const std::string name) {
+    assign(::open(name.c_str(), O_RDONLY));
   }
 };
 
-struct Conn_device: public Port_device<asio::serial_port, Ctx> {
+
+struct Conn_device: public Port_device<File, Ctx> {
   bool connected = false;
   bool initialize(asio::yield_context yield) override {
     set_id("test_connection_device_id");
@@ -93,9 +98,17 @@ struct Conn_device: public Port_device<asio::serial_port, Ctx> {
 BOOST_AUTO_TEST_CASE(connection_test) {
   asio::io_context& ctx = Ctx::get_context();
   Conn_device dev;
+  asio::streambuf buf;
   dev.set_name("Test Connection Device");
-  dev.set_connection_string("/dev/ttyS0");
+  dev.set_connection_string("/dev/zero");
   asio::spawn(ctx, boost::bind(&Conn_device::connect, &dev, _1));
+  asio::spawn(ctx, 
+      [&] (asio::yield_context yield) {
+        auto bytes_read = asio::async_read(dev.get_port(), buf.prepare(16), yield);
+        buf.commit(bytes_read);
+      }
+  );
   ctx.run();
   BOOST_TEST(dev.connected);
+  BOOST_TEST(buf.size() == 16);
 }

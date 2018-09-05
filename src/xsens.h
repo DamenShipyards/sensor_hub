@@ -7,7 +7,7 @@
  * (C) 2018 Damen Shipyards. All rights reserved.
  * \license
  * This software is proprietary. Any use without written
- * permission from the copyright holder is strictly 
+ * permission from the copyright holder is strictly
  * forbidden.
  */
 
@@ -27,19 +27,37 @@ typedef const byte_t cbyte_t;
 typedef std::vector<byte_t> data_t;
 typedef const data_t cdata_t;
 
+namespace data {
+
 extern cbyte_t packet_start;
 extern cbyte_t sys_command;
 extern cbyte_t conf_command;
 
-extern cdata_t goto_config_command;
-extern cdata_t goto_measurement_command;
+extern cdata_t goto_config;
+extern cdata_t config_ack;
 
-extern cdata_t config_ok;
-extern cdata_t measurement_ok;
+extern cdata_t goto_measurement;
+extern cdata_t measurement_ack;
+
+extern cdata_t set_option_flags;
+extern cdata_t option_flags_ack;
+
+extern cdata_t req_reset;
+extern cdata_t reset_ack;
+
+extern cdata_t req_product_code;
+extern cdata_t req_utc_time;
+extern cdata_t req_firmware_rev;
+
+extern cdata_t set_output_configuration;
+extern cdata_t output_configuration_ack;
+
+}
 
 
 template <typename Port, typename ContextProvider=Context_provider>
 struct Xsens: public Port_device<Port, ContextProvider> {
+
   bool exec_command(cdata_t& command, cdata_t& expected_response, asio::yield_context yield) {
     Port& port = this->get_port();
 
@@ -63,8 +81,8 @@ struct Xsens: public Port_device<Port, ContextProvider> {
         size_t bytes_read = port.async_read_some(read_buf.prepare(0x1000), yield);
         read_buf.commit(bytes_read);
         response.insert(
-            response.end(), 
-            asio::buffers_begin(read_buf.data()), 
+            response.end(),
+            asio::buffers_begin(read_buf.data()),
             asio::buffers_begin(read_buf.data()) + bytes_read);
         read_buf.consume(bytes_read);
         response_found = contains(response, expected_response);
@@ -84,15 +102,24 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   bool goto_config(asio::yield_context yield) {
-    return exec_command(goto_config_command, config_ok, yield);
+    return exec_command(data::goto_config, data::config_ack, yield);
   }
 
   bool goto_measurement(asio::yield_context yield) {
-    return exec_command(goto_measurement_command, measurement_ok, yield);
+    return exec_command(data::goto_measurement, data::measurement_ack, yield);
+  }
+
+  virtual bool set_output_configuration(asio::yield_context yield) {
+    return true;
+  }
+
+  virtual bool set_option_flags(asio::yield_context yield) {
+    return true;
   }
 
   bool initialize(asio::yield_context yield) override {
     return goto_config(yield)
+      && set_output_configuration(yield)
       && goto_measurement(yield);
   }
 };
@@ -100,11 +127,21 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
 template <typename Port, typename ContextProvider=Context_provider>
 struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
-  Xsens_MTi_G_710(): Xsens<Port>() {
+
+  Xsens_MTi_G_710(): Xsens<Port, ContextProvider>() {
     log(level::info, "Constructing Xsens_MTi_G_710");
   }
+
   ~Xsens_MTi_G_710() override {
     log(level::info, "Destroying Xsens_MTi_G_710");
+  }
+
+  bool set_output_configuration(asio::yield_context yield) override {
+    return this->exec_command(data::set_output_configuration, data::output_configuration_ack, yield);
+  }
+
+  bool set_option_flags(asio::yield_context yield) override {
+    return this->exec_command(data::set_option_flags, data::option_flags_ack, yield);
   }
 };
 

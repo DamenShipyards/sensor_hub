@@ -7,7 +7,6 @@
  */
 #define BOOST_TEST_MODULE usb_test
 #define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
-#include <boost/test/unit_test.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/bind.hpp>
@@ -16,11 +15,11 @@
 #include <exception>
 #include <vector>
 
-#include <stdio.h>
-#include <string.h>
 
 #include "../src/usb.h"
 #include "../src/tools.h"
+
+#include "test_common.h"
 
 // Data types for data communicated with the sensor
 typedef unsigned char byte_t;
@@ -28,75 +27,9 @@ typedef const byte_t cbyte_t;
 typedef std::vector<byte_t> data_t;
 typedef const data_t cdata_t;
 
-BOOST_AUTO_TEST_CASE(usb_test_contains) {
-  cdata_t c1{0x01, 0x02, 0x03, 0x04, 0x04};
-  cdata_t c2{0x01, 0x02, 0x03};
-  cdata_t c3{0x02, 0x03, 0x04};
-  cdata_t c4{0x03, 0x04, 0x04};
-  cdata_t c5{0x04};
-  cdata_t c6{0x04, 0x04};
-  cdata_t c7{0x04, 0x04, 0x04};
-  cdata_t c8{0x04, 0x04, 0x01};
-  cdata_t c9{};
-  cdata_t c10{0x01};
-  cdata_t c11{0x01, 0x03};
-  BOOST_TEST(contains(c1, c1));
-  BOOST_TEST(contains(c1, c2));
-  BOOST_TEST(contains(c1, c3));
-  BOOST_TEST(contains(c1, c4));
-  BOOST_TEST(contains(c1, c5));
-  BOOST_TEST(contains(c1, c6));
-  BOOST_TEST(!contains(c1, c7));
-  BOOST_TEST(!contains(c1, c8));
-  BOOST_TEST(!contains(c2, c1));
-  BOOST_TEST(!contains(c9, c10));
-  BOOST_TEST(contains(c10, c9));
-  BOOST_TEST(!contains(c1, c11));
-  BOOST_TEST(contains_at(c1, c2) == 0);
-  BOOST_TEST(contains_at(c1, c3) == 1);
-  BOOST_TEST(contains_at(c1, c4) == 2);
-  BOOST_TEST(contains_at(c1, c5) == 3);
-  BOOST_TEST(contains_at(c1, c6) == 3);
-  BOOST_TEST(contains_at(c1, c7) == -1);
-}
 
-namespace ut = boost::unit_test;
-namespace tt = boost::test_tools;
 namespace asio = boost::asio;
 
-
-std::string usb_device;
-
-tt::assertion_result usb_available(ut::test_unit_id test_id) {
-  const char* device_str = getenv("USB");
-  if (device_str != nullptr) {
-    usb_device = device_str;
-  }
-  else {
-    usb_device = "";
-  }
-  if (usb_device == "") {
-    usb_device = "2639:0017";
-  }
-
-  FILE *lsusb = popen("/usr/bin/lsusb", "r");
-  if (lsusb == nullptr) {
-    std::cout << "Failed to popen lsusb" << std::endl;
-    return false;
-  }
-  char buffer[1024];
-  char* line = fgets(buffer, sizeof(buffer), lsusb);
-  bool usb_present = false;
-  while (line != nullptr) {
-    usb_present = strstr(line, usb_device.c_str()) != nullptr;
-    if (usb_present)
-      break;
-    line = fgets(buffer, sizeof(buffer), lsusb);
-  }
-  pclose(lsusb);
-
-  return usb_present;
-}
 
 static bool read_returned = false;
 static size_t bytes_handled = 0;
