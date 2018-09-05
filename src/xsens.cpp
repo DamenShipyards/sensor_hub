@@ -26,7 +26,23 @@ static auto& mti_g_710_serial_factory =
     add_device_factory("xsens_mti_g_710_serial", std::move(std::make_unique<Xsens_MTi_G_710_serial_factory>()));
 
 
+std::ostream& operator<<(std::ostream& os, cdata_t data) {
+  os << std::hex;
+  bool tween = false;
+  for (auto&& b: data) {
+    if (tween)
+      os << " ";
+    else 
+      tween = true;
+    os << std::setfill('0') << std::setw(2) << int(b);
+  }
+  os << std::dec;
+  return os;
+}
+
+
 namespace data {
+
 cbyte_t packet_start = 0xFA;
 cbyte_t sys_command = 0xFF;
 cbyte_t conf_command = 0x01;

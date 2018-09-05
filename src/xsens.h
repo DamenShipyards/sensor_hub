@@ -18,6 +18,10 @@
 #include "loop.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/bind.hpp>
+
+#include <ios>
+#include <ostream>
 
 namespace posix_time = boost::posix_time;
 
@@ -54,6 +58,7 @@ extern cdata_t output_configuration_ack;
 
 }
 
+extern std::ostream& operator<<(std::ostream& os, cdata_t data);
 
 template <typename Port, typename ContextProvider=Context_provider>
 struct Xsens: public Port_device<Port, ContextProvider> {
@@ -101,6 +106,25 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return true;
   }
 
+  void handle_data(cdata_t& data) {
+  }
+
+  void poll_data(asio::yield_context yield) {
+    log(level::debug, "Polling Xsens");
+    asio::streambuf buf;
+    while (this->is_connected()) {
+      auto bytes_read = this->get_port().async_read_some(buf.prepare(512), yield);
+      log(level::debug, "Read % bytes", bytes_read);
+      if (bytes_read > 0) {
+        buf.commit(bytes_read);
+        auto buf_begin = asio::buffers_begin(buf.data());
+        cdata_t data = cdata_t(buf_begin, buf_begin + buf.size());
+        buf.consume(bytes_read);
+        handle_data(data);
+      }
+    }
+  }
+
   bool goto_config(asio::yield_context yield) {
     return exec_command(data::goto_config, data::config_ack, yield);
   }
@@ -117,10 +141,32 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return true;
   }
 
+  void start_polling() {
+    auto executor = this->get_port().get_executor();
+    asio::post(
+        executor, 
+        [executor, this]() {
+          asio::spawn(executor, boost::bind(&Xsens::poll_data, this, _1));
+        }
+    );
+  }
+
   bool initialize(asio::yield_context yield) override {
-    return goto_config(yield)
-      && set_output_configuration(yield)
-      && goto_measurement(yield);
+    bool result = goto_config(yield)
+        && set_output_configuration(yield)
+        && goto_measurement(yield);
+
+
+    if (result) {
+      log(level::info, "Successfully initialized Xsens device");
+    }
+    else {
+      log(level::error, "Failed to initialize Xsens device");
+    }
+
+    start_polling();
+
+    return result;
   }
 };
 
