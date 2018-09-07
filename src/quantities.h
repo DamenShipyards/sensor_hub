@@ -72,6 +72,9 @@ enum class Quantity {
   rr,  ///< 29: Roll rate, angular velocity about X axis
   pr,  ///< 30: Pitch rate, angular velocity about Y axis
   yr,  ///< 31: Yaw rate, angular velocity about Z axis
+  fax, ///< 32: X component of free acceleration, acceleration with respect to earth surface
+  fay, ///< 33: Y component of free acceleration, acceleration with respect to earth surface
+  faz, ///< 34: Z component of free acceleration, acceleration with respect to earth surface
   end, ///< Enumeration end marker. Do not use
 };
 
@@ -115,6 +118,9 @@ QUANTITY_NAME(q4);
 QUANTITY_NAME(rr);
 QUANTITY_NAME(pr);
 QUANTITY_NAME(yr);
+QUANTITY_NAME(fax);
+QUANTITY_NAME(fay);
+QUANTITY_NAME(faz);
 
 template <Quantity quantity>
 constexpr inline decltype(auto) get_quantity_name() {
