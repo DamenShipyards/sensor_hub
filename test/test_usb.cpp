@@ -51,26 +51,22 @@ BOOST_AUTO_TEST_CASE(usb_read_test, *ut::precondition(usb_available)) {
   Usb usb(io_context);
   read_returned = false;
   bytes_read = 0;
-  if (usb.open(usb_device)) {
-    try {
-      // One read with callback
-      asio::async_read(usb, b.prepare(128), handle_read);
-      // ... and one read with coroutine
-      asio::spawn(io_context, boost::bind(read, boost::ref(usb), _1));
-      io_context.run();
-    }
-    catch (std::exception& e) {
-      std::cout << "Exception: " << e.what() << std::endl;
-      std::cout.flush();
-    }
-    BOOST_TEST(bytes_handled == 128U);
-    BOOST_TEST(read_returned == true);
-    BOOST_TEST(bytes_read == 128U);
-    usb.close();
+  try {
+    usb.open(usb_device);
+    // One read with callback
+    asio::async_read(usb, b.prepare(128), handle_read);
+    // ... and one read with coroutine
+    asio::spawn(io_context, boost::bind(read, boost::ref(usb), _1));
+    io_context.run();
   }
-  else {
-    BOOST_TEST(false, "Failed to open device");
+  catch (std::exception& e) {
+    std::cout << "Exception: " << e.what() << std::endl;
+    std::cout.flush();
   }
+  usb.close();
+  BOOST_TEST(bytes_handled == 128U);
+  BOOST_TEST(read_returned == true);
+  BOOST_TEST(bytes_read == 128U);
 }
 
 static data_t response1;
@@ -115,22 +111,18 @@ void xsens(Usb& usb, boost::asio::yield_context yield) {
 BOOST_AUTO_TEST_CASE(usb_xsens_test, *ut::precondition(usb_available)) {
   Usb usb(io_context);
   read_returned = false;
-  if (usb.open(usb_device)) {
-    try {
-      io_context.restart();
-      boost::asio::spawn(io_context, boost::bind(xsens, boost::ref(usb), _1));
-      io_context.run();
-    }
-    catch (std::exception& e) {
-      std::cout << "Exception: " << e.what() << std::endl;
-      std::cout.flush();
-    }
-    BOOST_TEST(read_returned == true);
-    BOOST_TEST(response2 == measurement_ok);
-    BOOST_TEST(i > 0);
-    usb.close();
+  try {
+    usb.open(usb_device);
+    io_context.restart();
+    boost::asio::spawn(io_context, boost::bind(xsens, boost::ref(usb), _1));
+    io_context.run();
   }
-  else {
-    BOOST_TEST(false, "Failed to open device");
+  catch (std::exception& e) {
+    std::cout << "Exception: " << e.what() << std::endl;
+    std::cout.flush();
   }
+  usb.close();
+  BOOST_TEST(read_returned == true);
+  BOOST_TEST(response2 == measurement_ok);
+  BOOST_TEST(i > 0);
 }

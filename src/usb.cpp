@@ -357,19 +357,24 @@ bool Usb::open(const std::string& device_str, int seq) {
   return open(vendor_id, product_id, seq);
 }
 
-bool Usb::open(const std::string& device_str) {
+void Usb::open(const std::string& device_str) {
   std::vector<std::string> fields;
   boost::split(fields, device_str, [](char c){ return c == ','; });
+  bool result = false;
   switch (fields.size()) {
     case 1:
-      return open(fields[0], 0);
+      result = open(fields[0], 0);
+      break;
     case 2: {
       int seq = std::stoi(fields[1]);
-      return open(fields[0], seq);
+      result = open(fields[0], seq);
+      break;
     }
     default:
       log(level::error, "Invalid USB connection string: %", device_str);
-      return false;
+  }
+  if (!result) {
+    throw Usb_exception("USB open failure");
   }
 }
 
