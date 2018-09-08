@@ -8,8 +8,7 @@
 #include <thread>
 #include <iomanip>
 
-BOOST_AUTO_TEST_CASE(datetime_test)
-{
+BOOST_AUTO_TEST_CASE(datetime_test) {
   std::cout << "BOOST SYSTEM: " << chrono::system_clock::now().time_since_epoch().count() << '\n';
 #ifdef BOOST_CHRONO_HAS_CLOCK_STEADY
   std::cout << "BOOST STEADY: " << chrono::steady_clock::now().time_since_epoch().count() << '\n';
