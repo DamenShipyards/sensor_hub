@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_CASE(construction_test)
   asio::io_context& ctx = Ctx::get_context();
   Device_ptr dev = std::make_unique<Xsens_MTi_G_710<Usb, Ctx> >();
 
-  asio::deadline_timer tmr(ctx, posix_time::milliseconds(500));
+  asio::deadline_timer tmr(ctx, posix_time::milliseconds(2500));
   tmr.async_wait(
       [&ctx](boost::system::error_code ec) {
         ctx.stop();
