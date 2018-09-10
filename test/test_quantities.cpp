@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(iteration_test)
     ++count;
   }
 
-  BOOST_TEST(count == 32);
+  BOOST_TEST(count == 35);
   constexpr const char* const qn = Quantity_name<Quantity::yr>::value;
   std::string s(qn);
   BOOST_TEST(s == "yr");
