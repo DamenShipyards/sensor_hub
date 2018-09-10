@@ -37,6 +37,8 @@ enum class level {
 extern boost::log::sources::severity_logger_mt<level>& get_log();
 extern boost::log::sources::logger& get_device_log();
 extern void init_device_log(const std::string& device_name);
+extern void set_log_level(level lvl);
+
 
 template <typename M>
 inline void log(level lvl, const M& msg) {
@@ -73,6 +75,24 @@ inline void log(const std::string& device_name, const M& msg) {
 }
 
 extern void flush_log();
+
+inline void set_log_level(const std::string& slevel) {
+  if (slevel == "debug") {
+    set_log_level(level::debug);
+  }
+  else if (slevel == "info") {
+    set_log_level(level::info);
+  }
+  else if (slevel == "warning") {
+    set_log_level(level::warning);
+  }
+  else if (slevel == "error") {
+    set_log_level(level::error);
+  }
+  else {
+    log(level::error, "Unexpected log level: %", slevel);
+  }
+}
 
 
 #endif

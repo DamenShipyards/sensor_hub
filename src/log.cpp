@@ -116,6 +116,9 @@ struct Logger {
     fs::create_directories(p);
     return p;
   }
+  void set_log_level(level lvl) {
+    file_sink_->set_filter(!expressions::has_attr(tag_attr) && severity >= lvl);
+  }
 private:
   Logger(): log_(), device_log_() {
     add_common_attributes();
@@ -171,5 +174,9 @@ void init_device_log(const std::string& device_name) {
   core::get()->add_sink(sink);
 }
 
+
+void set_log_level(level lvl) {
+  Logger::get_instance().set_log_level(lvl);
+}
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

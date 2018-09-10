@@ -151,9 +151,11 @@ private:
 
 int enter_loop() {
   int result = 0;
-  Service& service = Service::get_instance();
 
   boost::property_tree::ptree& cfg = get_config();
+  set_log_level(cfg.get("logging.level", "info"));
+
+  Service& service = Service::get_instance();
 
   if (cfg.get("http.active", false)) {
     service.start_http_server(cfg.get("http.address", "localhost"), cfg.get("http.port", 12080));
