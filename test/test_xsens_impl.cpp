@@ -45,7 +45,8 @@ BOOST_AUTO_TEST_CASE(xsens_parse_date_time_test) {
   BOOST_TEST(result);
   BOOST_TEST(date_time.hour == 8);
   BOOST_TEST(date_time.minute == 57);
-  BOOST_TEST(date_time.get_values()[0] == 1536569876.3429);
+  BOOST_TEST(date_time.get_values()[0].quantity == Quantity::ut);
+  BOOST_TEST(date_time.get_values()[0].value == 1536569876.3429);
 }
 
 BOOST_AUTO_TEST_CASE(data_converter_test) {
@@ -65,10 +66,12 @@ BOOST_AUTO_TEST_CASE(xsens_parse_data_test) {
   for (auto& packet: packets) {
     boost::apply_visitor(visitor, packet);
   }
-  parser::values_type values = visitor.data;
+  auto values = visitor.values;
   BOOST_TEST(values.size() == 4);
-  BOOST_TEST(values[0] == to_float(data.data() + 3));
-  BOOST_TEST(values[1] == -to_float(data.data() + 7));
-  BOOST_TEST(values[2] == -to_float(data.data() + 11));
-  BOOST_TEST(values[3] == 1536569876.3429);
+  BOOST_TEST(values[0].value == to_float(data.data() + 3));
+  BOOST_TEST(values[0].quantity == Quantity::ax);
+  BOOST_TEST(values[1].value == -to_float(data.data() + 7));
+  BOOST_TEST(values[1].quantity == Quantity::ay);
+  BOOST_TEST(values[2].value == -to_float(data.data() + 11));
+  BOOST_TEST(values[3].value == 1536569876.3429);
 }

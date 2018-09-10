@@ -27,6 +27,11 @@ struct Enum_iter {
     ++val_;
     return *this;
   }
+  Enum_iter operator++(int) {
+    Enum_iter result = *this;
+    ++val_;
+    return result;
+  }
   E operator*() { return static_cast<E>(val_); }
   Enum_iter&& begin() { return std::move(Enum_iter(begin_val)); }
   Enum_iter&& end() { return std::move(Enum_iter(end_val)); }

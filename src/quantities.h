@@ -172,6 +172,17 @@ struct Quantity_value: public Data_quantity, public Data_value {};
 struct Stamped_value: public Data_stamp, public Data_value {};
 struct Stamped_quantity: public Data_quantity, public Stamped_value {};
 
+inline Stamped_quantity stamped_quantity(double stamp, Quantity_value&& qv) {
+  return {qv.quantity, stamp, qv.value};
+}
+inline Stamped_quantity stamped_quantity(double stamp, const Quantity_value& qv) {
+  return {qv.quantity, stamp, qv.value};
+}
+
+inline std::ostream& operator<<(std::ostream& os, Quantity quantity) {
+  os << get_quantity_name(quantity);
+  return os;
+}
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

@@ -69,4 +69,6 @@ BOOST_AUTO_TEST_CASE(data_assignment_test) {
   BOOST_TEST(dv.value == sv.value);
   dv = qv;
   BOOST_TEST(dv.value == qv.value);
+  sq = {Quantity::ut, sv};
+  sq = stamped_quantity(150.0, qv);
 }

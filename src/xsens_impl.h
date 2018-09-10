@@ -23,7 +23,7 @@
 
 namespace gregorian = boost::gregorian;
 
-namespace data {
+namespace command {
 
 cbyte_t packet_start = 0xFA;
 cbyte_t sys_command = 0xFF;
@@ -107,15 +107,13 @@ using x3::_attr;
 using x3::_val;
 using x3::_pass;
 
-using values_type = std::vector<double>;
-
 struct Data_packet {
   Data_packet(): id(0), len(0) {}
   Data_packet(const uint16_t did): id(did), len(0) {}
   uint16_t id;
   int len;
-  virtual values_type get_values() const {
-    return values_type();
+  virtual Values_type get_values() const {
+    return Values_type();
   }
 };
 
@@ -123,6 +121,7 @@ template <int SIZE>
 struct Date_time_value: public Data_packet {
   static constexpr uint8_t valid_utc = 0x04;
   static constexpr uint16_t did = XDI_UtcTime;
+  static constexpr Quantity quantity = Quantity::ut;
   uint32_t nano;
   uint16_t year;
   uint8_t month;
@@ -132,17 +131,17 @@ struct Date_time_value: public Data_packet {
   uint8_t second;
   uint8_t flags;
 
-  values_type get_values() const override {
+  Values_type get_values() const override {
     using namespace posix_time;
     if (flags & valid_utc) {
       ptime t(
           gregorian::date(year, month, day), 
           hours(hour) + minutes(minute) + seconds(second) + microseconds(nano/1000)
       );
-      return values_type{1E-6 * (t - unix_epoch).total_microseconds()};
+      return Values_type{{quantity, 1E-6 * (t - unix_epoch).total_microseconds()}};
     }
     else {
-      return values_type();
+      return Values_type();
     }
   }
 
@@ -166,10 +165,12 @@ struct RadConverter: UnitaryConverter<DIM> {
   }
 };
 
-template<uint16_t DID, uint16_t COORD, uint16_t FORMAT, int DIM, template<int D> typename Converter=UnitaryConverter>
+template<uint16_t DID, uint16_t COORD, uint16_t FORMAT, int DIM, Quantity QUANT, 
+         template<int D> typename Converter=UnitaryConverter>
 struct Data_value: public Data_packet {
   typedef Converter<DIM> converter;
   static constexpr uint16_t did = DID | COORD | FORMAT;
+  static constexpr Quantity quantity = QUANT;
   Data_value(): Data_packet(did), data() {}
 
   typedef typename std::conditional<FORMAT == XDI_SubFormatFloat, float,
@@ -180,11 +181,12 @@ struct Data_value: public Data_packet {
 
   std::vector<data_type> data;
 
-  values_type get_values() const override {
-    values_type result;
+  Values_type get_values() const override {
+    Values_type result;
     int dim = 0;
+    Quantity_iter qi(quantity);
     for (auto& value: data) {
-      result.push_back(converter::factor(dim++) * static_cast<double>(value));
+      result.push_back({*qi++, converter::factor(dim++) * static_cast<double>(value)});
     }
     return result;
   }
@@ -201,16 +203,16 @@ struct Data_value: public Data_packet {
 
 
 using Date_time = Date_time_value<12>;
-using Acceleration = Data_value<XDI_Acceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3>;
-using Free_acceleration = Data_value<XDI_FreeAcceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3>;
-using Rate_of_turn = Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3>;
-using Lat_lon = Data_value<XDI_LatLon, XDI_CoordSysEnu, XDI_SubFormatDouble, 2, RadConverter>;
-using Magnetic_flux = Data_value<XDI_MagneticField, XDI_CoordSysEnu, XDI_SubFormatFloat, 3>;
-using Velocity = Data_value<XDI_VelocityXYZ, XDI_CoordSysEnu, XDI_SubFormatFloat, 3>;
-using Altitude_ellipsoid = Data_value<XDI_AltitudeEllipsoid, XDI_CoordSysEnu, XDI_SubFormatFloat, 1>;
-using Altitude_msl = Data_value<XDI_AltitudeMsl, XDI_CoordSysEnu, XDI_SubFormatFloat, 1>;
-using Euler_angles = Data_value<XDI_EulerAngles, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, RadConverter>;
-using Quaternion = Data_value<XDI_Quaternion, XDI_CoordSysEnu, XDI_SubFormatFloat, 4>;
+using Acceleration = Data_value<XDI_Acceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ax>;
+using Free_acceleration = Data_value<XDI_FreeAcceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::fax>;
+using Rate_of_turn = Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::rr, RadConverter>;
+using Lat_lon = Data_value<XDI_LatLon, XDI_CoordSysEnu, XDI_SubFormatDouble, 2, Quantity::la, RadConverter>;
+using Magnetic_flux = Data_value<XDI_MagneticField, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::mx>;
+using Velocity = Data_value<XDI_VelocityXYZ, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::vx>;
+using Altitude_ellipsoid = Data_value<XDI_AltitudeEllipsoid, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::h1>;
+using Altitude_msl = Data_value<XDI_AltitudeMsl, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::h2>;
+using Euler_angles = Data_value<XDI_EulerAngles, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ro, RadConverter>;
+using Quaternion = Data_value<XDI_Quaternion, XDI_CoordSysEnu, XDI_SubFormatFloat, 4, Quantity::q1>;
 
 auto set_did = [](auto& ctx) { _val(ctx).id = _attr(ctx); };
 auto set_len = [](auto& ctx) { _val(ctx).len = static_cast<int>(_attr(ctx)); };
@@ -274,10 +276,10 @@ struct Packet_parser::Data_packets
 };
 
 struct Packet_parser::Data_visitor {
-  std::vector<double> data;
+  Values_queue values;
   void operator()(const Data_packet& data_packet) {
     for (auto& value: data_packet.get_values()) {
-      data.push_back(value);
+      values.push_back(value);
     }
   }
 };
@@ -297,7 +299,7 @@ Packet_parser::~Packet_parser() {
 void Packet_parser::parse() {
   uint8_t mid = 0;
   int len = 0;
-  uint8_t sum = data::sys_command;
+  uint8_t sum = command::sys_command;
   Packet_parser& self = *this;
 
   static auto set_mid = [&](auto& ctx) { mid = _attr(ctx); sum += mid; };
@@ -312,7 +314,7 @@ void Packet_parser::parse() {
   static auto have_all = [&](auto& ctx) { _pass(ctx) = len < 0; };
 
   //! Start of a packet
-  static auto preamble = byte_(data::packet_start) >> byte_(data::sys_command);
+  static auto preamble = byte_(command::packet_start) >> byte_(command::sys_command);
   //! Anything that is not the start of a packet
   static auto junk = *(byte_ - preamble);
   //! The actual data we're looking for
@@ -338,8 +340,8 @@ void Packet_parser::parse() {
 }
 
 
-const std::vector<double>& Packet_parser::get_data() const {
-  return visitor->data;
+Values_queue& Packet_parser::get_values() {
+  return visitor->values;
 }
 
 } // parser

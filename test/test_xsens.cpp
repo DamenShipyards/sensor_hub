@@ -14,13 +14,14 @@ BOOST_AUTO_TEST_CASE(construction_test) {
 BOOST_AUTO_TEST_CASE(connection_test) {
   asio::io_context& ctx = Ctx::get_context();
   Xsens_MTi_G_710<Usb, Ctx> xsens;
-  asio::deadline_timer tmr(ctx, posix_time::milliseconds(2500));
+  asio::deadline_timer tmr(ctx, posix_time::milliseconds(5000));
   tmr.async_wait(
       [&ctx](boost::system::error_code ec) {
         ctx.stop();
       }
   );
 
+  xsens.set_name("xsens-test");
   xsens.set_connection_string("2639:0017");
   BOOST_TEST(!xsens.is_connected());
   asio::spawn(ctx, 

@@ -110,13 +110,11 @@ protected:
     id_ = id;
   }
 
-  void insert_value(Stamped_quantity& value) {
+  void insert_value(Stamped_quantity&& value) {
     auto item = data_.try_emplace(value.quantity);
     item.first->second.push_back(value);
     std::stringstream ss;
-    ss << std::setprecision(15) << value.stamp 
-       << "," << get_quantity_name(value.quantity) 
-       << "," << std::setprecision(15) << value.value;
+    ss << std::setprecision(15) << value.stamp << "," << value.quantity << "," << value.value;
     log(name_, ss.str());
   }
 

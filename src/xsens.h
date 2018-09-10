@@ -16,6 +16,7 @@
 #include "usb.h"
 #include "tools.h"
 #include "spirit_x3.h"
+#include "datetime.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
@@ -39,7 +40,7 @@ typedef std::vector<byte_t> data_t;
 typedef const data_t cdata_t;
 
 
-namespace data {
+namespace command {
 
 extern cbyte_t packet_start;
 extern cbyte_t sys_command;
@@ -74,6 +75,9 @@ namespace parser {
 
 namespace x3 = boost::spirit::x3;
 
+using Values_type = std::vector<Quantity_value>;
+using Values_queue = std::deque<Quantity_value>;
+
 struct Packet_parser {
   Packet_parser();
   ~Packet_parser();
@@ -94,7 +98,7 @@ struct Packet_parser {
     parse();
   }
   void parse();
-  const std::vector<double>& get_data() const;
+  Values_queue& get_values();
 };
 
 } //parser
@@ -153,6 +157,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     asio::streambuf buf;
     while (this->is_connected()) {
       auto bytes_read = this->get_port().async_read_some(buf.prepare(512), yield);
+      double stamp = get_time();
       log(level::debug, "Read % bytes", bytes_read);
       if (bytes_read > 0) {
         buf.commit(bytes_read);
@@ -166,16 +171,21 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 #endif
         parser_.parse(buf_begin, buf_end);
         buf.consume(bytes_read);
+        auto& values = parser_.get_values();
+        while (!values.empty()) {
+          this->insert_value(stamped_quantity(stamp, values.front()));
+          values.pop_front();
+        }
       }
     }
   }
 
   bool goto_config(asio::yield_context yield) {
-    return exec_command(data::goto_config, data::config_ack, yield);
+    return exec_command(command::goto_config, command::config_ack, yield);
   }
 
   bool goto_measurement(asio::yield_context yield) {
-    return exec_command(data::goto_measurement, data::measurement_ack, yield);
+    return exec_command(command::goto_measurement, command::measurement_ack, yield);
   }
 
   virtual bool set_output_configuration(asio::yield_context yield) {
@@ -235,11 +245,11 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
   }
 
   bool set_output_configuration(asio::yield_context yield) override {
-    return this->exec_command(data::set_output_configuration, data::output_configuration_ack, yield);
+    return this->exec_command(command::set_output_configuration, command::output_configuration_ack, yield);
   }
 
   bool set_option_flags(asio::yield_context yield) override {
-    return this->exec_command(data::set_option_flags, data::option_flags_ack, yield);
+    return this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
   }
 };
 
