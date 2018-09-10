@@ -1,9 +1,7 @@
 #define BOOST_TEST_MODULE parse_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/spirit/home/x3.hpp>
-#include <boost/spirit/home/x3/binary/binary.hpp>
-#include <boost/spirit/home/x3/auxiliary/eps.hpp>
+#include "../src/spirit_x3.h"
 
 #include <iostream>
 #include <ostream>
@@ -11,6 +9,7 @@
 #include <string>
 #include <cstdint>
 #include <algorithm>
+
 
 namespace x3 = boost::spirit::x3;
 using namespace std::string_literals;
@@ -46,6 +45,7 @@ BOOST_AUTO_TEST_CASE(spirit_basic_test) {
 
   BOOST_TEST((cur == data.end()));
 }
+
 
 BOOST_AUTO_TEST_CASE(spirit_compound_test) {
   // Match a preamble
@@ -84,4 +84,98 @@ BOOST_AUTO_TEST_CASE(spirit_compound_test) {
   BOOST_TEST(result2);
   BOOST_TEST(content == expected_content);
   BOOST_TEST(checksum == 4);
+
+  data = "\x08\x00\xff\xfa"s;
+  cur = data.begin();
+  auto result3 = x3::parse(cur, data.end(), p2);
+  BOOST_TEST(!result3);
 }
+
+struct Unknown {
+  Unknown(): _id(0), len(0) {}
+  Unknown(uint8_t id): _id(id), len(0) {}
+  uint8_t _id;
+  int len;
+  virtual const int get_val() const {
+    return 0;
+  }
+};
+
+template <uint8_t DataId>
+struct Id_data_packet: public Unknown {
+  Id_data_packet(): Unknown(DataId) {}
+  uint8_t len;
+  uint8_t val1;
+  const int get_val() const override {
+    return static_cast<int>(val1);
+  }
+
+};
+
+template <uint8_t DataId>
+struct Id_data_packet2: public Id_data_packet<DataId> {
+  uint16_t val2;
+  const int get_val() const override {
+    return static_cast<int>(val2);
+  }
+};
+
+using id_pack_1 = Id_data_packet2<1>;
+using id_pack_2 = Id_data_packet<2>;
+using id_pack_3 = Id_data_packet<4>;
+
+
+x3::rule<class uknown, Unknown> const unknown = "unknown";
+x3::rule<class id_data_packet1, id_pack_1> const id_data_packet1 = "id_data_packet1";
+x3::rule<class id_data_packet2, id_pack_2> const id_data_packet2 = "id_data_packet2";
+x3::rule<class id_data_packet3, id_pack_3> const id_data_packet3 = "id_data_packet3";
+
+auto set_id = [](auto& ctx) { x3::_val(ctx)._id = x3::_attr(ctx); };
+auto set_len = [](auto& ctx) { x3::_val(ctx).len = x3::_attr(ctx); };
+auto more = [](auto& ctx) { x3::_pass(ctx) = x3::_val(ctx).len-- > 0; };
+auto done = [](auto& ctx) { x3::_pass(ctx) = x3::_val(ctx).len < 0; };
+auto unknown_def = x3::byte_[set_id] >> x3::byte_[set_len] >> *(x3::eps[more] >> x3::byte_) >> x3::eps[done];
+//auto data_packet_def = x3::byte_ >> x3::byte_ >> x3::byte_ >> x3::byte_;
+auto id_data_packet1_def = x3::byte_(1) >> x3::byte_ >> x3::byte_ >> x3::big_word;
+auto id_data_packet2_def = x3::byte_(2) >> x3::byte_ >> x3::byte_;
+auto id_data_packet3_def = x3::byte_(4) >> x3::byte_ >> x3::byte_;
+
+
+BOOST_SPIRIT_DEFINE(
+    unknown,
+    id_data_packet1,
+    id_data_packet2,
+    id_data_packet3
+)
+
+
+BOOST_FUSION_ADAPT_STRUCT(id_pack_1, len, val1, val2)
+BOOST_FUSION_ADAPT_STRUCT(id_pack_2, len, val1)
+BOOST_FUSION_ADAPT_STRUCT(id_pack_3, len, val1)
+
+struct Visitor {
+  std::vector<int> values;
+  void operator() (const Unknown& u) {
+    values.push_back(u.get_val());
+  }
+};
+
+BOOST_AUTO_TEST_CASE(spirit_def_test) {
+  std::string data = "\x01\x03\x08\x00\x01\x03\x02\x05\x06\x02\x01\x03\x04\x01\x04"s;
+  std::vector<boost::variant<id_pack_1, id_pack_2, id_pack_3, Unknown> > packets;
+  auto cur = data.begin();
+  auto data_parser = *(id_data_packet1 | id_data_packet2 | id_data_packet3 | unknown);
+  x3::parse(cur, data.end(), data_parser, packets);
+  BOOST_TEST(packets.size() == 4);
+  Visitor v;
+  for (auto const&p: packets) {
+    boost::apply_visitor(v, p);
+  }
+  BOOST_TEST(v.values.size() == 4);
+  BOOST_TEST(v.values[0] == 1);
+  BOOST_TEST(v.values[1] == 0);
+  BOOST_TEST(v.values[2] == 3);
+  BOOST_TEST(v.values[3] == 4);
+}
+
+

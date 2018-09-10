@@ -21,10 +21,11 @@ find_package(Doxygen)
 
 set (CMAKE_CXX_STANDARD 17)
 
-set(SENSORHUB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(FMTLIB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/src)
-set(FMTLIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include)
-set(SENSORHUB_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test)
+set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(FMTLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/src")
+set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")
+set(SENSORHUB_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
+set(XSENS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/xsens/include")
 
 enable_testing()
 
@@ -51,6 +52,7 @@ include_directories(
   ${Boost_INCLUDE_DIR}
   ${LIBUSB_1_INCLUDE_DIRS}
   ${FMTLIB_INCLUDE_DIR}
+  ${XSENS_INCLUDE_DIR}
 )
 
 link_directories(
@@ -77,14 +79,16 @@ set_target_properties(sensor_hub PROPERTIES
   )
 
 macro(new_test NEW_TEST)
+  set(TEST_SOURCES ${ARGN})
+  list(TRANSFORM TEST_SOURCES PREPEND ${SENSORHUB_SOURCE_DIR}/ )
   add_executable(${NEW_TEST} 
     ${SENSORHUB_TEST_DIR}/${NEW_TEST}.cpp
-    ${CPP_SOURCES}
+    ${TEST_SOURCES}
     ${FMTLIB_SOURCES}
   )
   set_target_properties(${NEW_TEST} PROPERTIES 
     LINK_FLAGS "-Wl,--no-as-needed"
-    COMPILE_FLAGS "-ggdb -Wall -pedantic"
+    COMPILE_FLAGS "-ggdb -Wall -pedantic -DDEBUG"
     RUNTIME_OUTPUT_DIRECTORY test
   )
   target_link_libraries(${NEW_TEST} 
@@ -96,15 +100,16 @@ macro(new_test NEW_TEST)
 endmacro()
 
 new_test(test_asio)
-new_test(test_log)
-new_test(test_usb)
+new_test(test_log log.cpp)
 new_test(test_serial)
-new_test(test_device)
-new_test(test_quantities)
-new_test(test_datetime)
-new_test(test_xsens)
+new_test(test_quantities quantities.cpp)
 new_test(test_tools)
 new_test(test_parse)
+new_test(test_usb log.cpp usb.cpp)
+new_test(test_device log.cpp device.cpp)
+new_test(test_datetime datetime.cpp)
+new_test(test_xsens xsens.cpp usb.cpp device.cpp log.cpp datetime.cpp)
+new_test(test_xsens_impl datetime.cpp)
 
 if(DOXYGEN_FOUND)
   set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)

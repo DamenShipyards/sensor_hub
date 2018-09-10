@@ -23,20 +23,20 @@ struct Port {
 static bool destructor_called = false;
 
 template<typename P>
-struct SomeDevice: public Device {
-  ~SomeDevice() override {
+struct Some_device: public Device {
+  ~Some_device() override {
     destructor_called = true;
   }
 
   P port;
 };
 
-using MyDevice = SomeDevice<Port>;
+using My_device = Some_device<Port>;
 
 
 BOOST_AUTO_TEST_CASE(container_test) {
   Devices devices;
-  devices.emplace_back(std::make_unique<MyDevice>());
+  devices.emplace_back(std::make_unique<My_device>());
   for (auto& device: devices) {
     BOOST_TEST(device->get_id() == "id_0");
   }
@@ -45,8 +45,8 @@ BOOST_AUTO_TEST_CASE(container_test) {
   BOOST_TEST(destructor_called);
 }
 
-struct IdNameDevice: public MyDevice {
-  IdNameDevice(): MyDevice() {
+struct IdNameDevice: public My_device {
+  IdNameDevice(): My_device() {
     set_id("test_id");
     set_name("test_name");
   }
@@ -54,8 +54,8 @@ struct IdNameDevice: public MyDevice {
 
 
 BOOST_AUTO_TEST_CASE(id_name_test) {
-  MyDevice dev1;
-  MyDevice dev2;
+  My_device dev1;
+  My_device dev2;
 
   BOOST_TEST(dev1.get_id() == "id_1");
   BOOST_TEST(dev1.get_name() == "device_1");
@@ -68,9 +68,10 @@ BOOST_AUTO_TEST_CASE(id_name_test) {
 }
 
 BOOST_AUTO_TEST_CASE(factory_test) {
-  Device_ptr dev = create_device("xsens_mti_g_710_usb");
-  dev->set_name("My XSens Sensor");
-  BOOST_TEST(typeid(*dev).hash_code() == typeid(Xsens_MTi_G_710<Usb>).hash_code());
+  add_device_factory("my_device", std::move(std::make_unique<Device_factory<My_device> >()));
+  Device_ptr dev = create_device("my_device");
+  dev->set_name("My Sensor");
+  BOOST_TEST(typeid(*dev).hash_code() == typeid(My_device).hash_code());
   dev = nullptr;
   BOOST_TEST(dev.get() == nullptr);
 }

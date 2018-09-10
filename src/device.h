@@ -26,7 +26,6 @@
 namespace asio = boost::asio;
 
 #include "quantities.h"
-#include "loop.h"
 #include "log.h"
 
 
@@ -125,7 +124,7 @@ private:
 /**
  * Device that controls an IO port supporting asio's basic_io_object interface
  */
-template <typename Port, class ContextProvider=Context_provider>
+template <typename Port, class ContextProvider>
 struct Port_device: public Device {
   Port_device()
       : Device(),

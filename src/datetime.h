@@ -35,6 +35,7 @@ namespace date_time = boost::date_time;
  * Get UTC unix time stamp from central clock
  */
 extern double get_time();
+extern const posix_time::ptime unix_epoch; 
 
 /**
  * Adjust central clock

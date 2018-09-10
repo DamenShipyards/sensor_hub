@@ -7,11 +7,13 @@
 #include <memory>
 
 
-BOOST_AUTO_TEST_CASE(construction_test)
-{
-  asio::io_context& ctx = Ctx::get_context();
+BOOST_AUTO_TEST_CASE(construction_test) {
   Device_ptr dev = std::make_unique<Xsens_MTi_G_710<Usb, Ctx> >();
+}
 
+BOOST_AUTO_TEST_CASE(connection_test) {
+  asio::io_context& ctx = Ctx::get_context();
+  Xsens_MTi_G_710<Usb, Ctx> xsens;
   asio::deadline_timer tmr(ctx, posix_time::milliseconds(2500));
   tmr.async_wait(
       [&ctx](boost::system::error_code ec) {
@@ -19,13 +21,13 @@ BOOST_AUTO_TEST_CASE(construction_test)
       }
   );
 
-  dev->set_connection_string("2639:0017");
-  BOOST_TEST(!dev->is_connected());
+  xsens.set_connection_string("2639:0017");
+  BOOST_TEST(!xsens.is_connected());
   asio::spawn(ctx, 
       [&](asio::yield_context yield) {
-        dev->connect(yield);
+        xsens.connect(yield);
       }
   );
   ctx.run();
-  BOOST_TEST(dev->is_connected());
+  BOOST_TEST(xsens.is_connected());
 }

@@ -15,13 +15,20 @@
 #include "log.h"
 #include "usb.h"
 #include "tools.h"
-#include "loop.h"
+#include "spirit_x3.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
 
+
+#include <xsens/xsxbusmessageid.h>
+#include <xsens/xsdataidentifier.h>
+#include <xsens/xsdataidentifiervalue.h>
+
 #include <ios>
 #include <ostream>
+#include <deque>
+#include <iterator>
 
 namespace posix_time = boost::posix_time;
 
@@ -30,6 +37,7 @@ typedef unsigned char byte_t;
 typedef const byte_t cbyte_t;
 typedef std::vector<byte_t> data_t;
 typedef const data_t cdata_t;
+
 
 namespace data {
 
@@ -58,16 +66,49 @@ extern cdata_t output_configuration_ack;
 
 }
 
+
 extern std::ostream& operator<<(std::ostream& os, cdata_t data);
 
-template <typename Port, typename ContextProvider=Context_provider>
+
+namespace parser {
+
+namespace x3 = boost::spirit::x3;
+
+struct Packet_parser {
+  Packet_parser();
+  ~Packet_parser();
+  struct Data_packets;
+  struct Data_visitor;
+  std::deque<uint8_t> queue;
+  std::vector<uint8_t> data;
+  std::unique_ptr<Data_packets> data_packets;
+  std::unique_ptr<Data_visitor> visitor;
+  typename std::deque<uint8_t>::iterator cur;
+
+  template <typename Iterator>
+  void parse(Iterator begin, Iterator end) {
+    if (queue.size() > 0x1000)
+      // Something is wrong. Hose the queue
+      queue.clear();
+    queue.insert(queue.end(), begin, end);
+    parse();
+  }
+  void parse();
+  const std::vector<double>& get_data() const;
+};
+
+} //parser
+
+
+
+template <typename Port, typename ContextProvider>
 struct Xsens: public Port_device<Port, ContextProvider> {
 
   bool exec_command(cdata_t& command, cdata_t& expected_response, asio::yield_context yield) {
     Port& port = this->get_port();
 
     // Set a timeout for the command to complete
-    asio::deadline_timer timeout(ContextProvider::get_context(), posix_time::milliseconds(200));
+    asio::deadline_timer timeout(ContextProvider::get_context(), posix_time::milliseconds(400));
     timeout.async_wait(
         [&](const boost::system::error_code& error) {
           if (!error)
@@ -106,8 +147,6 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return true;
   }
 
-  void handle_data(cdata_t& data) {
-  }
 
   void poll_data(asio::yield_context yield) {
     log(level::debug, "Polling Xsens");
@@ -118,9 +157,15 @@ struct Xsens: public Port_device<Port, ContextProvider> {
       if (bytes_read > 0) {
         buf.commit(bytes_read);
         auto buf_begin = asio::buffers_begin(buf.data());
-        cdata_t data = cdata_t(buf_begin, buf_begin + buf.size());
+        auto buf_end = buf_begin + buf.size();
+#ifdef DEBUG
+        cdata_t data(buf_begin, buf_end);
+        std::stringstream ss;
+        ss << data;
+        log(level::debug, "XSens received: %", ss.str());
+#endif
+        parser_.parse(buf_begin, buf_end);
         buf.consume(bytes_read);
-        handle_data(data);
       }
     }
   }
@@ -144,7 +189,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   void start_polling() {
     auto executor = this->get_port().get_executor();
     asio::post(
-        executor, 
+        executor,
         [executor, this]() {
           asio::spawn(executor, boost::bind(&Xsens::poll_data, this, _1));
         }
@@ -153,6 +198,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
   bool initialize(asio::yield_context yield) override {
     bool result = goto_config(yield)
+        && set_option_flags(yield)
         && set_output_configuration(yield)
         && goto_measurement(yield);
 
@@ -168,10 +214,16 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
     return result;
   }
+
+  const parser::Packet_parser& get_parser() const {
+    return parser_;
+  }
+private:
+  parser::Packet_parser parser_;
 };
 
 
-template <typename Port, typename ContextProvider=Context_provider>
+template <typename Port, typename ContextProvider>
 struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
 
   Xsens_MTi_G_710(): Xsens<Port, ContextProvider>() {
