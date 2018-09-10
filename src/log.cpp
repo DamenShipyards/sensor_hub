@@ -20,6 +20,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
+#include <boost/log/sinks.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
@@ -27,6 +28,7 @@
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/utility/manipulators/to_log.hpp>
 #include <boost/log/support/date_time.hpp>
+#include <boost/log/sinks/async_frontend.hpp>
 
 #ifdef _WIN32
 #include <shlobj.h>
@@ -38,6 +40,7 @@ namespace fs = boost::filesystem;
 using pth = boost::filesystem::path;
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level)
+BOOST_LOG_ATTRIBUTE_KEYWORD(tag_attr, "Tag", std::string)
 
 static const char* level_strings[] = {
   " - DEBUG   - ",
@@ -80,29 +83,12 @@ struct Logger {
   sources::severity_logger_mt<level>& get_log() {
     return log_;
   }
+  sources::logger& get_device_log() {
+    return device_log_;
+  }
   void flush() {
     file_sink_->flush();
   }
-private:
-  Logger(): log_() {
-    add_common_attributes();
-    file_sink_ = 
-        add_file_log(
-            keywords::file_name = get_log_filename(),
-            keywords::open_mode = std::ios_base::app,
-              keywords::rotation_size = 10 * 1024 * 1024,
-              keywords::format =  
-                expressions::stream 
-                  << expressions::format_date_time<boost::posix_time::ptime>(
-                    "TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
-                  << expressions::attr<level, level_tag>("Severity")
-                  << expressions::smessage
-        );
-  }
-
-  sources::severity_logger_mt<level> log_;
-  boost::shared_ptr<sinks::synchronous_sink<sinks::text_file_backend> > file_sink_;
-  
   pth get_log_dir() {
 #   ifdef _WIN32
     PWSTR szPath = nullptr;
@@ -125,8 +111,36 @@ private:
 #   endif
     return p;
   }
+  pth get_device_log_dir() {
+    pth p = get_log_dir() / "device_logs";
+    fs::create_directories(p);
+    return p;
+  }
+private:
+  Logger(): log_(), device_log_() {
+    add_common_attributes();
+    file_sink_ = 
+        add_file_log(
+            keywords::file_name = get_log_filename(),
+            keywords::open_mode = std::ios_base::app,
+            keywords::auto_flush = true,
+            keywords::rotation_size = 10 * 1024 * 1024,
+            keywords::format =  
+              expressions::stream 
+                << expressions::format_date_time<boost::posix_time::ptime>(
+                  "TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
+                << expressions::attr<level, level_tag>("Severity")
+                << expressions::smessage
+        );
+    file_sink_->set_filter(!expressions::has_attr(tag_attr));
+  }
+
+  sources::severity_logger_mt<level> log_;
+  sources::logger device_log_;
+  boost::shared_ptr<sinks::synchronous_sink<sinks::text_file_backend> > file_sink_;
+  
   pth get_log_filename() {
-    return  get_log_dir() / "sensor_hub_%N.log";
+    return  get_log_dir() / "sensor_hub.%N.log";
   }
 };
 
@@ -138,4 +152,24 @@ sources::severity_logger_mt<level>& get_log() {
 void flush_log() {
   Logger::get_instance().flush();
 }
+
+
+sources::logger& get_device_log() {
+  return Logger::get_instance().get_device_log();
+}
+
+void init_device_log(const std::string& device_name) {
+  typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
+  auto filename = Logger::get_instance().get_device_log_dir() / (device_name + ".%N.log");
+  auto sink = boost::make_shared<file_sink>(
+      keywords::file_name = filename,
+      keywords::open_mode = std::ios_base::app,
+      keywords::rotation_size = 10 * 1024 * 1024,
+      keywords::auto_flush = true
+  );
+  sink->set_filter(tag_attr == device_name);
+  core::get()->add_sink(sink);
+}
+
+
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
