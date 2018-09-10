@@ -18,6 +18,8 @@
 #include <memory>
 #include <exception>
 #include <map>
+#include <deque>
+#include <iomanip>
 
 #include <fmt/core.h>
 
@@ -28,6 +30,8 @@ namespace asio = boost::asio;
 #include "quantities.h"
 #include "log.h"
 
+using Data_queue = std::deque<Stamped_value>;
+using Data_map = std::map<Quantity, Data_queue>;
 
 /**
  * Base class for all sensor devices
@@ -36,7 +40,7 @@ namespace asio = boost::asio;
  */
 struct Device {
   Device(): id_(fmt::format("id_{:d}", seq_)), name_(fmt::format("device_{:d}", seq_)),
-            connected_(false) {
+            connected_(false), data_() {
     log(level::debug, "Constructing Device");
     ++seq_;
   }
@@ -59,11 +63,17 @@ struct Device {
 
   void set_name(const std::string& name) {
     log(level::debug, "Setting device name to \"%\"", name);
+    init_device_log(name);
     name_ = name;
   }
 
   virtual const bool get_value(const Quantity& quantity, Value_type& value) const {
-    return false;
+    auto it = data_.find(quantity);
+    if (it == data_.end() || it->second.empty()) {
+      return false;
+    }
+    value = it->second.back().value;
+    return true;
   }
 
   const Value_type get_value(const Quantity& quantity) const {
@@ -100,6 +110,16 @@ protected:
     id_ = id;
   }
 
+  void insert_value(Stamped_quantity& value) {
+    auto item = data_.try_emplace(value.quantity);
+    item.first->second.push_back(value);
+    std::stringstream ss;
+    ss << std::setprecision(15) << value.stamp 
+       << "," << get_quantity_name(value.quantity) 
+       << "," << std::setprecision(15) << value.value;
+    log(name_, ss.str());
+  }
+
   void set_connected(const bool connected) {
     if (connected == connected_) {
       log(level::warning, "Connected state of device was already: %", connected);
@@ -118,6 +138,7 @@ private:
   std::string name_;
   bool connected_;
   std::string connection_string_;
+  Data_map data_;
 };
 
 

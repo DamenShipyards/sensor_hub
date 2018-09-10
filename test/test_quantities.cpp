@@ -33,15 +33,19 @@ BOOST_AUTO_TEST_CASE(iteration_test)
 {
   int count = 0;
 
+  /* Muck around with index sequences ...
   print<1,2,3,4,5>();
   print(std::make_index_sequence<10>());
+  */
 
+  std::vector<std::string> qs;
   for (auto&& q: Quantity_iter()) {
-    std::cout << get_quantity_name(q) << std::endl;
+    qs.push_back(get_quantity_name(q));
     ++count;
   }
 
   BOOST_TEST(count == 35);
+  BOOST_TEST(qs[34] == "faz");
   constexpr const char* const qn = Quantity_name<Quantity::yr>::value;
   std::string s(qn);
   BOOST_TEST(s == "yr");
@@ -51,4 +55,18 @@ BOOST_AUTO_TEST_CASE(iteration_test)
   auto s2 = get_quantity_name(q);
   BOOST_TEST(s1 == "la");
   BOOST_TEST(s2 == "la");
+}
+
+BOOST_AUTO_TEST_CASE(data_assignment_test) {
+  Quantity_value qv = {Quantity::ut, 88.0};
+  Data_value dv;
+  Stamped_value sv = {100.0, 99.0};
+  Stamped_quantity sq = {Quantity::lo, 50.0, 1.0};
+  sv = sq;
+  dv = sv;
+  BOOST_TEST(sv.stamp == sq.stamp);
+  BOOST_TEST(sv.value == sq.value);
+  BOOST_TEST(dv.value == sv.value);
+  dv = qv;
+  BOOST_TEST(dv.value == qv.value);
 }

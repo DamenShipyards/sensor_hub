@@ -156,5 +156,22 @@ constexpr inline const char* get_quantity_name(Quantity quantity) {
   return get_quantity_name(quantity, quantity_sequence);
 }
 
+struct Data_quantity {
+  Quantity quantity;
+};
+
+struct Data_stamp {
+  Value_type stamp;
+};
+
+struct Data_value {
+  Value_type value;
+};
+
+struct Quantity_value: public Data_quantity, public Data_value {};
+struct Stamped_value: public Data_stamp, public Data_value {};
+struct Stamped_quantity: public Data_quantity, public Stamped_value {};
+
+
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
