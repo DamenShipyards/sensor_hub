@@ -293,7 +293,7 @@ void Request_handler::handle_request(const Request& req, Reply& rep) {
 
   // Fill out the reply to be sent to the client.
   rep.status = Reply::ok;
-  static const char buf[] = "Welcome to the Pleasure Dome!";
+  static const char buf[] = "Welcome to Damen Sensor Hub";
   rep.content.append(buf, sizeof(buf));
   rep.headers.resize(2);
   rep.headers[0].name = "Content-Length";
