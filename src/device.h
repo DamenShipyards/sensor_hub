@@ -29,6 +29,7 @@ namespace asio = boost::asio;
 
 #include "quantities.h"
 #include "log.h"
+#include "datetime.h"
 
 using Data_queue = std::deque<Stamped_value>;
 using Data_map = std::map<Quantity, Data_queue>;
@@ -40,7 +41,7 @@ using Data_map = std::map<Quantity, Data_queue>;
  */
 struct Device {
   Device(): id_(fmt::format("id_{:d}", seq_)), name_(fmt::format("device_{:d}", seq_)),
-            connected_(false), data_() {
+            connected_(false), data_(), enable_logging_(false) {
     log(level::debug, "Constructing Device");
     ++seq_;
   }
@@ -102,8 +103,26 @@ struct Device {
   const std::string& get_connection_string() const {
     return connection_string_;
   }
+
   void set_connection_string(const std::string& connection_string) {
     connection_string_ = connection_string;
+  }
+
+  void enable_logging(const bool value) {
+    enable_logging_ = value;
+    if (value) {
+      log(level::info, "Logging enabled for %", name_);
+    }
+    else {
+      log(level::info, "Logging disabled for %", name_);
+    }
+  }
+
+  void use_as_time_source(const bool value) {
+    use_as_time_source_ = value;
+    if (value) {
+      log(level::info, "Using % as time source", name_);
+    }
   }
 protected:
   void set_id(const std::string& id) {
@@ -113,9 +132,14 @@ protected:
   void insert_value(Stamped_quantity&& value) {
     auto item = data_.try_emplace(value.quantity);
     item.first->second.push_back(value);
-    std::stringstream ss;
-    ss << std::setprecision(15) << value.stamp << "," << value.quantity << "," << value.value;
-    log(name_, ss.str());
+    if (enable_logging_) {
+      std::stringstream ss;
+      ss << std::setprecision(15) << value.stamp << "," << value.quantity << "," << value.value;
+      log(name_, ss.str());
+    }
+    if (value.quantity == Quantity::ut && use_as_time_source_) {
+      adjust_clock(value.value);
+    }
   }
 
   void set_connected(const bool connected) {
@@ -130,6 +154,7 @@ protected:
       log(level::info, "Device \"%\" : % disconnected", name_, id_);
     }
   }
+
 private:
   static int seq_;
   std::string id_;
@@ -137,6 +162,8 @@ private:
   bool connected_;
   std::string connection_string_;
   Data_map data_;
+  bool enable_logging_;
+  bool use_as_time_source_;
 };
 
 

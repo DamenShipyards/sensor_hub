@@ -54,25 +54,12 @@ double get_test_time() {
 
 BOOST_AUTO_TEST_CASE(datetime_adjust)
 {
-  std::cout << std::setprecision(15);
-  // Starting out with 10 second difference
-  std::cout << get_time() << std::endl;
-  std::cout << get_test_time() << std::endl;
+  double diff = get_test_time() - get_time();
+  BOOST_TEST(diff > 9.9);
+  BOOST_TEST(diff < 10.1);
   // Adjust once
   adjust_clock(get_test_time());
-  double diff = get_test_time() - get_time();
-  BOOST_TEST(diff > 9.0);
-  BOOST_TEST(diff < 10.0);
-  // ... adjust a 100 times ...
-  for (int i = 0; i < 100; ++i) {
-    adjust_clock(get_test_time());
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
   diff = get_test_time() - get_time();
-  // ... and clock diff should be less than one second
-  BOOST_TEST(diff > 0.0); 
-  BOOST_TEST(diff < 1.0);
-  std::cout << std::setprecision(15);
-  std::cout << get_time() << std::endl;
-  std::cout << get_test_time() << std::endl;
+  BOOST_TEST(diff > 9.7);
+  BOOST_TEST(diff < 9.8);
 }

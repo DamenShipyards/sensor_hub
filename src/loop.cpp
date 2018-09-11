@@ -87,6 +87,8 @@ struct Service {
       Device_ptr device = create_device(device_type);
       device->set_name(cfg.get(fmt::format("{:s}.name", device_section), "missing_device_name"));
       device->set_connection_string(cfg.get(fmt::format("{:s}.connection_string", device_section), "missing_connection_string"));
+      device->enable_logging(cfg.get(fmt::format("{:s}.enable_logging", device_section), false));
+      device->use_as_time_source(cfg.get(fmt::format("{:s}.use_as_time_source", device_section), false));
       devices_.push_back(std::move(device));
     }
   }

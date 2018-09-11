@@ -36,14 +36,18 @@ struct Clock {
     return value_;
   }
   void adjust(const double& towards_time) {
-    double diff = towards_time - get_time();
-    offset_ += adjust_rate_ * diff;
+    double t = get_time();
+    if ((t - last_adjust_) > 1) {
+      double diff = towards_time - t;
+      offset_ += adjust_rate_ * diff;
+    }
+    last_adjust_ = t;
   }
   void set_adjust_rate(const double& adjust_rate) {
     adjust_rate_ = adjust_rate;
   }
 private:
-  Clock(): value_(0), offset_(0), adjust_rate_(DEFAULT_ADJUST_RATE) {
+  Clock(): value_(0), offset_(0), adjust_rate_(DEFAULT_ADJUST_RATE), last_adjust_(0) {
     auto dt_now = date_time::microsec_clock<posix_time::ptime>::universal_time();
     auto sys_now = chrono::system_clock::now().time_since_epoch();
     
@@ -65,6 +69,7 @@ private:
   double value_;
   double offset_;
   double adjust_rate_;
+  double last_adjust_;
   static const double rate_;
 };
 

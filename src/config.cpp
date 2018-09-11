@@ -100,6 +100,8 @@ private:
     config_.put("device0.type", "xsens_mti_g_170_usb");
     config_.put("device0.name", "Xsens-MTi-G-710");
     config_.put("device0.connection_string", "2639:0017,0");
+    config_.put("device0.enable_logging", true);
+    config_.put("device0.use_as_time_source", false);
   }
 };
 
