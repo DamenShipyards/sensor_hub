@@ -13,6 +13,7 @@
 /msvc/sensor_hub.vcxproj.user
 /msvc/version.aps
 /msvc/gitrev.txt
+/msvc/version.rc
 
 # I use this as local build directory
 /build
