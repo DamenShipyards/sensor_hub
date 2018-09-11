@@ -45,8 +45,8 @@
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>sensor_hub</TargetName>
-    <IncludePath>..\3rdparty\fmt\include;..\3rdparty\libusb\include;..\3rdparty\xsens\include;C:\boost_1_67_0;$(IncludePath)</IncludePath>
-    <LibraryPath>..\3rdparty\libusb\lib;C:\boost_1_67_0\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\3rdparty\fmt\include;..\3rdparty\libusb\include;..\3rdparty\xsens\include;C:\boost;$(IncludePath)</IncludePath>
+    <LibraryPath>..\3rdparty\libusb\lib;C:\boost\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>sensor_hub</TargetName>
