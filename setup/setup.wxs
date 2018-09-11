@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <?include config.wxi ?>
   <Product Id="*" UpgradeCode="{a63fce4e-8bfa-11e8-8127-408d5cb38438}" Version="$(var.Version)" Language="1033" Name="Damen $(var.LongName)" Manufacturer="Damen Shipyards Gorinchem">
-    <Package InstallerVersion="300" Compressed="yes" Description="Sensor data collection, processing and redistribution" />
+    <Package InstallerVersion="301" Compressed="yes" Description="Sensor data collection, processing and redistribution" />
     <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes" IgnoreRemoveFailure="yes" DowngradeErrorMessage="A later version of [ProductName] is already installed. Uninstall it first if you want to use this version. Setup will now exit." />
     <Condition Message="This application is only supported on Windows 7, or higher."><![CDATA[Installed OR (VersionNT >= 600)]]></Condition>
     <Condition Message="This application is only supported on 64 bit Windows."><![CDATA[Installed OR VersionNT64]]></Condition>
@@ -37,6 +37,7 @@
 	  <Component Id="Libraries" Guid="{5cdd4138-b5d4-11e8-85c2-077f20dccfae}">
 	    <File Id="libusb.dll" Source="..\3rdparty\libusb\lib\libusb-1.0.dll" />
 	  </Component>
+	  <Merge Id="VCRuntime" SourceFile="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.15.26706\MergeModules\Microsoft_VC141_CRT_x64.msm"  DiskId="1" Language="1033"/>
     </DirectoryRef>
     <DirectoryRef Id="ProgramMenu$(var.ShortName)">
       <Component Id="ApplicationShortcuts" Guid="{2aa381b2-8bfb-11e8-9551-408d5cb38438}">
@@ -53,6 +54,7 @@
 	  <ComponentRef Id="ApplicationShortcuts" />
 	  <ComponentRef Id="Documents" />
 	  <ComponentRef Id="Libraries" />
+	  <MergeRef Id="VCRuntime" />
     </Feature>
     <!-- (Un)Install the windows service -->
     <SetProperty Id="InstallService" Value='"[APPLICATIONROOTDIRECTORY]\$(var.ShortName).exe" install' After="CostFinalize" />
