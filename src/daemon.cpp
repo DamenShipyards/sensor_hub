@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
   pth p{argv[0]};
   p = fs::canonical(p);
 
+  log(level::info, "****************************************");
   log(level::info, "Starting %", p);
   
   int result = 0;
