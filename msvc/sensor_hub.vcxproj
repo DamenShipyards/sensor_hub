@@ -45,7 +45,7 @@
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>sensor_hub</TargetName>
-    <IncludePath>..\3rdparty\fmt\include;..\3rdparty\libusb\include;C:\boost_1_67_0;$(IncludePath)</IncludePath>
+    <IncludePath>..\3rdparty\fmt\include;..\3rdparty\libusb\include;..\3rdparty\xsens\include;C:\boost_1_67_0;$(IncludePath)</IncludePath>
     <LibraryPath>..\3rdparty\libusb\lib;C:\boost_1_67_0\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -55,7 +55,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>x64;_WIN32_WINNT=0x0601;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>x64;_WIN32_WINNT=0x0601;NDEBUG;_CONSOLE;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader />
@@ -76,25 +76,29 @@
     <ClCompile Include="..\3rdparty\fmt\src\format.cc" />
     <ClCompile Include="..\3rdparty\fmt\src\posix.cc" />
     <ClCompile Include="..\src\config.cpp" />
+    <ClCompile Include="..\src\datetime.cpp" />
     <ClCompile Include="..\src\device.cpp" />
+    <ClCompile Include="..\src\http.cpp" />
     <ClCompile Include="..\src\log.cpp" />
     <ClCompile Include="..\src\loop.cpp" />
     <ClCompile Include="..\src\quantities.cpp" />
     <ClCompile Include="..\src\usb.cpp" />
     <ClCompile Include="..\src\winservice.cpp" />
-    <ClCompile Include="..\src\www.cpp" />
     <ClCompile Include="..\src\xsens.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\config.h" />
+    <ClInclude Include="..\src\datetime.h" />
     <ClInclude Include="..\src\device.h" />
+    <ClInclude Include="..\src\http.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\loop.h" />
     <ClInclude Include="..\src\quantities.h" />
+    <ClInclude Include="..\src\spirit_x3.h" />
     <ClInclude Include="..\src\tools.h" />
     <ClInclude Include="..\src\usb.h" />
-    <ClInclude Include="..\src\www.h" />
     <ClInclude Include="..\src\xsens.h" />
+    <ClInclude Include="..\src\xsens_impl.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />

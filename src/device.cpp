@@ -36,7 +36,7 @@ Device_ptr create_device(const std::string& name) {
     decltype(auto) factory = get_device_factory_map().at(name);
     return factory->get_instance();
   }
-  catch (std::out_of_range& e) {
+  catch (std::out_of_range&) {
     log(level::error, "Device with name % does not appear to be registered", name);
     throw;
   }

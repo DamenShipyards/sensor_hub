@@ -20,10 +20,20 @@
 #include <deque>
 #include <exception>
 #include <boost/asio.hpp>
+#ifdef __GNUG__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+#ifdef _MSC_VER
+#pragma warning(disable:4200)
+#endif
 #include <libusb-1.0/libusb.h>
+#ifdef _MSC_VER
+#pragma warning(default:4200)
+#endif
+#ifdef __GNUG__
 #pragma GCC diagnostic pop
+#endif
 
 #include "log.h"
 
@@ -225,10 +235,10 @@ struct Usb {
         device_,
         static_cast<uint8_t>(endpoint),
         operation_context->get_data().data(),
-        operation_context->get_data().size(),
+        static_cast<int>(operation_context->get_data().size()),
         handle_transfer<OperationContext>,
         operation_context,
-        500);
+        500U);
 
     int r = libusb_submit_transfer(transfer);
     if (r != 0) {
