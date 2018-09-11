@@ -1,4 +1,6 @@
 /manual/manual.texi
+/manual/Makefile
+/manual/manual
 
 /setup/output
 /setup/*.resp
