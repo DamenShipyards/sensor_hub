@@ -46,8 +46,8 @@ private:
     pth defaults_file{config_file.string() + ".default"};
     log(level::info, "Using configuration file: %", config_file);
     if (fs::exists(config_file)) {
-      load(config_file);
       save(defaults_file);
+      load(config_file);
     }
     else {
       save(config_file);
@@ -97,7 +97,7 @@ private:
     config_.put("http.address", "localhost");
     config_.put("http.port", 12080);    
     config_.put("devices.count", 1);
-    config_.put("device0.type", "xsens_mti_g_170_usb");
+    config_.put("device0.type", "xsens_mti_g_710_usb");
     config_.put("device0.name", "Xsens-MTi-G-710");
     config_.put("device0.connection_string", "2639:0017,0");
     config_.put("device0.enable_logging", true);

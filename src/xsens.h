@@ -112,7 +112,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     Port& port = this->get_port();
 
     // Set a timeout for the command to complete
-    asio::deadline_timer timeout(ContextProvider::get_context(), posix_time::milliseconds(400));
+    asio::deadline_timer timeout(ContextProvider::get_context(), posix_time::milliseconds(500));
     timeout.async_wait(
         [&](const boost::system::error_code& error) {
           if (!error)
@@ -156,26 +156,32 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     log(level::debug, "Polling Xsens");
     asio::streambuf buf;
     while (this->is_connected()) {
-      auto bytes_read = this->get_port().async_read_some(buf.prepare(512), yield);
-      double stamp = get_time();
-      log(level::debug, "Read % bytes", bytes_read);
-      if (bytes_read > 0) {
-        buf.commit(bytes_read);
-        auto buf_begin = asio::buffers_begin(buf.data());
-        auto buf_end = buf_begin + buf.size();
+      try {
+        auto bytes_read = this->get_port().async_read_some(buf.prepare(512), yield);
+        double stamp = get_time();
+        log(level::debug, "Read % bytes", bytes_read);
+        if (bytes_read > 0) {
+          buf.commit(bytes_read);
+          auto buf_begin = asio::buffers_begin(buf.data());
+          auto buf_end = buf_begin + buf.size();
 #ifdef DEBUG
-        cdata_t data(buf_begin, buf_end);
-        std::stringstream ss;
-        ss << data;
-        log(level::debug, "XSens received: %", ss.str());
+          cdata_t data(buf_begin, buf_end);
+          std::stringstream ss;
+          ss << data;
+          log(level::debug, "XSens received: %", ss.str());
 #endif
-        parser_.parse(buf_begin, buf_end);
-        buf.consume(bytes_read);
-        auto& values = parser_.get_values();
-        while (!values.empty()) {
-          this->insert_value(stamped_quantity(stamp, values.front()));
-          values.pop_front();
+          parser_.parse(buf_begin, buf_end);
+          buf.consume(bytes_read);
+          auto& values = parser_.get_values();
+          while (!values.empty()) {
+            this->insert_value(stamped_quantity(stamp, values.front()));
+            values.pop_front();
+          }
         }
+      }
+      catch (std::exception& e) {
+        log(level::error, "Error while polling Xsens: %", e.what());
+        this->disconnect();
       }
     }
   }

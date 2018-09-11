@@ -14,12 +14,11 @@ using pth = boost::filesystem::path;
 
 void segv_handler(int s) {
   std::cout << std::endl << "Caught Segmentation Fault" << std::endl;
-  flush_log();
   exit(s);
 }
 
 void ctrl_c_handler(int s) {
-  flush_log();
+  log(level::info, "Caught CTRL-C");
   stop_loop();
   std::cout << std::endl << "Caught CTRL-C" << std::endl;
   exit(s);
@@ -52,12 +51,11 @@ int main(int argc, char* argv[])
     result = enter_loop();
   }
   catch(std::exception& e) {
+    log(level::error, "Exception: %", e.what());
     std::cout << e.what() << std::endl;
-    flush_log();
     result =  1;
   }
   catch(...) {
-    flush_log();
     result = 2;
   }
   stop_loop();

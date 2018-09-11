@@ -168,7 +168,7 @@ void init_device_log(const std::string& device_name) {
       keywords::file_name = filename,
       keywords::open_mode = std::ios_base::app,
       keywords::rotation_size = 10 * 1024 * 1024,
-      keywords::auto_flush = true
+      keywords::auto_flush = false
   );
   sink->set_filter(tag_attr == device_name);
   core::get()->add_sink(sink);
