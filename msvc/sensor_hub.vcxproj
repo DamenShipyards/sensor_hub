@@ -99,8 +99,10 @@
     <ClInclude Include="..\src\usb.h" />
     <ClInclude Include="..\src\xsens.h" />
     <ClInclude Include="..\src\xsens_impl.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="sensor_hub.rc" />
     <ResourceCompile Include="version.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
