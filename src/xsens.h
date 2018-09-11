@@ -202,6 +202,10 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return true;
   }
 
+  virtual bool reset(asio::yield_context yield) {
+    return true;
+  }
+
   void start_polling() {
     auto executor = this->get_port().get_executor();
     asio::post(
@@ -221,12 +225,14 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
     if (result) {
       log(level::info, "Successfully initialized Xsens device");
+      start_polling();
     }
     else {
       log(level::error, "Failed to initialize Xsens device");
+      if (reset(yield)) {
+        log(level::info, "Successfully reset device");
+      }
     }
-
-    start_polling();
 
     return result;
   }
@@ -256,6 +262,10 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
 
   bool set_option_flags(asio::yield_context yield) override {
     return this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
+  }
+
+  bool reset(asio::yield_context yield) override {
+    return this->exec_command(command::req_reset, command::reset_ack, yield);
   }
 };
 
