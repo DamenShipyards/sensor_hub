@@ -238,7 +238,7 @@ struct Usb {
         static_cast<int>(operation_context->get_data().size()),
         handle_transfer<OperationContext>,
         operation_context,
-        500U);
+        2000U);
 
     int r = libusb_submit_transfer(transfer);
     if (r != 0) {
