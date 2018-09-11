@@ -1,0 +1,55 @@
+This is sensor_hub.info, produced by makeinfo version 6.5 from
+manual.texi.
+
+This manual is for Sensor Hub version 0.1.0.0
+
+   Copyright (C) 2018 Damen Shipyards Gorinchem
+
+
+File: sensor_hub.info,  Node: Top,  Next: Introduction,  Up: (dir)
+
+Sensor Hub 0.1.0.0 , Manual revision 1
+**************************************
+
+This manual is for Sensor Hub version 0.1.0.0
+
+* Menu:
+
+* Introduction:: Welcome
+* Index:: Index
+* References:: References
+
+
+File: sensor_hub.info,  Node: Introduction,  Next: Index,  Prev: Top,  Up: Top
+
+1 Introduction
+**************
+
+This is the user manual for Sensor Hub.
+
+   Sensor Hub is a daemon for collecting and redistributing sensor data.
+
+
+File: sensor_hub.info,  Node: Index,  Next: References,  Prev: Introduction,  Up: Top
+
+Index
+*****
+
+
+File: sensor_hub.info,  Node: References,  Prev: Index,  Up: Top
+
+References
+**********
+
+[XSENS_MTLL] Xsens, "MT Low Level Communication Documentation", 2017
+
+
+
+Tag Table:
+Node: Top173
+Node: Introduction446
+Node: Index674
+Node: References776
+Ref: XSENS_MTLL867
+
+End Tag Table

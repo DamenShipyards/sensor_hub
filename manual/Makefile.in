@@ -1,16 +1,34 @@
-all: html info pdf
+HHC_BINARY := $(shell `which hhc` --help 2>/dev/null)
+APP_NAME := sensor_hub
+
+all: html info pdf chm
+
 
 html: 
-	@CMAKE_CURRENT_SOURCE_DIR@/manual/texi2html --init-file @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.init --css-ref=@CMAKE_CURRENT_SOURCE_DIR@/manual/styles/styles.css --split=chapter --use-nodes --top-file=index.html --output=@CMAKE_CURRENT_BINARY_DIR@/manual/html @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.texi
 	mkdir -p @CMAKE_CURRENT_BINARY_DIR@/manual/html/images
 	mkdir -p @CMAKE_CURRENT_BINARY_DIR@/manual/html/styles
+	@CMAKE_CURRENT_SOURCE_DIR@/manual/texi2html --init-file @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.init --css-ref=@CMAKE_CURRENT_SOURCE_DIR@/manual/styles/styles.css --split=chapter --use-nodes --top-file=index.html --output=@CMAKE_CURRENT_BINARY_DIR@/manual/html @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.texi	
 	cp @CMAKE_CURRENT_SOURCE_DIR@/manual/images/* @CMAKE_CURRENT_BINARY_DIR@/manual/html/images/
 	cp @CMAKE_CURRENT_SOURCE_DIR@/manual/styles/* @CMAKE_CURRENT_BINARY_DIR@/manual/html/styles/
 
 info: 
-	makeinfo --output=@CMAKE_CURRENT_BINARY_DIR@/manual/sensor_hub.info @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.texi
+	makeinfo --output=@CMAKE_CURRENT_BINARY_DIR@/manual/$(APP_NAME).info @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.texi
 
 pdf: 
-	texi2dvi --build-dir=/tmp --output=@CMAKE_CURRENT_BINARY_DIR@/manual/sensor_hub.pdf --pdf @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.texi 
+	texi2dvi --build-dir=/tmp --output=@CMAKE_CURRENT_BINARY_DIR@/manual/$(APP_NAME).pdf --pdf @CMAKE_CURRENT_SOURCE_DIR@/manual/manual.texi 
+	
+chm:
+	@CMAKE_CURRENT_SOURCE_DIR@/manual/texi2html --output=@CMAKE_CURRENT_BINARY_DIR@/manual/chm --init-file @CMAKE_CURRENT_SOURCE_DIR@/manual/chm.init --css-include=@CMAKE_CURRENT_SOURCE_DIR@/manual/styles/chm.css --split=section manual.texi
+	mkdir -p @CMAKE_CURRENT_BINARY_DIR@/manual/chm/images
+	mkdir -p @CMAKE_CURRENT_BINARY_DIR@/manual/chm/styles
+	cp @CMAKE_CURRENT_SOURCE_DIR@/manual/images/* @CMAKE_CURRENT_BINARY_DIR@/manual/chm/images
+	cp @CMAKE_CURRENT_SOURCE_DIR@/manual/styles/* @CMAKE_CURRENT_BINARY_DIR@/manual/chm/styles
+ifdef HHC_BINARY	
+	-hhc `cygpath -d @CMAKE_CURRENT_BINARY_DIR@/manual/chm/manual.hhp`
+	cp @CMAKE_CURRENT_BINARY_DIR@/manual/chm/manual.chm @CMAKE_CURRENT_BINARY_DIR@/manual/$(APP_NAME).chm
+else
+	@echo "hhc binary (windows help compiler) not found"
+endif
+	
 
-.PHONY: pdf info html
+.PHONY: pdf info html chm
