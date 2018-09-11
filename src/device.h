@@ -130,15 +130,19 @@ protected:
   }
 
   void insert_value(Stamped_quantity&& value) {
+    if (value.quantity == Quantity::ut && use_as_time_source_) {
+      adjust_clock(value.value);
+    }
     auto item = data_.try_emplace(value.quantity);
-    item.first->second.push_back(value);
+    auto& queue = item.first->second;
+    queue.push_back(value);
+    if (queue.size() > 0x0040000) {
+      queue.pop_front();
+    }
     if (enable_logging_) {
       std::stringstream ss;
       ss << std::setprecision(15) << value.stamp << "," << value.quantity << "," << value.value;
       log(name_, ss.str());
-    }
-    if (value.quantity == Quantity::ut && use_as_time_source_) {
-      adjust_clock(value.value);
     }
   }
 
