@@ -5,6 +5,8 @@ project(SensorHub)
 # Use compilers on the path, not /usr/bin/(g++|gcc) perse. cmake is stupid that way
 execute_process(COMMAND which gcc OUTPUT_VARIABLE CMAKE_C_COMPILER)
 execute_process(COMMAND which g++ OUTPUT_VARIABLE CMAKE_CXX_COMPILER)
+execute_process(COMMAND awk -F= "/Version/ { print $2 }" ${CMAKE_CURRENT_SOURCE_DIR}/version.ini OUTPUT_VARIABLE VERSION)
+message("Building application version ${VERSION}")
 string(STRIP ${CMAKE_C_COMPILER} CMAKE_C_COMPILER)
 string(STRIP ${CMAKE_CXX_COMPILER} CMAKE_CXX_COMPILER)
 
@@ -21,6 +23,7 @@ find_package(Doxygen)
 
 set (CMAKE_CXX_STANDARD 17)
 
+set(BUILD_MANUAL 1)
 set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(FMTLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/src")
 set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")

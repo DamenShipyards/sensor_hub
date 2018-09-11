@@ -9991,7 +9991,7 @@ sub get_string($;$$)
         {
             unless (exists($missing_strings{$string}))
             {
-                print STDERR "i18n: missing string $string\n";
+                #print STDERR "i18n: missing string $string\n";
                 $missing_strings{$string} = 1;
             }
         }
