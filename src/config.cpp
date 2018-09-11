@@ -62,8 +62,7 @@ private:
     SHGetKnownFolderPath(FOLDERID_ProgramData, NULL, 0, &szPath);
     pth p(szPath);
     CoTaskMemFree(szPath);
-    p /= "Damen";
-    p /= "SensorHub";
+    p = p / "Damen" / "SensorHub" / "Config";
     fs::create_directories(p);
 #   else
     pth p("/etc/sensor_hub");

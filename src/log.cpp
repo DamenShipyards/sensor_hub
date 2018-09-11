@@ -80,23 +80,26 @@ struct Logger {
     static Logger instance;
     return instance;
   }
+
   sources::severity_logger_mt<level>& get_log() {
     return log_;
   }
+
   sources::logger& get_device_log() {
     return device_log_;
   }
+
   void flush() {
     file_sink_->flush();
   }
+
   pth get_log_dir() {
 #   ifdef _WIN32
     PWSTR szPath = nullptr;
-    SHGetKnownFolderPath(FOLDERID_LocalAppData, NULL, 0, &szPath);
+    SHGetKnownFolderPath(FOLDERID_ProgramData, NULL, 0, &szPath);
     pth p(szPath);
     CoTaskMemFree(szPath);
-    p /= "Damen";
-    p /= "SensorHub";
+    p = p / "Damen" / "SensorHub" / "Log";
     fs::create_directories(p);
 #   else
     pth p("/var/log/sensor_hub");
@@ -111,14 +114,25 @@ struct Logger {
 #   endif
     return p;
   }
+
   pth get_device_log_dir() {
+#   ifdef _WIN32
+    PWSTR szPath = nullptr;
+    SHGetKnownFolderPath(FOLDERID_ProgramData, NULL, 0, &szPath);
+    pth p(szPath);
+    CoTaskMemFree(szPath);
+    p = p / "Damen" / "SensorHub" / "DeviceLogs";
+#   else
     pth p = get_log_dir() / "device_logs";
+#   endif
     fs::create_directories(p);
     return p;
   }
+
   void set_log_level(level lvl) {
     file_sink_->set_filter(!expressions::has_attr(tag_attr) && severity >= lvl);
   }
+
 private:
   Logger(): log_(), device_log_() {
     add_common_attributes();
