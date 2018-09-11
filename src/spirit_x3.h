@@ -21,7 +21,7 @@ inline float endian_reverse(float x) BOOST_NOEXCEPT {
   uint32_t result = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_4(*reinterpret_cast<uint32_t*>(&x));
   return *reinterpret_cast<float*>(&result);
 }
-inline float endian_reverse(double x) BOOST_NOEXCEPT {
+inline double endian_reverse(double x) BOOST_NOEXCEPT {
   uint64_t result = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_8(*reinterpret_cast<uint64_t*>(&x));
   return *reinterpret_cast<double*>(&result);
 }
