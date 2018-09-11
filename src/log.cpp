@@ -7,7 +7,7 @@
  * (C) 2018 Damen Shipyards. All rights reserved.
  * \license
  * This software is proprietary. Any use without written
- * permission from the copyright holder is strictly 
+ * permission from the copyright holder is strictly
  * forbidden.
  */
 
@@ -77,7 +77,7 @@ struct Logger {
   void operator=(Logger const&) = delete;
 
   static Logger& get_instance() {
-    static Logger instance; 
+    static Logger instance;
     return instance;
   }
   sources::severity_logger_mt<level>& get_log() {
@@ -122,28 +122,34 @@ struct Logger {
 private:
   Logger(): log_(), device_log_() {
     add_common_attributes();
-    file_sink_ = 
+    file_sink_ =
         add_file_log(
             keywords::file_name = get_log_filename(),
             keywords::open_mode = std::ios_base::app,
             keywords::auto_flush = true,
-            keywords::rotation_size = 10 * 1024 * 1024,
-            keywords::format =  
-              expressions::stream 
+            keywords::rotation_size = 8 * 1024 * 1024,
+            keywords::format =
+              expressions::stream
                 << expressions::format_date_time<boost::posix_time::ptime>(
                   "TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
                 << expressions::attr<level, level_tag>("Severity")
                 << expressions::smessage
         );
+    auto collector = sinks::file::make_collector(
+        keywords::target = get_log_dir(),
+        keywords::max_files = 10
+    );
+    file_sink_->locked_backend()->set_file_collector(collector);
+    file_sink_->locked_backend()->scan_for_files();
     file_sink_->set_filter(!expressions::has_attr(tag_attr));
   }
 
   sources::severity_logger_mt<level> log_;
   sources::logger device_log_;
   boost::shared_ptr<sinks::synchronous_sink<sinks::text_file_backend> > file_sink_;
-  
+
   pth get_log_filename() {
-    return  get_log_dir() / "sensor_hub.%N.log";
+    return  get_log_dir() / "sensor_hub.%8N.log";
   }
 };
 
@@ -161,15 +167,24 @@ sources::logger& get_device_log() {
   return Logger::get_instance().get_device_log();
 }
 
+
 void init_device_log(const std::string& device_name) {
   typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
-  auto filename = Logger::get_instance().get_device_log_dir() / (device_name + ".%N.log");
+  auto log_dir = Logger::get_instance().get_device_log_dir();
+  auto filename = log_dir / (device_name + ".%8N.log");
   auto sink = boost::make_shared<file_sink>(
       keywords::file_name = filename,
       keywords::open_mode = std::ios_base::app,
-      keywords::rotation_size = 10 * 1024 * 1024,
+      keywords::rotation_size = 32 * 1024 * 1024,
       keywords::auto_flush = false
   );
+  auto collector = sinks::file::make_collector(
+      keywords::target = log_dir,
+      keywords::min_free_space = 256 * 1024 * 1024,
+      keywords::max_files = 32
+  );
+  sink->locked_backend()->set_file_collector(collector);
+  sink->locked_backend()->scan_for_files();
   sink->set_filter(tag_attr == device_name);
   core::get()->add_sink(sink);
 }
