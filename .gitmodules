@@ -4,6 +4,3 @@
 [submodule "3rdparty/modbus"]
 	path = 3rdparty/modbus
 	url = https://github.com/orca-software/modbus.git
-[submodule "3rdparty/libwdi"]
-	path = 3rdparty/libwdi
-	url = https://github.com/orca-software/libwdi
