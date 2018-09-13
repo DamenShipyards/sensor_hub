@@ -310,7 +310,7 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
         }
         catch (Usb_exception& e) {
           log(level::error, "Failed to get device descriptors, error %", e.what());
-          continue;
+          goto descriptor_failure;
         }
 
         // On Linux, we want to detach any kernel driver. Shouldn't do any harm on Windows
@@ -321,7 +321,6 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
           r = libusb_claim_interface(device_, i);
           if (r != LIBUSB_SUCCESS) {
             log(level::error, "Failed to claim USB interface %, error %", i, r);
-            close();
             goto interface_failure;
           }
         }
@@ -336,7 +335,11 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
         log(level::info, "Successfully opened USB device with endpoints: %, %: %",
             write_endpoint_, read_endpoint_, read_packet_size_);
         break;
-interface_failure:
+      interface_failure:
+        descriptors_ = nullptr;
+      descriptor_failure:
+        libusb_close(device_);
+        device_ = nullptr;
         continue;
       }
     }
@@ -346,14 +349,14 @@ interface_failure:
 }
 
 bool Usb::open(const std::string& device_str, int seq) {
-  if (device_str.size() != 9)
+  std::vector<std::string> fields;
+  boost::split(fields, device_str, [](char c) { return c == ':'; });
+  if (fields.size() != 2) {
+    log(level::error, "Invalid USB connection string: %", device_str);
     return false;
-  const char* device_cstr = device_str.c_str();
-  char* endp;
-  int vendor_id = std::strtol(device_cstr, &endp, 16);
-  // Skip colon
-  ++endp;
-  int product_id = std::strtol(endp, &endp, 16);
+  }
+  int vendor_id = std::stol(fields[0], 0, 16);
+  int product_id = std::stol(fields[1], 0, 16);
   return open(vendor_id, product_id, seq);
 }
 
@@ -382,13 +385,15 @@ void Usb::close() {
   cancel();
   event_handler_ = nullptr;
   if (device_ != nullptr) {
-    for (int i = 0; i < descriptors_->get_interface_count(); ++i) {
-      int r = libusb_release_interface(device_, i);
-      if (r != LIBUSB_SUCCESS) {
-        log(level::error, "Failed to release USB interface %, error %", i, r);
+    if (descriptors_ != nullptr) {
+      for (int i = 0; i < descriptors_->get_interface_count(); ++i) {
+        int r = libusb_release_interface(device_, i);
+        if (r != LIBUSB_SUCCESS) {
+          log(level::error, "Failed to release USB interface %, error %", i, r);
+        }
       }
+      descriptors_ = nullptr;
     }
-    descriptors_ = nullptr;
     libusb_close(device_);
     log(level::info, "Closed USB device");
     device_ = nullptr;
