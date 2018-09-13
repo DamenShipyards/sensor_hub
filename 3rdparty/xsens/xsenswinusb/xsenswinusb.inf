@@ -1,0 +1,183 @@
+;
+;   Microsoft WinUsb installation Inf File.
+;   Modified by Xsens to support the Xsens devices
+;
+
+ [Version]
+Signature = "$Windows NT$"
+Class = XsensUSB
+; Other devices
+; ClassGuid={4D36E97E-E325-11CE-BFC1-08002BE10318} 
+; Sensors
+ClassGuid={5175d334-c371-4806-b3ba-71fd53c9258d} 
+Provider = %ProviderName%
+DriverVer = 07/19/2012,0.1.0
+CatalogFile=XsensWinUsb.cat
+
+; ================== Class section ==================
+
+[ClassInstall32]
+Addreg=MyDeviceClassReg
+
+[MyDeviceClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-1
+
+; ========== Manufacturer/Models sections ===========
+
+[Manufacturer]
+%ProviderName% = XsensUSB,NTx86,NTamd64,NTia64
+
+[XsensUSB.NTx86]
+%VID_2639&PID_0001.DeviceDesc% =USB_Install, USB\VID_2639&PID_0001
+%VID_2639&PID_0002.DeviceDesc% =USB_Install, USB\VID_2639&PID_0002
+%VID_2639&PID_0003.DeviceDesc% =USB_Install, USB\VID_2639&PID_0003
+%VID_2639&PID_0004.DeviceDesc% =USB_Install, USB\VID_2639&PID_0004
+%VID_2639&PID_0005.DeviceDesc% =USB_Install, USB\VID_2639&PID_0005
+%VID_2639&PID_0006.DeviceDesc% =USB_Install, USB\VID_2639&PID_0006
+%VID_2639&PID_0007.DeviceDesc% =USB_Install, USB\VID_2639&PID_0007
+%VID_2639&PID_0008.DeviceDesc% =USB_Install, USB\VID_2639&PID_0008
+%VID_2639&PID_0009.DeviceDesc% =USB_Install, USB\VID_2639&PID_0009
+%VID_2639&PID_0011.DeviceDesc% =USB_Install, USB\VID_2639&PID_0011
+%VID_2639&PID_0012.DeviceDesc% =USB_Install, USB\VID_2639&PID_0012
+%VID_2639&PID_0013.DeviceDesc% =USB_Install, USB\VID_2639&PID_0013
+%VID_2639&PID_0014.DeviceDesc% =USB_Install, USB\VID_2639&PID_0014
+%VID_2639&PID_0015.DeviceDesc% =USB_Install, USB\VID_2639&PID_0015
+%VID_2639&PID_0016.DeviceDesc% =USB_Install, USB\VID_2639&PID_0016
+%VID_2639&PID_0017.DeviceDesc% =USB_Install, USB\VID_2639&PID_0017
+%VID_2639&PID_0018.DeviceDesc% =USB_Install, USB\VID_2639&PID_0018
+%VID_2639&PID_0019.DeviceDesc% =USB_Install, USB\VID_2639&PID_0019
+
+
+[XsensUSB.NTamd64]
+%VID_2639&PID_0001.DeviceDesc% =USB_Install, USB\VID_2639&PID_0001
+%VID_2639&PID_0002.DeviceDesc% =USB_Install, USB\VID_2639&PID_0002
+%VID_2639&PID_0003.DeviceDesc% =USB_Install, USB\VID_2639&PID_0003
+%VID_2639&PID_0004.DeviceDesc% =USB_Install, USB\VID_2639&PID_0004
+%VID_2639&PID_0005.DeviceDesc% =USB_Install, USB\VID_2639&PID_0005
+%VID_2639&PID_0006.DeviceDesc% =USB_Install, USB\VID_2639&PID_0006
+%VID_2639&PID_0007.DeviceDesc% =USB_Install, USB\VID_2639&PID_0007
+%VID_2639&PID_0008.DeviceDesc% =USB_Install, USB\VID_2639&PID_0008
+%VID_2639&PID_0009.DeviceDesc% =USB_Install, USB\VID_2639&PID_0009
+%VID_2639&PID_0011.DeviceDesc% =USB_Install, USB\VID_2639&PID_0011
+%VID_2639&PID_0012.DeviceDesc% =USB_Install, USB\VID_2639&PID_0012
+%VID_2639&PID_0013.DeviceDesc% =USB_Install, USB\VID_2639&PID_0013
+%VID_2639&PID_0014.DeviceDesc% =USB_Install, USB\VID_2639&PID_0014
+%VID_2639&PID_0015.DeviceDesc% =USB_Install, USB\VID_2639&PID_0015
+%VID_2639&PID_0016.DeviceDesc% =USB_Install, USB\VID_2639&PID_0016
+%VID_2639&PID_0017.DeviceDesc% =USB_Install, USB\VID_2639&PID_0017
+%VID_2639&PID_0018.DeviceDesc% =USB_Install, USB\VID_2639&PID_0018
+%VID_2639&PID_0019.DeviceDesc% =USB_Install, USB\VID_2639&PID_0019
+
+[XsensUSB.NTia64]
+%VID_2639&PID_0001.DeviceDesc% =USB_Install, USB\VID_2639&PID_0001
+%VID_2639&PID_0002.DeviceDesc% =USB_Install, USB\VID_2639&PID_0002
+%VID_2639&PID_0003.DeviceDesc% =USB_Install, USB\VID_2639&PID_0003
+%VID_2639&PID_0004.DeviceDesc% =USB_Install, USB\VID_2639&PID_0004
+%VID_2639&PID_0005.DeviceDesc% =USB_Install, USB\VID_2639&PID_0005
+%VID_2639&PID_0006.DeviceDesc% =USB_Install, USB\VID_2639&PID_0006
+%VID_2639&PID_0007.DeviceDesc% =USB_Install, USB\VID_2639&PID_0007
+%VID_2639&PID_0008.DeviceDesc% =USB_Install, USB\VID_2639&PID_0008
+%VID_2639&PID_0009.DeviceDesc% =USB_Install, USB\VID_2639&PID_0009
+%VID_2639&PID_0011.DeviceDesc% =USB_Install, USB\VID_2639&PID_0011
+%VID_2639&PID_0012.DeviceDesc% =USB_Install, USB\VID_2639&PID_0012
+%VID_2639&PID_0013.DeviceDesc% =USB_Install, USB\VID_2639&PID_0013
+%VID_2639&PID_0014.DeviceDesc% =USB_Install, USB\VID_2639&PID_0014
+%VID_2639&PID_0015.DeviceDesc% =USB_Install, USB\VID_2639&PID_0015
+%VID_2639&PID_0016.DeviceDesc% =USB_Install, USB\VID_2639&PID_0016
+%VID_2639&PID_0017.DeviceDesc% =USB_Install, USB\VID_2639&PID_0017
+%VID_2639&PID_0018.DeviceDesc% =USB_Install, USB\VID_2639&PID_0018
+%VID_2639&PID_0019.DeviceDesc% =USB_Install, USB\VID_2639&PID_0019
+
+; =================== Installation ===================
+
+[USB_Install]
+Include=winusb.inf
+Needs=WINUSB.NT
+
+[USB_Install.Services]
+Include=winusb.inf
+AddService=WinUSB,0x00000002,WinUSB_ServiceInstall
+
+[WinUSB_ServiceInstall]
+DisplayName     = %WinUSB_SvcDesc%
+ServiceType     = 1
+StartType       = 3
+ErrorControl    = 1
+ServiceBinary   = %12%\WinUSB.sys
+
+[USB_Install.Wdf]
+KmdfService=WINUSB, WinUsb_Install
+UmdfServiceOrder=WINUSB
+UmdfDispatcher=WinUsb 
+
+[WinUSB_Install]
+KmdfLibraryVersion=1.9
+
+[USB_Install.HW]
+AddReg=Dev_AddReg
+
+[Dev_AddReg]
+HKR,,DeviceInterfaceGUIDs,0x10000,"{FD51225C-700A-47e5-9999-B2D9031B88ED}"
+
+[USB_Install.CoInstallers]
+AddReg=CoInstallers_AddReg
+CopyFiles=CoInstallers_CopyFiles
+
+[CoInstallers_AddReg]
+HKR,,CoInstallers32,0x00010000,"WUDFUpdate_01009.dll", "winusbcoinstaller2.dll","WdfCoInstaller01009.dll,WdfCoInstaller"
+
+[CoInstallers_CopyFiles]
+winusbcoinstaller2.dll
+WdfCoInstaller01009.dll
+WUDFUpdate_01009.dll
+
+[DestinationDirs]
+CoInstallers_CopyFiles=11
+
+; ================= Source Media Section =====================
+
+[SourceDisksNames]
+1 = %DISK_NAME%,,,\x86
+2 = %DISK_NAME%,,,\amd64
+3 = %DISK_NAME%,,,\ia64
+
+[SourceDisksFiles.x86]
+winusbcoinstaller2.dll=1
+WdfCoInstaller01009.dll=1
+WUDFUpdate_01009.dll=1
+
+[SourceDisksFiles.amd64]
+winusbcoinstaller2.dll=2
+WdfCoInstaller01009.dll=2
+WUDFUpdate_01009.dll=2
+
+[SourceDisksFiles.ia64]
+winusbcoinstaller2.dll=3
+WdfCoInstaller01009.dll=3
+WUDFUpdate_01009.dll=3
+; =================== Strings ===================
+
+[Strings]
+ProviderName="Xsens"
+VID_2639&PID_0001.DeviceDesc="Xsens MTi-10 IMU"
+VID_2639&PID_0002.DeviceDesc="Xsens MTi-20 VRU"
+VID_2639&PID_0003.DeviceDesc="Xsens MTi-30 AHRS"
+VID_2639&PID_0004.DeviceDesc="Xsens MTi-40"
+VID_2639&PID_0005.DeviceDesc="Xsens MTi-50"
+VID_2639&PID_0006.DeviceDesc="Xsens MTi-60"
+VID_2639&PID_0007.DeviceDesc="Xsens MTi-70"
+VID_2639&PID_0008.DeviceDesc="Xsens MTi-80"
+VID_2639&PID_0009.DeviceDesc="Xsens MTi-90"
+VID_2639&PID_0011.DeviceDesc="Xsens MTi-100 IMU"
+VID_2639&PID_0012.DeviceDesc="Xsens MTi-200 VRU"
+VID_2639&PID_0013.DeviceDesc="Xsens MTi-300 AHRS"
+VID_2639&PID_0014.DeviceDesc="Xsens MTi-400 AHRS/GPS"
+VID_2639&PID_0015.DeviceDesc="Xsens MTi-G-500 AHRS/GPS"
+VID_2639&PID_0016.DeviceDesc="Xsens MTi-600 GPS/INS"
+VID_2639&PID_0017.DeviceDesc="Xsens MTi-G-700 GPS/INS"
+VID_2639&PID_0018.DeviceDesc="Xsens MTi-800"
+VID_2639&PID_0019.DeviceDesc="Xsens MTi-900"
+WinUSB_SvcDesc = "WinUSB Driver Service"
+DISK_NAME="Xsens Install Disk"
+ClassName="XsensUSB"
