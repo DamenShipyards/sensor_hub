@@ -112,7 +112,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     Port& port = this->get_port();
 
     // Set a timeout for the command to complete
-    asio::deadline_timer timeout(ContextProvider::get_context(), posix_time::milliseconds(500));
+    asio::deadline_timer timeout(ContextProvider::get_context(), posix_time::milliseconds(1000));
     timeout.async_wait(
         [&](const boost::system::error_code& error) {
           if (!error)
@@ -121,6 +121,11 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
     // Write out the command string...
     asio::async_write(port, asio::buffer(command), yield);
+#ifdef DEBUG
+    std::stringstream ssc;
+    ssc << command;
+    log(level::debug, "XSens received: %", ssc.str());
+#endif
     // ... and look for the expected response
     try {
       int repeats = 4;
@@ -130,10 +135,16 @@ struct Xsens: public Port_device<Port, ContextProvider> {
         asio::streambuf read_buf;
         size_t bytes_read = port.async_read_some(read_buf.prepare(0x1000), yield);
         read_buf.commit(bytes_read);
-        response.insert(
-            response.end(),
-            asio::buffers_begin(read_buf.data()),
-            asio::buffers_begin(read_buf.data()) + bytes_read);
+        auto buf_begin = asio::buffers_begin(read_buf.data());
+        auto buf_end = buf_begin + bytes_read;
+#ifdef DEBUG
+        cdata_t data(buf_begin, buf_end);
+        std::stringstream ssr;
+        ssr << data;
+        log(level::debug, "Sent to XSens: %", ssr.str());
+#endif
+        response.insert(response.end(), buf_begin, buf_end);
+
         read_buf.consume(bytes_read);
         response_found = contains(response, expected_response);
       } while (--repeats > 0 && !response_found);
