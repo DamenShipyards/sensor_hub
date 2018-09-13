@@ -1,0 +1,9 @@
+*.sh text eol=lf
+Makefile text eol=lf
+*.cpp text eol=auto
+*.cc text eol=auto
+*.h text eol=auto
+*.md text eol=auto
+*.ini text eol=auto
+*.txt text eol=auto
+*.sln test eol=crlf
