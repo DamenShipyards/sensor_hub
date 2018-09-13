@@ -36,21 +36,25 @@ inline void check_install_usb_driver(int vid, int pid) {
       if (device->vid == vid && device->pid == pid) {
         int result = WDI_SUCCESS;
         log(level::info, "Installing WinUSB driver for %", device->desc);
+
         wdi_options_prepare_driver prepare_options = { 0 };
         prepare_options.driver_type = WDI_WINUSB;
         prepare_options.vendor_name = "Damen Shipyards";
+        prepare_options.cert_subject = "Damen Shipyards Signer";
+
         wdi_options_install_driver install_options = {0};
         install_options.pending_install_timeout = 10000;
+
         if ((result = wdi_prepare_driver(device, DEFAULT_DIR, INF_NAME, &prepare_options)) == WDI_SUCCESS) {
           if ((result = wdi_install_driver(device, DEFAULT_DIR, INF_NAME, NULL)) == WDI_SUCCESS) {
             log(level::info, "Successfully installed WinUSB driver");
           }
           else {
-            log(level::error, "Failed to install USB driver: %", result);
+            log(level::error, "Failed to install USB driver: %, %", result, wdi_strerror(result));
           }
         }
         else {
-          log(level::error, "Failed to prepare USB driver: %", result);
+          log(level::error, "Failed to prepare USB driver: %, %", result, wdi_strerror(result));
         }
       }
     }
