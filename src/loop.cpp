@@ -7,7 +7,7 @@
  * (C) 2018 Damen Shipyards. All rights reserved.
  * \license
  * This software is proprietary. Any use without written
- * permission from the copyright holder is strictly 
+ * permission from the copyright holder is strictly
  * forbidden.
  */
 
@@ -17,6 +17,8 @@
 #include "config.h"
 #include "device.h"
 
+#include "driver/install.h"
+
 #include <fmt/core.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -25,10 +27,14 @@
 #define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
 #include <boost/asio/spawn.hpp>
 
+#ifdef DEBUG
+#include <thread>
+#include <chrono>
+#endif
+
 #include <string>
 
 namespace posix_time = boost::posix_time;
-
 
 struct Service {
   //! Disable copying for singleton service
@@ -40,7 +46,7 @@ struct Service {
    * Return singleton instance
    */
   static Service& get_instance() {
-    static Service instance; 
+    static Service instance;
     return instance;
   }
 
@@ -80,13 +86,21 @@ struct Service {
    * Setup the service device list from provided configuration
    */
   void setup_devices(boost::property_tree::ptree& cfg) {
+#ifdef DEBUG
+    using namespace std::chrono_literals;
+    // Allow the debugger some time to connect
+    std::this_thread::sleep_for(10s);
+#endif
     int device_count = cfg.get("devices.count", 0);
     for (int i = 0; i < device_count; ++i) {
       std::string device_section = fmt::format("device{:d}", i);
       std::string device_type = cfg.get(fmt::format("{:s}.type", device_section), "missing_device_type");
       Device_ptr device = create_device(device_type);
       device->set_name(cfg.get(fmt::format("{:s}.name", device_section), "missing_device_name"));
-      device->set_connection_string(cfg.get(fmt::format("{:s}.connection_string", device_section), "missing_connection_string"));
+      std::string connection_string = cfg.get(fmt::format("{:s}.connection_string", device_section), "missing_connection_string");
+      auto usb_address = get_usb_address(connection_string);
+      check_install_usb_driver(usb_address.first, usb_address.second);
+      device->set_connection_string(connection_string);
       device->enable_logging(cfg.get(fmt::format("{:s}.enable_logging", device_section), false));
       device->use_as_time_source(cfg.get(fmt::format("{:s}.use_as_time_source", device_section), false));
       devices_.push_back(std::move(device));
@@ -130,7 +144,7 @@ struct Service {
    * Run service
    *
    * Sets up 1 and 10 second clocks for doing regular servicing and
-   * calls run on boost::asio's io_context. Blocks until explicitly 
+   * calls run on boost::asio's io_context. Blocks until explicitly
    * stopped.
    */
   int run() {
