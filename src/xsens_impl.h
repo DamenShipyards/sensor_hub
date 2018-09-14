@@ -30,10 +30,10 @@ cbyte_t sys_command = 0xFF;
 cbyte_t conf_command = 0x01;
 
 cdata_t goto_config = {packet_start, sys_command, XMID_GotoConfig, 0x00, 0xD1};
-cdata_t config_ack = {packet_start, sys_command, XMID_GotoConfigAck, 0x00, 0xD0};
+cdata_t config_ack = {packet_start, sys_command, XMID_GotoConfigAck};
 
 cdata_t goto_measurement = {packet_start, sys_command, XMID_GotoMeasurement, 0x00, 0xF1};
-cdata_t measurement_ack = {packet_start, sys_command, XMID_GotoMeasurementAck, 0x00, 0xF0};
+cdata_t measurement_ack = {packet_start, sys_command, XMID_GotoMeasurementAck};
 
 cdata_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
   0x08,
@@ -46,12 +46,21 @@ cdata_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
   0x00, 0x00, 0x00, 0x00, // Option flags to clear
   0x1E
 };
-cdata_t option_flags_ack = {packet_start, sys_command, XMID_SetOptionFlagsAck, 0x00, 0xB8};
+cdata_t option_flags_ack = {packet_start, sys_command, XMID_SetOptionFlagsAck};
+
 cdata_t req_reset = {packet_start, sys_command, XMID_Reset, 0x00, 0xC1};
 cdata_t reset_ack = {packet_start, sys_command, XMID_ResetAck, 0x00, 0xC0};
 
+cdata_t req_device_id = {packet_start, sys_command, XMID_ReqDid, 0x00, 0x01};
+cdata_t device_id_resp = {packet_start, sys_command, XMID_DeviceId};
+
 cdata_t req_product_code = {packet_start, sys_command, XMID_ReqProductCode, 0x00, 0xE5};
+cdata_t product_code_resp = {packet_start, sys_command, XMID_ProductCode};
+
 cdata_t req_firmware_rev = {packet_start, sys_command, XMID_ReqFirmwareRevision, 0x00, 0xEF};
+cdata_t firmware_rev_resp = {packet_start, sys_command, XMID_FirmwareRevision};
+
+cdata_t error_resp = {packet_start, sys_command, XMID_Error};
 
 cdata_t set_output_configuration = {
   packet_start, sys_command,
@@ -73,20 +82,7 @@ cdata_t set_output_configuration = {
 
 cdata_t output_configuration_ack = {
   packet_start, sys_command,
-  XMID_SetOutputConfigurationAck,
-  0x2C,
-  0x10, 0x10, 0xFF, 0xFF,
-  0x40, 0x20, 0x00, 0x64,
-  0x40, 0x30, 0x00, 0x64,
-  0x80, 0x20, 0x00, 0x64,
-  0x50, 0x43, 0x00, 0x0A,
-  0xC0, 0x20, 0x00, 0x0A,
-  0xD0, 0x10, 0x00, 0x0A,
-  0x50, 0x20, 0x00, 0x0A,
-  0x50, 0x10, 0x00, 0x0A,
-  0x20, 0x30, 0x00, 0x0A,
-  0x20, 0x10, 0x00, 0x0A,
-  0x71
+  XMID_SetOutputConfigurationAck
 };
 
 } // namespace data

@@ -20,7 +20,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
-
+#include <boost/endian/conversion.hpp>
 
 #include <xsens/xsxbusmessageid.h>
 #include <xsens/xsdataidentifier.h>
@@ -59,12 +59,20 @@ extern cdata_t req_reset;
 extern cdata_t reset_ack;
 
 extern cdata_t req_product_code;
-extern cdata_t req_utc_time;
+extern cdata_t product_code_resp;
+
+extern cdata_t req_device_id;
+extern cdata_t device_id_resp;
+
 extern cdata_t req_firmware_rev;
+extern cdata_t firmware_rev_resp;
+
+extern cdata_t req_utc_time;
 
 extern cdata_t set_output_configuration;
 extern cdata_t output_configuration_ack;
 
+extern cdata_t error_resp;
 }
 
 
@@ -108,7 +116,7 @@ struct Packet_parser {
 template <typename Port, typename ContextProvider>
 struct Xsens: public Port_device<Port, ContextProvider> {
 
-  bool exec_command(cdata_t& command, cdata_t& expected_response, asio::yield_context yield) {
+  bool exec_command(cdata_t& command, cdata_t& expected_response, asio::yield_context yield, std::string* data=nullptr) {
     Port& port = this->get_port();
 
     // Set a timeout for the command to complete
@@ -121,35 +129,56 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
     // Write out the command string...
     asio::async_write(port, asio::buffer(command), yield);
-#ifdef DEBUG
+
     std::stringstream ssc;
     ssc << command;
-    log(level::debug, "XSens received: %", ssc.str());
-#endif
+    log(level::debug, "Sent to XSens: %", ssc.str());
+
     // ... and look for the expected response
     try {
       int repeats = 4;
       data_t response{};
-      bool response_found = false;
+      int response_found = -1;
       do {
         asio::streambuf read_buf;
         size_t bytes_read = port.async_read_some(read_buf.prepare(0x1000), yield);
         read_buf.commit(bytes_read);
         auto buf_begin = asio::buffers_begin(read_buf.data());
         auto buf_end = buf_begin + bytes_read;
-#ifdef DEBUG
+
         cdata_t data(buf_begin, buf_end);
         std::stringstream ssr;
         ssr << data;
-        log(level::debug, "Sent to XSens: %", ssr.str());
-#endif
+        log(level::debug, "Received from XSens: %", ssr.str());
+
         response.insert(response.end(), buf_begin, buf_end);
 
         read_buf.consume(bytes_read);
-        response_found = contains(response, expected_response);
-      } while (--repeats > 0 && !response_found);
+        response_found = contains_at(response, expected_response);
+        int error_found = contains_at(response, command::error_resp);
+        if (error_found >= 0) {
+          if (error_found + 4 < static_cast<int>(response.size())) {
+            log(level::error, "Received Xsens error: %", static_cast<int>(response[error_found + 4]));
+            timeout.cancel();
+            return false;
+          }
+        }
+      } while (--repeats > 0 && response_found < 0);
+
       timeout.cancel();
-      if (repeats <= 0)
+
+      if (repeats > 0) {
+        if (data != nullptr) {
+          if (response_found + 3 < static_cast<int>(response.size())) {
+            uint8_t size = response[response_found + 3];
+            if (response_found + 4 + size < static_cast<int>(response.size())) {
+              auto data_start = response.begin() + response_found + 4;
+              data->insert(data->end(), data_start, data_start + size);
+            }
+          }
+        }
+      }
+      else
         return false;
     }
     catch (std::exception& e) {
@@ -214,7 +243,49 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   virtual bool reset(asio::yield_context yield) {
-    return true;
+    return this->exec_command(command::req_reset, command::reset_ack, yield);
+  }
+
+
+  virtual bool request_product_code(asio::yield_context yield) {
+    std::string data;
+    bool result = this->exec_command(command::req_product_code, command::product_code_resp, yield, &data);
+    if (result) {
+      log(level::info, "Product code: %", data);
+    }
+    return result;
+  }
+
+  virtual bool request_identifier(asio::yield_context yield) {
+    std::string data;
+    bool result = this->exec_command(command::req_device_id, command::device_id_resp, yield, &data);
+    if (result && data.size() == 4) {
+      std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}", 
+          static_cast<uint8_t>(data[0]), 
+          static_cast<uint8_t>(data[1]), 
+          static_cast<uint8_t>(data[2]),
+          static_cast<uint8_t>(data[3])
+      );
+      log(level::info, "Device serial#: %", serial_no);
+      this->set_id("xsens_" + serial_no);
+    }
+    return result;
+  }
+
+  virtual bool request_firmware(asio::yield_context yield) {
+    std::string data;
+    bool result = this->exec_command(command::req_firmware_rev, command::firmware_rev_resp, yield, &data);
+    if (result && data.size() == 11) {
+      uint8_t maj = data[0];
+      uint8_t min = data[1]; 
+      uint8_t rev = data[2];
+      uint32_t build = *reinterpret_cast<uint32_t*>(data.data() + 3);
+      uint32_t svnrev = *reinterpret_cast<uint32_t*>(data.data() + 7);
+      boost::endian::big_to_native_inplace(build);
+      boost::endian::big_to_native_inplace(svnrev);
+      log(level::info, fmt::format("Device firmware: {}.{}.{}.{} svn {}", maj, min, rev, build, svnrev));
+    }
+    return result;
   }
 
   void start_polling() {
@@ -229,6 +300,9 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
   bool initialize(asio::yield_context yield) override {
     bool result = goto_config(yield)
+        && request_product_code(yield)
+        && request_identifier(yield)
+        && request_firmware(yield)
         && set_option_flags(yield)
         && set_output_configuration(yield)
         && goto_measurement(yield);
@@ -275,9 +349,6 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
     return this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
   }
 
-  bool reset(asio::yield_context yield) override {
-    return this->exec_command(command::req_reset, command::reset_ack, yield);
-  }
 };
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

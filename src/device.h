@@ -63,9 +63,11 @@ struct Device {
   }
 
   void set_name(const std::string& name) {
-    log(level::debug, "Setting device name to \"%\"", name);
-    init_device_log(name);
-    name_ = name;
+    if (name != name_) {
+      log(level::info, "Setting device name to \"%\"", name);
+      name_ = name;
+      init_device_log(name);
+    }
   }
 
   virtual const bool get_value(const Quantity& quantity, Value_type& value) const {
@@ -126,7 +128,10 @@ struct Device {
   }
 protected:
   void set_id(const std::string& id) {
-    id_ = id;
+    if (id != id_) {
+      log(level::info, "Setting device id to \"%\"", id);
+      id_ = id;
+    }
   }
 
   void insert_value(Stamped_quantity&& value) {
