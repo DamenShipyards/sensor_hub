@@ -7,7 +7,7 @@ set EXE="sensor_hub.exe"
 set BUILDDIR="Release"
 set DESCRIPTION="Damen Sensor Hub"
 set URL="http://www.damen.com/"
-set SIGNTOOL="c:\Program Files\Microsoft SDKs\Windows\v7.1\bin\signtool.exe"
+set SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\10.0.17134.0\x64\signtool.exe"
 set SIGNSHA1=742ECBBE6C66BB716C80C1FEA18FAB8FFEBC15BA
 rem ================================================
 
