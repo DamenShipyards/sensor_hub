@@ -258,7 +258,8 @@ private:
 
 
 Usb::Usb(boost::asio::io_context& io_context)
-    : io_ctx_(io_context), ctx_(nullptr), device_(nullptr), descriptors_(nullptr),
+    : io_ctx_(io_context), strand_(io_context),
+      ctx_(nullptr), device_(nullptr), descriptors_(nullptr),
       read_endpoint_(0), write_endpoint_(0), read_packet_size_(0),
       transfers_() {
   ctx_ = Usb_context::get_instance().get_context();

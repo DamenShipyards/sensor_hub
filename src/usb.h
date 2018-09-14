@@ -103,13 +103,13 @@ template <typename BufferSequence, typename Handler>
 struct Operation_context {
   Operation_context() = delete;
   Operation_context(
-      boost::asio::io_context& ctx,
+      boost::asio::io_context::strand& strand,
       const BufferSequence& buffers,
       Handler& handler,
       size_t packet_size,
       Transfer_queue* transfers)
-      : ctx_(ctx),
-        work_guard_(boost::asio::make_work_guard(ctx)),
+      : strand_(strand),
+        work_guard_(boost::asio::make_work_guard(strand.context())),
         buffers_(buffers),
         handler_(handler),
         data_(((boost::asio::buffer_size(buffers) - 1) / packet_size + 1) * packet_size),
@@ -144,7 +144,7 @@ struct Operation_context {
     consume_read_data(bytes_transferred);
     Handler handler(handler_);
     Transfer_queue* transfers = transfers_;
-    boost::asio::post(ctx_,
+    boost::asio::post(strand_,
         [handler{std::move(handler)}, ec, bytes_transferred, transfers, transfer]() mutable {
            transfers->delete_transfer(transfer);
            handler(ec, bytes_transferred);
@@ -156,7 +156,7 @@ struct Operation_context {
     return data_;
   }
 private:
-  boost::asio::io_context& ctx_;
+  boost::asio::io_context::strand& strand_;
   boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_;
   BufferSequence buffers_;
   Handler handler_;
@@ -265,7 +265,7 @@ struct Usb {
 
     typedef Operation_context<MutableBufferSequence, typename Init::completion_handler_type> Read_context;
 
-    Read_context* read_context = new Read_context{io_ctx_, buffers, init.completion_handler, read_packet_size_, &transfers_};
+    Read_context* read_context = new Read_context{strand_, buffers, init.completion_handler, read_packet_size_, &transfers_};
     submit_operation(read_context, read_endpoint_);
 
     return init.result.get();
@@ -285,7 +285,7 @@ struct Usb {
 
     typedef Operation_context<ConstBufferSequence, typename Init::completion_handler_type> Write_context;
 
-    Write_context* write_context = new Write_context{io_ctx_, buffers, init.completion_handler, 1, &transfers_};
+    Write_context* write_context = new Write_context{strand_, buffers, init.completion_handler, 1, &transfers_};
     submit_operation(write_context, write_endpoint_);
 
     return init.result.get();
@@ -293,6 +293,7 @@ struct Usb {
   void cancel();
 private:
   boost::asio::io_context& io_ctx_;
+  boost::asio::io_context::strand strand_;
   libusb_context* ctx_;
   libusb_device_handle* device_;
   struct Usb_descriptors;
