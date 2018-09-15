@@ -26,6 +26,7 @@
 
 #define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
 #include <boost/asio/spawn.hpp>
+#include <boost/asio/signal_set.hpp>
 
 #ifdef DEBUG
 #include <thread>
@@ -157,9 +158,24 @@ private:
   /**
    * Private default constructor for singleton
    */
-  Service(): ctx_(), http_server_(nullptr), devices_() {
-  }
+  Service()
+      : ctx_(), signals_(ctx_, SIGINT, SIGTERM), http_server_(nullptr), devices_() {
+    log(level::info, "Constructing service instance");
+		signals_.async_wait(
+				[this](boost::system::error_code ec, int signo)
+				{
+          if (!ec) {
+            log(level::info, "Received signal: %", signo);
+            ctx_.stop();
+          }
+          else {
+            log(level::error, "Failed to wait on signals: %", ec.message());
+          }
+				}
+    );
+	}
   asio::io_context ctx_;
+  boost::asio::signal_set signals_;
   std::unique_ptr<Http_server> http_server_;
   Devices devices_;
 };
