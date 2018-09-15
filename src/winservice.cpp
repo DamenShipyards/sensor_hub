@@ -7,7 +7,7 @@
  * (C) 2018 Damen Shipyards. All rights reserved.
  * \license
  * This software is proprietary. Any use without written
- * permission from the copyright holder is strictly 
+ * permission from the copyright holder is strictly
  * forbidden.
  */
 
@@ -55,7 +55,7 @@ DWORD WINAPI ServiceWorkerThread (LPVOID lpParam);
 
 void print_usage()
 {
-  std::cout << "Usage:" << std::endl 
+  std::cout << "Usage:" << std::endl
             << " sensor_hub <command>" << std::endl
             << "   Commands:" << std::endl
             << "     install: Install the service" << std::endl
@@ -214,7 +214,7 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
 
 VOID WINAPI ServiceCtrlHandler (DWORD CtrlCode)
 {
-  switch (CtrlCode) 
+  switch (CtrlCode)
   {
     case SERVICE_CONTROL_INTERROGATE:
       SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
@@ -225,7 +225,7 @@ VOID WINAPI ServiceCtrlHandler (DWORD CtrlCode)
       if (g_ServiceStatus.dwCurrentState != SERVICE_RUNNING)
         break;
 
-      // Get ready to stop the service 
+      // Get ready to stop the service
       g_ServiceStatus.dwControlsAccepted = 0;
       g_ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
       g_ServiceStatus.dwWin32ExitCode = 0;
@@ -233,7 +233,7 @@ VOID WINAPI ServiceCtrlHandler (DWORD CtrlCode)
 
       log(level::info, "Stopping service");
       SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
-      
+
       // This will signal the worker thread to start shutting down
       stop_loop();
       break;
@@ -254,7 +254,7 @@ DWORD WINAPI ServiceWorkerThread (LPVOID lpParam)
     log(level::error, "Exception from main loop: %", e.what());
     ReportStatus(EVENTLOG_ERROR_TYPE, "Unexpected error in Damen Sensor Hub: %s", e.what());
     result = ERROR_EXCEPTION_IN_SERVICE;
-  }    
+  }
 
   return result;
 }
@@ -280,7 +280,7 @@ static int SetServiceInfo(SC_HANDLE inSCM, LPCTSTR inServiceName, LPCTSTR inDesc
   lock = LockServiceDatabase(inSCM);
   check_error(lock);
 
-  // Open a handle to the service. 
+  // Open a handle to the service.
   service = OpenService(inSCM, inServiceName, SERVICE_CHANGE_CONFIG|SERVICE_START);
   check_error(service);
 
@@ -310,7 +310,7 @@ exit:
   }
   if(lock)
   {
-    UnlockServiceDatabase(lock); 
+    UnlockServiceDatabase(lock);
   }
   return ret;
 }
@@ -335,8 +335,8 @@ static int InstallService(LPCTSTR inName, LPCTSTR inDisplayName, LPCTSTR inDescr
   scm = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
   check_error(scm);
 
-  service = CreateService( scm, inName, inDisplayName, SERVICE_ALL_ACCESS, SERVICE_WIN32_SHARE_PROCESS, 
-      SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, fullPath, NULL, NULL, SERVICE_DEPENDENCIES, 
+  service = CreateService( scm, inName, inDisplayName, SERVICE_ALL_ACCESS, SERVICE_WIN32_SHARE_PROCESS,
+      SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, fullPath, NULL, NULL, SERVICE_DEPENDENCIES,
       NULL, NULL );
   check_error(service);
 
@@ -425,7 +425,7 @@ int _tmain (int argc, TCHAR *argv[])
   p.make_preferred();
   log(level::info, "Starting %", p);
 
-  SERVICE_TABLE_ENTRY ServiceTable[] = 
+  SERVICE_TABLE_ENTRY ServiceTable[] =
   {
     {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
     {NULL, NULL}
@@ -448,7 +448,7 @@ int _tmain (int argc, TCHAR *argv[])
         log(level::info, "Service installed.");
       }
       return ret;
-    } 
+    }
     else if (_tcscmp(argv[1], _T("uninstall")) == 0) {
       ret = RemoveService(SERVICE_NAME);
       if (ret != 0) {

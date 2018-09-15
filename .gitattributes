@@ -1,5 +1,13 @@
+# Linux/cygwin only files
 *.sh text eol=lf
-Makefile text eol=lf
+Makefile.in text eol=lf
+
+# Windows only files
+*.bat text eol=crlf
+*.sln text eol=crlf
+winservice.cpp eol=crlf
+
+# Linux/windows shared text files
 *.cpp text eol=auto
 *.cc text eol=auto
 *.h text eol=auto
