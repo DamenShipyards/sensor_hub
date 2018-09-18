@@ -346,7 +346,9 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
   }
 
   bool set_option_flags(asio::yield_context yield) override {
-    return this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
+    this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
+    // We don't really care that much whether this command was successful, so just always return true
+    return true;
   }
 
 };
