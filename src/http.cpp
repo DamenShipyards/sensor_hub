@@ -647,7 +647,7 @@ public:
   }
 
   void stop() {
-	socket_.close();
+    socket_.close();
   }
 
 private:
