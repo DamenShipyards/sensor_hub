@@ -41,17 +41,13 @@ struct Config {
   }
 private:
   Config(): config_() {
-    set_defaults();
     pth config_file = get_config_file();
-    pth defaults_file{config_file.string() + ".default"};
     log(level::info, "Using configuration file: %", config_file);
     if (fs::exists(config_file)) {
-      save(defaults_file);
       load(config_file);
     }
-    else {
-      save(config_file);
-    }
+    set_defaults();
+    save(config_file);
   }
 
   pt::ptree config_;
@@ -90,17 +86,24 @@ private:
     pt::write_ini(p.string(), config_);
   }
 
+  template <typename Value>
+  void set_default(const std::string& key, Value def) {
+    config_.put(key, config_.get(key, def));
+  }
+
   void set_defaults() {
-    config_.put("logging.level", "info");
-    config_.put("http.active", true);
-    config_.put("http.address", "localhost");
-    config_.put("http.port", 12080);    
-    config_.put("devices.count", 1);
-    config_.put("device0.type", "xsens_mti_g_710_usb");
-    config_.put("device0.name", "Xsens-MTi-G-710");
-    config_.put("device0.connection_string", "2639:0017,0");
-    config_.put("device0.enable_logging", true);
-    config_.put("device0.use_as_time_source", false);
+    set_default("logging.level", "info");
+    set_default("http.enabled", true);
+    set_default("http.address", "localhost");
+    set_default("http.port", 12080);    
+    set_default("modbus.enabled", true);
+    set_default("modbus.port", 502);
+    set_default("devices.count", 1);
+    set_default("device0.type", "xsens_mti_g_710_usb");
+    set_default("device0.name", "Xsens-MTi-G-710");
+    set_default("device0.connection_string", "2639:0017,0");
+    set_default("device0.enable_logging", true);
+    set_default("device0.use_as_time_source", false);
   }
 };
 

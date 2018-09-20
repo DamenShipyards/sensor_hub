@@ -15,6 +15,7 @@
 #include "log.h"
 #include "http.h"
 #include "config.h"
+#include "modbus.h"
 #include "device.h"
 
 #include "driver/install.h"
@@ -23,10 +24,8 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
-
-#define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
-#include <boost/asio/spawn.hpp>
 #include <boost/asio/signal_set.hpp>
+#include <boost/make_shared.hpp>
 
 #ifdef DEBUG
 #include <thread>
@@ -73,6 +72,25 @@ struct Service {
     if (http_server_ != nullptr) {
       log(level::info, "Stopping HTTP server");
       http_server_->stop();
+    }
+  }
+
+  /**
+   * Start built-in modbus server
+   */
+  void start_modbus_server(const int port) {
+    log(level::info, "Starting Modbus server");
+    auto handler = boost::make_shared<Modbus_handler>();
+    modbus_server_ = std::make_unique<Modbus_server>(ctx_, handler, port);
+  }
+
+  /**
+   * Stop built-in modbus server
+   */
+  void stop_modbus_server() {
+    if (modbus_server_ != nullptr) {
+      log(level::info, "Stopping Modbus server");
+      modbus_server_->stop();
     }
   }
 
@@ -159,7 +177,10 @@ private:
    * Private default constructor for singleton
    */
   Service()
-      : ctx_(), signals_(ctx_, SIGINT, SIGTERM), http_server_(nullptr), devices_() {
+      : ctx_(), signals_(ctx_, SIGINT, SIGTERM), 
+        http_server_(nullptr), 
+        modbus_server_(nullptr),
+        devices_() {
     log(level::info, "Constructing service instance");
 		signals_.async_wait(
 				[this](boost::system::error_code ec, int signo)
@@ -177,6 +198,7 @@ private:
   asio::io_context ctx_;
   boost::asio::signal_set signals_;
   std::unique_ptr<Http_server> http_server_;
+  std::unique_ptr<Modbus_server> modbus_server_;
   Devices devices_;
 };
 
@@ -189,8 +211,12 @@ int enter_loop() {
 
   Service& service = Service::get_instance();
 
-  if (cfg.get("http.active", false)) {
+  if (cfg.get("http.enabled", false)) {
     service.start_http_server(cfg.get("http.address", "localhost"), cfg.get("http.port", 12080));
+  }
+
+  if (cfg.get("modbus.enabled", false)) {
+    service.start_modbus_server(cfg.get("modbus.port", 502));
   }
 
   service.setup_devices(cfg);
@@ -211,6 +237,7 @@ int enter_loop() {
 void stop_loop() {
   Service& service = Service::get_instance();
   service.stop_http_server();
+  service.stop_modbus_server();
   service.close_devices();
   asio::io_context& ctx = service.get_context();
   if (!ctx.stopped()) {

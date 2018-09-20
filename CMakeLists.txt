@@ -31,6 +31,7 @@ set(FMTLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/src")
 set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")
 set(SENSORHUB_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
 set(XSENS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/xsens/include")
+set(MODBUS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/modbus/include")
 
 enable_testing()
 
@@ -46,6 +47,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/log.cpp
   ${SENSORHUB_SOURCE_DIR}/config.cpp
   ${SENSORHUB_SOURCE_DIR}/quantities.cpp
+  ${SENSORHUB_SOURCE_DIR}/modbus.cpp
 )
 
 file(GLOB FMTLIB_SOURCES
@@ -58,6 +60,7 @@ include_directories(
   ${LIBUSB_1_INCLUDE_DIRS}
   ${FMTLIB_INCLUDE_DIR}
   ${XSENS_INCLUDE_DIR}
+  ${MODBUS_INCLUDE_DIR}
 )
 
 link_directories(
@@ -115,6 +118,7 @@ new_test(test_device log.cpp device.cpp)
 new_test(test_datetime datetime.cpp)
 new_test(test_xsens xsens.cpp usb.cpp device.cpp log.cpp datetime.cpp)
 new_test(test_xsens_impl datetime.cpp)
+new_test(test_modbus)
 
 if(DOXYGEN_FOUND)
   set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)

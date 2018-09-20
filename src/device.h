@@ -23,7 +23,9 @@
 
 #include <fmt/core.h>
 
+#ifndef BOOST_COROUTINES_NO_DEPRECATION_WARNING
 #define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
+#endif
 #include <boost/asio/spawn.hpp>
 namespace asio = boost::asio;
 

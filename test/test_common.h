@@ -26,7 +26,6 @@ tt::assertion_result usb_available(ut::test_unit_id test_id) {
 
   FILE *lsusb = popen("/usr/bin/lsusb", "r");
   if (lsusb == nullptr) {
-    std::cout << "Failed to popen lsusb" << std::endl;
     return false;
   }
   char buffer[1024];
