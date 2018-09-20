@@ -33,6 +33,7 @@
 #endif
 
 #include <string>
+#include <memory>
 
 namespace posix_time = boost::posix_time;
 
@@ -57,12 +58,21 @@ struct Service {
     return ctx_;
   }
 
+  Http_server& get_http_server() {
+    return *http_server_;
+  }
+
+  Modbus_server& get_modbus_server() {
+    return *modbus_server_;
+  }
+
   /**
    * Start built-in HTTP server
    */
   void start_http_server(const std::string& host, const int port) {
     log(level::info, "Starting HTTP server");
-    http_server_ = std::make_unique<Http_server>(ctx_, host, port);
+    auto handler = std::make_shared<Request_handler>(devices_);
+    http_server_ = std::make_unique<Http_server>(ctx_, handler, host, port);
   }
 
   /**
@@ -213,6 +223,7 @@ int enter_loop() {
 
   if (cfg.get("http.enabled", false)) {
     service.start_http_server(cfg.get("http.address", "localhost"), cfg.get("http.port", 12080));
+    service.get_http_server().set_css(cfg.get("http.css", ""));
   }
 
   if (cfg.get("modbus.enabled", false)) {

@@ -95,7 +95,8 @@ private:
     set_default("logging.level", "info");
     set_default("http.enabled", true);
     set_default("http.address", "localhost");
-    set_default("http.port", 12080);    
+    set_default("http.port", 10080);
+    set_default("http.css", "html { font-family: sans-serif; background-color: #85b0d0; }");
     set_default("modbus.enabled", true);
     set_default("modbus.port", 502);
     set_default("devices.count", 1);

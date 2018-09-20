@@ -7,7 +7,7 @@
  * (C) 2018 Damen Shipyards. All rights reserved.
  * \license
  * This software is proprietary. Any use without written
- * permission from the copyright holder is strictly 
+ * permission from the copyright holder is strictly
  * forbidden.
  */
 
@@ -96,6 +96,83 @@ std::string extension_to_type(const std::string& extension) {
   return "text/plain";
 }
 
+static const char icon[] =
+  "AAABAAEAICAAAAEAIACoEAAAFgAAACgAAAAgAAAAQAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  "AAAAAAD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A"
+  "/v7+AP7+/gD+/v4A/v7+ALKhoV+tmpqpsqKiA7SkpCGqlZWvs6OjVv7+/gCvnZ2cr52ddf7+/gD+"
+  "/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+"
+  "/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4AsqGhw7Khof+yoaEGsqGhS7KhofyyoaGs/v7+"
+  "ALKhof+yoaHa/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A"
+  "/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gCyoaEYsqGhM7KhoSeyoaHPsqGh/7KhoTey"
+  "oaFusqGh/LKhobyyoaEjsqGh/7KhoeGyoaEosqGhMrKhoS3+/v4A/v7+AP7+/gD+/v4A/v7+AP7+"
+  "/gCkJQDFpCkAx6QpAMekKQDHpCkAx6QpAMekKQDHpCkAx6QoAMejKQQpoCIDQatpVeGxoKD/sZ+f"
+  "/rGgoP+yoaH/sZ+f/bKhofyyoaH/sqGh/rKhofuyoaH/sqGh/rKhofuyoaH7sqGh4P7+/gD+/v4A"
+  "/v7+AP7+/gD+/v4A/v7+AKQpAPulLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6YoAzOj"
+  "JABSq2NL/7Khof+yoaH/sqGh/7Khof+yoaH/sqGh/7Khof+yoaH/sqGh/7Khof+yoaH/sqGh/7Kh"
+  "of+yoaHi/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4ApCkA+6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A"
+  "/6UtAP+lLQD/roB2e61+daGugHP/sqGh/7Khof+yoqL/s6Ki/7Oiov+zoqL/s6Ki/7Oiov+zoqL/"
+  "s6Ki/7Oiov+yoaH/sqGh/7KhofeyoaGysqGhs7KhoTj+/v4A/v7+AP7+/gCkKQD7pS0A/6UtAP+l"
+  "LQD/pS0A/6UtAP+lLQD/pS0A/6U3Dv+vnp35sqGh/7Khof+yoaH/s6Oj/6KFhP+dKwD/mygA/5so"
+  "AP+bKAD/mygA/5smAP+YJQDXlG1rqrOjo/+yoaH/sqGh/7Khof+yoaH/sqGhbv7+/gD+/v4A/v7+"
+  "AKQpAPulLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/61wYmSrbF2HrXdm/7Khof+zo6P/"
+  "ooaF/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UrAP+eXk/ns6Oj/7Khof+yoaHlsqGhBrKhoRCy"
+  "oaEG/v7+AP7+/gD+/v4ApCkA+6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/qlZASqdM"
+  "NGmsbVn/sqGh/7Ojo/+ihoX/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/59aSP+zo6P/sqGh"
+  "/7KhoeiyoaEfsqGhKLKhoQ3+/v4A/v7+AP7+/gCkKQD7pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/"
+  "pS0A/6Y7FP+xnp7usZ+f+LGenf+yoaH/s6Oj/6KGhf+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+l"
+  "LQD/n1pI/7Ojo/+yoaH/sqGh/rKhofWyoaH2sqGhkP7+/gD+/v4A/v7+AKQpAPulLQD/pS0A/6Ut"
+  "AP+lLQD/pS0A/6UtAP+lLQD/pjYN/7GXlMOwlZHWsJKM/7Khof+zo6P/ooaF/6UtAP+lLQD/pS0A"
+  "/6UtAP+lLQD/pS0A/6UtAP+fWkj/s6Oj/7Khof+yoaH4sqGhwLKhocOyoaFl/v7+AP7+/gD+/v4A"
+  "pCkA+6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pigDM54mCRCugHalsqGh/7Ojo/+i"
+  "hoX/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/59aSP+zo6P/sqGh/7KhoeT+/v4AsqGhAf7+"
+  "/gD+/v4A/v7+AP7+/gCkKQD7pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6U0Cv+wk5CxsqGh"
+  "r7KhodayoaH/s6Oj/6KGhf2lKwD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/nlpH/7Ojo/+yoaH/"
+  "sqGh8bKhoXmyoaF+sqGhOv7+/gD+/v4A/v7+AKQpAPulLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+l"
+  "LQD/pjwU/7Khof2yoaH/sqGh/7Khof+zoqL/po2O/ZhAKeCbRSr/m0Uq/5tFKv+bRSr/m0Uq/5tD"
+  "KP+eal//s6Oj/7Khof+yoaH/sqGh/7Khof+yoaGe/v7+AP7+/gD+/v4ApCkA+6UtAP+lLQD/pS0A"
+  "/6UtAP+lLQD/pS0A/6UtAP+lLQD/qlA5RrKhoR6yoaGLsqGh/7Khof+zoqL/s6Oj/7Ojo/+zo6P/"
+  "s6Oj/7Ojo/+zo6P/s6Oj/7Ojo/+yoaH/sqGh/7Gfn+6yoaFMsqGhU7KhoRv+/v4A/v7+AP7+/gCk"
+  "KQD7pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+mJgMz/v7+ALKhoXqyoaH/sqGh/7Kh"
+  "of+yoaH/sqGh/7Khof+yoaH/sqGh/7Khof+yoaH/sqGh/7Khof+yoaH/sZ+f5v7+/gD+/v4A/v7+"
+  "AP7+/gD+/v4A/v7+AKQpAPulLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6YmAzP+/v4A"
+  "sqGhZLKhodOyoaHPsqGh9LKhof+vjIT/sJKM/7GgoP+xmpf/r4uC/7Gal/+yoaH/sI+J/6+Mg/+x"
+  "nZzB/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4ApCkA+6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6Ut"
+  "AP+lLQD/piYDM/7+/gCyoaEEsqGhB/7+/gCyoaHFsqGh/6UyCP+pUTL/sZ+f/618bf+lLQD/rXpr"
+  "/7Khof+nQR3/pCwD96VJOBn+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gCkKQD7pS0A/6UtAP+lLQD/"
+  "pS0A/6UtAP+lLQD/pS0A/6UtAP+mJgMz/v7+AP7+/gD+/v4A/v7+ALGgoL6yoaH/pS8D/6hNLf+y"
+  "oaH/rXlq/6UtAP+teWr/sqGh/6Y+F/+jJgDb/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AKQp"
+  "APulLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UoATP+/v4A/v7+AAPf4AF2XlcCpkEn"
+  "dKNBIf6lLQD/pTEF/6VEIv+mOBD/pS0A/6dAG/+qWj7/pS0B/6QoAKD+/v4A/v7+AP7+/gD+/v4A"
+  "/v7+AP7+/gD+/v4ApCkA+6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pCgBZaUoATKk"
+  "KAQyoyYDVKQmALClKwD8pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/oyYBVP7+"
+  "/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gCkKQD7pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A"
+  "/6UtAP+lKwD/pSsA/6UrAP+lKwD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/"
+  "pS0A/6UrAOqSHSUK/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AKQpAPulLQD/pS0A/6UtAP+l"
+  "LQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6Ut"
+  "AP+lLQD/pS0A/6UtAP+lKwD/oyUBdEDH0AH+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4ApCkA"
+  "+6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/"
+  "pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pSsA/6QpANGeKhAM/v7+AP7+/gD+/v4A/v7+AP7+/gD+"
+  "/v4A/v7+AP7+/gCkKQD7pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6Ut"
+  "AP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+kKgDtoCEBN/7+/gD+/v4A/v7+"
+  "AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AKQpAPulLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/"
+  "pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lKwD/pCoA9qMiAVZF"
+  "0tcB/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4ApCkA+6UtAP+lLQD/pS0A/6Ut"
+  "AP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pSsA"
+  "/6QoANehJAQsh9+rAf7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gCkKQD7"
+  "pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+lLQD/pS0A/6UtAP+l"
+  "LQD/pS0A/qQpAOCjJQFvmx0QDf7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+"
+  "/gD+/v4A/v7+AKMlAMWkKQDHpCkAx6QpAMekKQDHpCkAx6QpAMekKQDHpCkAx6QpAMekKQDHpCkA"
+  "x6QpAMekKADHpCgAoaQmAXugHgM8lz06BH65sQH+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A"
+  "/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+"
+  "/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+"
+  "/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+"
+  "AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A"
+  "/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+"
+  "/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+"
+  "/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A/v7+AP7+/gD+/v4A///b"
+  "f///mT///5k/4AwAB+AMAAfgCAAB4AAAAeAIAAfgDAAH4AAAAOAAAAHgDAAH4AAAB+AAAADgDAAH"
+  "4A4AB+AOAAfgD4AP4A+AD+APwA/gDwAf4AAAH+AAAD/gAAA/4AAAf+AAAP/gAAH/4AAH/+AAP///"
+  "//////////////8=";
 
 namespace status_strings {
 
@@ -240,18 +317,6 @@ Reply Reply::stock_reply(Reply::status_type status) {
 }
 
 
-class Request_handler {
-public:
-  Request_handler(const Request_handler&) = delete;
-  Request_handler& operator=(const Request_handler&) = delete;
-
-  explicit Request_handler() {};
-
-  void handle_request(const Request& req, Reply& rep);
-
-private:
-  static bool url_decode(const std::string& in, std::string& out);
-};
 
 
 
@@ -270,11 +335,6 @@ void Request_handler::handle_request(const Request& req, Reply& rep) {
     return;
   }
 
-  // If path ends in slash (i.e. is a directory) then add "index.html".
-  if (request_path[request_path.size() - 1] == '/') {
-    request_path += "index.html";
-  }
-
   // Determine the file extension.
   std::size_t last_slash_pos = request_path.find_last_of("/");
   std::size_t last_dot_pos = request_path.find_last_of(".");
@@ -283,23 +343,44 @@ void Request_handler::handle_request(const Request& req, Reply& rep) {
     extension = request_path.substr(last_dot_pos + 1);
   }
 
-  // Open the file to send back.
-  //std::string full_path = doc_root_ + request_path;
-  //std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
-  //if (!is) {
-  //  rep = Reply::stock_reply(Reply::not_found);
-  //  return;
-  //}
-
+  std::string content;
+  std::string content_type = get_content(request_path, content);
   // Fill out the reply to be sent to the client.
-  rep.status = Reply::ok;
-  static const char buf[] = "Welcome to Damen Sensor Hub";
-  rep.content.append(buf, sizeof(buf));
-  rep.headers.resize(2);
-  rep.headers[0].name = "Content-Length";
-  rep.headers[0].value = std::to_string(rep.content.size());
-  rep.headers[1].name = "Content-Type";
-  rep.headers[1].value = extension_to_type(extension);
+  if (!content_type.empty()) {
+    rep.status = Reply::ok;
+    rep.content.append(content);
+    rep.headers.resize(2);
+    rep.headers[0].name = "Content-Length";
+    rep.headers[0].value = std::to_string(rep.content.size());
+    rep.headers[1].name = "Content-Type";
+    rep.headers[1].value = content_type;
+  }
+  else {
+    rep = Reply::stock_reply(Reply::not_found);
+  }
+}
+
+
+std::string Request_handler::get_content(const std::string& path, std::string& content) {
+    static const char html[] =
+      "<html>\n"
+      "<head>\n"
+      "<meta http-equiv=\"refresh\" content=\"10\">\n"
+      "<title>Damen Sensor Hub</title>\n"
+      "<style>{}</style>\n"
+      "<link href=\"data:image/x-icon;base64,{}\" rel=\"icon\" type=\"image/x-icon\">"
+      "</head>\n"
+      "<body>{}</body>\n"
+      "</html>\n";
+    static const char home[] =
+      "<h1>Welcome to Damen Sensor Hub</h1>\n";
+    if (path == "/") {
+      content = fmt::format(html, css_, icon, home);
+      return "text/html";
+    }
+    else {
+      return "";
+    }
 }
 
 
@@ -638,7 +719,7 @@ public:
   Connection(const Connection&) = delete;
   Connection& operator=(const Connection&) = delete;
 
-  explicit Connection(boost::asio::ip::tcp::socket socket, 
+  explicit Connection(boost::asio::ip::tcp::socket socket,
                       Connection_manager& manager, Request_handler& handler)
 	  : socket_(std::move(socket)), connection_manager_(manager), request_handler_(handler) {}
 
@@ -754,67 +835,80 @@ struct Http_server::Server {
   Server(const Server&) = delete;
   Server& operator=(const Server&) = delete;
 
-  explicit Server(boost::asio::io_context& ctx, const std::string& address, const int port);
+  explicit Server(
+      boost::asio::io_context& ctx,
+      std::shared_ptr<Request_handler> handler,
+      const std::string& address,
+      const int port)
+    : io_context_(ctx),
+      acceptor_(io_context_),
+      connection_manager_(),
+      request_handler_(handler) {
+    // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
+    boost::asio::ip::tcp::resolver resolver(io_context_);
+    boost::asio::ip::tcp::endpoint endpoint =
+      *resolver.resolve(address, fmt::format("{:d}", port)).begin();
+    acceptor_.open(endpoint.protocol());
+    acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    acceptor_.bind(endpoint);
+    acceptor_.listen();
+
+    do_accept();
+  }
 
   void stop() {
 	  acceptor_.close();
 	  connection_manager_.stop_all();
   }
 
+  void set_css(const std::string& css) {
+    request_handler_->set_css(css);
+  }
+
 private:
-  void do_accept();
-  void do_await_stop();
+  void do_accept() {
+    acceptor_.async_accept(
+        [this](boost::system::error_code ec, boost::asio::ip::tcp::socket socket) {
+          // Check whether the server was stopped by a signal before this
+          // completion handler had a chance to run.
+          if (!acceptor_.is_open()) {
+            return;
+          }
+
+          if (!ec) {
+            connection_manager_.start(std::make_shared<Connection>(
+                  std::move(socket), connection_manager_, *request_handler_));
+          }
+
+          do_accept();
+        }
+    );
+  }
+
 
   boost::asio::io_context& io_context_;
   boost::asio::ip::tcp::acceptor acceptor_;
   Connection_manager connection_manager_;
-  Request_handler request_handler_;
+  std::shared_ptr<Request_handler> request_handler_;
 };
 
 
-Http_server::Server::Server(boost::asio::io_context& ctx, const std::string& address, const int port)
-  : io_context_(ctx), acceptor_(io_context_),
-    connection_manager_(), request_handler_() {
-  // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-  boost::asio::ip::tcp::resolver resolver(io_context_);
-  boost::asio::ip::tcp::endpoint endpoint =
-      *resolver.resolve(address, fmt::format("{:d}", port)).begin();
-  acceptor_.open(endpoint.protocol());
-  acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-  acceptor_.bind(endpoint);
-  acceptor_.listen();
-
-  do_accept();
-}
-
-
-void Http_server::Server::do_accept() {
-  acceptor_.async_accept(
-      [this](boost::system::error_code ec, boost::asio::ip::tcp::socket socket) {
-		// Check whether the server was stopped by a signal before this
-		// completion handler had a chance to run.
-		if (!acceptor_.is_open()) {
-		  return;
-	    }
-
-		if (!ec) {
-		  connection_manager_.start(std::make_shared<Connection>(
-				std::move(socket), connection_manager_, request_handler_));
-		}
-
-	    do_accept(); 
-      }
-  );
-}
-
-Http_server::Http_server(boost::asio::io_context& ctx, const std::string& address, const int port)
-  : server_{new Server{ctx, address, port}} {
+Http_server::Http_server(
+    boost::asio::io_context& ctx,
+    std::shared_ptr<Request_handler> handler,
+    const std::string& address,
+    const int port)
+  : server_{new Server{ctx, handler, address, port}} {
 }
 
 Http_server::~Http_server() = default;
 
 void Http_server::stop() {
   server_->stop();
+}
+
+void Http_server::set_css(const std::string& css) {
+  server_->set_css(css);
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

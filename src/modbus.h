@@ -14,6 +14,9 @@
 #ifndef MODBUS_H_
 #define MODBUS_H_
 
+#ifdef BOOST_COROUTINES_NO_DEPRECATION_WARNING
+#undef BOOST_COROUTINES_NO_DEPRECATION_WARNING
+#endif
 #include <modbus/server.hpp>
 
 struct Modbus_handler: public modbus::Default_handler {
