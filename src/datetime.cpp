@@ -12,6 +12,7 @@
  */
 
 #include "datetime.h"
+#include "log.h"
 
 #include <cstdint>
 
@@ -31,23 +32,26 @@ struct Clock {
     static Clock instance;
     return instance;
   }
+
   double get_time() {
-    set_value(get_sys_clock() + offset_);
+    set_value(get_clock());
     return value_;
   }
+
   void adjust(const double& towards_time) {
-    double t = get_time();
-    if ((t - last_adjust_) > 1) {
-      double diff = towards_time - t;
-      offset_ += adjust_rate_ * diff;
-    }
-    last_adjust_ = t;
+    adjust_diff(towards_time - get_clock());
   }
+
+  void adjust_diff(const double& diff) {
+    offset_ += adjust_rate_ * diff;
+  }
+
   void set_adjust_rate(const double& adjust_rate) {
     adjust_rate_ = adjust_rate;
   }
+
 private:
-  Clock(): value_(0), offset_(0), adjust_rate_(DEFAULT_ADJUST_RATE), last_adjust_(0) {
+  Clock(): value_(0), offset_(0), adjust_rate_(DEFAULT_ADJUST_RATE) {
     auto dt_now = date_time::microsec_clock<posix_time::ptime>::universal_time();
     auto sys_now = chrono::system_clock::now().time_since_epoch();
     
@@ -66,10 +70,12 @@ private:
       value_ = value;
     }
   }
+  double get_clock() {
+    return get_sys_clock() + offset_;
+  }
   double value_;
   double offset_;
   double adjust_rate_;
-  double last_adjust_;
   static const double rate_;
 };
 
@@ -87,9 +93,13 @@ void adjust_clock(const double& towards_time) {
   Clock::get_instance().adjust(towards_time);
 }
 
-void set_adjust_rate(const double& adjust_rate) {
-  if (adjust_rate > 0.0 && adjust_rate <= 1.0)
-    Clock::get_instance().set_adjust_rate(adjust_rate);
+void adjust_clock_diff(const double& diff) {
+  Clock::get_instance().adjust_diff(diff);
+}
+
+void set_clock_adjust_rate(const double& rate) {
+  log(level::info, "Setting clock adjust rate to %", rate);
+  Clock::get_instance().set_adjust_rate(rate);
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

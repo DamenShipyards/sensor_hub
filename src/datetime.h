@@ -41,19 +41,27 @@ extern const posix_time::ptime unix_epoch;
  * Adjust central clock
  *
  * \param towards_time UTC unix timestamp to use for adjusting the clock. The clock
- *                     will only be adjusted by a fraction that can be set with
- *                     #set_adjust_rate
+ *                     will only be adjusted by a fraction that defaults to 1/40 and
+ *                     can be set with set_clock_adjust_rate.
  */
 extern void adjust_clock(const double& towards_time);
 
 /**
- * Set adjust rate to be used by #adjust_clock
+ * Adjust central clock
  *
- * \param adjust_rate Value between 0 and 1 indicating how fast the clock is adjusted
- *                    towards the value provided to #adjust_clock. Default to 
- *                    #DEFAULT_ADJUST_RATE
+ * \param diff Difference between recorded time and system UTC unix timestamp to use for adjusting 
+ *             the clock. The clock will only be adjusted by a fraction that defaults to 1/40
+ *             and can be set with set_clock_adjust_rate
  */
-extern void set_adjust_rate(const double& adjust_rate);
+extern void adjust_clock_diff(const double& diff);
+
+
+/**
+ * Set rate with which to adjust central clock
+ *
+ * \param rate Rate with which to adjust the clock with each call to adjust_clock(_diff)
+ */
+extern void set_clock_adjust_rate(const double& rate);
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
