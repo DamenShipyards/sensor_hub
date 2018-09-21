@@ -322,6 +322,12 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return result;
   }
 
+  void use_as_time_source(const bool value) override {
+    Device::use_as_time_source(value);
+    // Decrease clock adjust rate because of high sample frequency of xsens
+    set_clock_adjust_rate(0.0001);
+  }
+
   const parser::Packet_parser& get_parser() const {
     return parser_;
   }

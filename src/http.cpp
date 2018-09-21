@@ -14,6 +14,7 @@
 #include "http.h"
 #include "log.h"
 #include "loop.h"
+#include "version.h"
 
 #include <utility>
 #include <fstream>
@@ -362,25 +363,55 @@ void Request_handler::handle_request(const Request& req, Reply& rep) {
 
 
 std::string Request_handler::get_content(const std::string& path, std::string& content) {
-    static const char html[] =
-      "<html>\n"
-      "<head>\n"
-      "<meta http-equiv=\"refresh\" content=\"10\">\n"
-      "<title>Damen Sensor Hub</title>\n"
-      "<style>{}</style>\n"
-      "<link href=\"data:image/x-icon;base64,{}\" rel=\"icon\" type=\"image/x-icon\">"
-      "</head>\n"
-      "<body>{}</body>\n"
-      "</html>\n";
-    static const char home[] =
-      "<h1>Welcome to Damen Sensor Hub</h1>\n";
-    if (path == "/") {
-      content = fmt::format(html, css_, icon, home);
-      return "text/html";
+  static const char html[] =
+    "<html>\n"
+    "<head>\n"
+    "<meta http-equiv=\"refresh\" content=\"10\">\n"
+    "<title>Damen Sensor Hub</title>\n"
+    "<style>{:s}</style>\n"
+    "<link href=\"data:image/x-icon;base64,{:s}\" rel=\"icon\" type=\"image/x-icon\">"
+    "</head>\n"
+    "<body>{:s}</body>\n"
+    "</html>\n";
+  static const char home[] =
+    "<h1>Welcome to Damen Sensor Hub</h1>\n"
+    "<h2>Connected devices:</h2>\n<ul>{:s}</ul>"
+    "<hr><p class=\"attribution\">"
+    "Version: {} built from revision: {}. Written by "
+    "<a href=\"mailto:jaap.versteegh@damen.com?subject=Damen Sensor Hub\">Jaap Versteegh</a>";
+  if (path == "/") {
+    std::string devices;
+    for (size_t i = 0; i < devices_.size(); ++i) {
+      const Device& device = *devices_[i];
+      if (device.is_connected()) {
+        devices += fmt::format(
+            "<li class=\"device_connected\"><a href=\"/devices/{:d}\">{:s}, {:s}</a>: connected",
+            i,
+            device.get_name(),
+            device.get_id());
+      }
+      else {
+        devices += fmt::format("<li class=\"device_disconnected\">{:s}: Not connected.", device.get_name());
+      }
     }
-    else {
-      return "";
+    content = fmt::format(html, css_, icon, 
+        fmt::format(home, devices, STRINGIFY(VERSION), STRINGIFY(GITREV)));
+    return "text/html";
+  }
+  else if (path.substr(0, 9) == "/devices/") {
+    std::string id = path.substr(9, 32);
+    content = "{}";
+    for (size_t i = 0; i < devices_.size(); ++i) {
+      const Device& device = *devices_[i];
+      if (std::to_string(i) == id || device.get_id() == id) {
+        content = get_device_json(device);
+      }
     }
+    return "application/json";
+  }
+  else {
+    return "";
+  }
 }
 
 

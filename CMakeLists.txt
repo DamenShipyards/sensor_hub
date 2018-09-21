@@ -32,6 +32,7 @@ set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")
 set(SENSORHUB_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
 set(XSENS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/xsens/include")
 set(MODBUS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/modbus/include")
+set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rapidjson/include")
 
 enable_testing()
 
@@ -61,6 +62,7 @@ include_directories(
   ${FMTLIB_INCLUDE_DIR}
   ${XSENS_INCLUDE_DIR}
   ${MODBUS_INCLUDE_DIR}
+  ${RAPIDJSON_INCLUDE_DIR}
 )
 
 link_directories(
@@ -114,10 +116,10 @@ new_test(test_quantities quantities.cpp)
 new_test(test_tools)
 new_test(test_parse)
 new_test(test_usb log.cpp usb.cpp)
-new_test(test_device log.cpp device.cpp)
-new_test(test_datetime datetime.cpp)
+new_test(test_device log.cpp device.cpp datetime.cpp)
+new_test(test_datetime datetime.cpp log.cpp)
 new_test(test_xsens xsens.cpp usb.cpp device.cpp log.cpp datetime.cpp)
-new_test(test_xsens_impl datetime.cpp)
+new_test(test_xsens_impl datetime.cpp log.cpp)
 new_test(test_modbus)
 
 if(DOXYGEN_FOUND)

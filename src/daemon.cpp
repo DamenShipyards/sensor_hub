@@ -14,6 +14,7 @@
 #include "log.h"
 #include "loop.h"
 #include "version.h"
+#include "tools.h"
 
 // Return codes
 #define PROGRAM_SUCCESS 0
@@ -27,8 +28,6 @@
 #define DAEMON_NOT_RUNNING 1007
 #define PID_ERROR 1008
 
-#define STRIFY2(X) #X
-#define STRINGIFY(X) STRIFY2(X)
 
 namespace fs = boost::filesystem;
 using pth = boost::filesystem::path;
@@ -52,6 +51,7 @@ void print_usage() {
 void print_version() {
   std::cout << "Damen Sensor Hub version : " << STRINGIFY(VERSION) << std::endl;
   std::cout << "Built from git revision  : " << STRINGIFY(GITREV) << std::endl;
+  std::cout << "Written by Jaap Versteegh <jaap.versteegh@damen.com>" << std::endl;
 }
 
 
@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
   catch(std::exception& e) {
     log(level::error, "Exception: %", e.what());
     std::cerr << "Exception: " <<  e.what() << std::endl;
-    return  UNHANDLED_EXCEPTION;
+    return UNHANDLED_EXCEPTION;
   }
   catch(...) {
     std::cerr << "Unknown exception." << std::endl;

@@ -60,6 +60,7 @@ void print_usage()
             << "   Commands:" << std::endl
             << "     install: Install the service" << std::endl
             << "     uninstall: Remove the service" << std::endl;
+            << "     version: Print version and exit" << std::endl;
 }
 
 void print_version_info(const TCHAR* exe, utf_converter& conv_utf8) {
@@ -81,6 +82,7 @@ void print_version_info(const TCHAR* exe, utf_converter& conv_utf8) {
         std::cout << "Build from revision: " << conv_utf8.to_bytes(value) << std::endl;
       }
     }
+    std::cout << "Written by Jaap Versteegh <jaap.versteegh@damen.com>" << std::endl;
     free(version_buf);
   }
 }
@@ -418,8 +420,6 @@ int _tmain (int argc, TCHAR *argv[])
   // TCHAR* to utf8 char* converter
   utf_converter conv_utf8;
 
-  print_version_info(argv[0], conv_utf8);
-
   pth p{argv[0]};
   p = fs::canonical(p);
   p.make_preferred();
@@ -459,6 +459,10 @@ int _tmain (int argc, TCHAR *argv[])
         std::cout << "Service removed." << std::endl;
         log(level::info, "Service removed.");
       }
+      return ret;
+    }
+    else if (_tcscmp(argv[1], _T("version")) == 0) {
+      print_version_info(argv[0], conv_utf8);
       return ret;
     }
     else {

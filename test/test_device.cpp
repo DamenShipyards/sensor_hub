@@ -113,3 +113,9 @@ BOOST_AUTO_TEST_CASE(connection_test) {
   BOOST_TEST(dev.connected);
   BOOST_TEST(buf.size() == 16);
 }
+
+BOOST_AUTO_TEST_CASE(json_test) {
+  Device dev;
+  std::string json = get_device_json(dev);
+  BOOST_TEST(json.find("\"connected\": false") != json.npos);
+}

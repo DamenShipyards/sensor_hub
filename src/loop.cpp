@@ -235,12 +235,12 @@ int enter_loop() {
   log(level::info, "Running IO service");
   try {
     result = service.run();
+    log(level::info, "IO service exited with code: %", result);
   }
   catch (std::exception& e) {
     log(level::error, "Exception in IO service: %", e.what());
-    throw;
   }
-  log(level::info, "IO service exited with code: %", result);
+  stop_loop();
   return result;
 }
 

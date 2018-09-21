@@ -4,3 +4,6 @@
 [submodule "3rdparty/modbus"]
 	path = 3rdparty/modbus
 	url = https://github.com/orca-software/modbus.git
+[submodule "3rdparty/rapidjson"]
+	path = 3rdparty/rapidjson
+	url = https://github.com/orca-software/rapidjson

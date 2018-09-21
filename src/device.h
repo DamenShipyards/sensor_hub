@@ -28,6 +28,8 @@
 #endif
 #include <boost/asio/spawn.hpp>
 namespace asio = boost::asio;
+#include <boost/property_tree/ptree.hpp>
+namespace pt = boost::property_tree;
 
 #include "quantities.h"
 #include "log.h"
@@ -81,6 +83,15 @@ struct Device {
     return true;
   }
 
+  virtual const bool get_sample(const Quantity& quantity, Stamped_value& sample) const {
+    auto it = data_.find(quantity);
+    if (it == data_.end() || it->second.empty()) {
+      return false;
+    }
+    sample = it->second.back();
+    return true;
+  }
+
   const Value_type get_value(const Quantity& quantity) const {
     Value_type value;
     if (!get_value(quantity, value))
@@ -122,7 +133,7 @@ struct Device {
     }
   }
 
-  void use_as_time_source(const bool value) {
+  virtual void use_as_time_source(const bool value) {
     use_as_time_source_ = value;
     if (value) {
       log(level::info, "Using % as time source", name_);
@@ -137,8 +148,8 @@ protected:
   }
 
   void insert_value(Stamped_quantity&& value) {
-    if (value.quantity == Quantity::ut && use_as_time_source_) {
-      adjust_clock(value.value);
+    if (use_as_time_source_ && value.quantity == Quantity::ut) {
+      adjust_clock_diff(value.value - value.stamp);
     }
     auto item = data_.try_emplace(value.quantity);
     auto& queue = item.first->second;
@@ -252,6 +263,16 @@ extern Device_factory_ptr& add_device_factory(const std::string& name, Device_fa
  * Have a factory from the factory registry create a device instance
  */
 extern Device_ptr create_device(const std::string& name);
+
+/**
+ * Get boost property tree from device
+ */
+extern pt::ptree get_device_tree(const Device& device);
+
+/**
+ * Get json string from device
+ */
+extern std::string get_device_json(const Device& device);
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

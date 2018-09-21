@@ -16,6 +16,9 @@
 
 #include <type_traits>
 
+#define STRIFY2(X) #X
+#define STRINGIFY(X) STRIFY2(X)
+
 /**
  * Iterator for scoped enum values
  */
@@ -33,9 +36,16 @@ struct Enum_iter {
     return result;
   }
   E operator*() { return static_cast<E>(val_); }
-  Enum_iter&& begin() { return std::move(Enum_iter(begin_val)); }
-  Enum_iter&& end() { return std::move(Enum_iter(end_val)); }
+  static const Enum_iter& begin() { 
+    static const Enum_iter b(begin_val);
+    return b; 
+  }
+  static const Enum_iter& end() { 
+    static const Enum_iter e(end_val);
+    return e; 
+  }
   bool operator!=(const Enum_iter& i) { return val_ != i.val_; }
+  bool operator==(const Enum_iter& i) { return val_ == i.val_; }
 private:
   typedef typename std::underlying_type<E>::type value_type;
   size_t val_;
