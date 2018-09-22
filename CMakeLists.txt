@@ -120,7 +120,7 @@ new_test(test_device log.cpp device.cpp datetime.cpp)
 new_test(test_datetime datetime.cpp log.cpp)
 new_test(test_xsens xsens.cpp usb.cpp device.cpp log.cpp datetime.cpp)
 new_test(test_xsens_impl datetime.cpp log.cpp)
-new_test(test_modbus)
+new_test(test_modbus modbus.cpp log.cpp config.cpp)
 
 if(DOXYGEN_FOUND)
   set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)

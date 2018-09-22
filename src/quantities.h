@@ -169,7 +169,11 @@ struct Data_value {
 };
 
 struct Quantity_value: public Data_quantity, public Data_value {};
-struct Stamped_value: public Data_stamp, public Data_value {};
+struct Stamped_value: public Data_stamp, public Data_value {
+  const double& operator[](const int index) {
+    return index == 0 ? stamp : value;
+  }
+};
 struct Stamped_quantity: public Data_quantity, public Stamped_value {};
 
 inline Stamped_quantity stamped_quantity(double stamp, Quantity_value&& qv) {

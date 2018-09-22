@@ -17,6 +17,7 @@
 #include "config.h"
 #include "modbus.h"
 #include "device.h"
+#include "xsens.h"
 
 #include "driver/install.h"
 
@@ -35,7 +36,9 @@
 #include <string>
 #include <memory>
 
+
 namespace posix_time = boost::posix_time;
+
 
 struct Service {
   //! Disable copying for singleton service
@@ -90,7 +93,7 @@ struct Service {
    */
   void start_modbus_server(const int port) {
     log(level::info, "Starting Modbus server");
-    auto handler = boost::make_shared<Modbus_handler>();
+    auto handler = boost::make_shared<Modbus_handler>(devices_);
     modbus_server_ = std::make_unique<Modbus_server>(ctx_, handler, port);
   }
 
@@ -261,5 +264,17 @@ void stop_loop() {
 asio::io_context& Context_provider::get_context() {
   return Service::get_instance().get_context();
 }
+
+
+using Xsens_MTi_G_710_usb = Xsens_MTi_G_710<Usb, Context_provider>;
+using Xsens_MTi_G_710_serial = Xsens_MTi_G_710<asio::serial_port, Context_provider>;
+
+using Xsens_MTi_G_710_usb_factory = Device_factory<Xsens_MTi_G_710_usb>;
+using Xsens_MTi_G_710_serial_factory = Device_factory<Xsens_MTi_G_710_serial>;
+
+static auto& mti_g_710_usb_factory =
+    add_device_factory("xsens_mti_g_710_usb", std::move(std::make_unique<Xsens_MTi_G_710_usb_factory>()));
+static auto& mti_g_710_serial_factory =
+    add_device_factory("xsens_mti_g_710_serial", std::move(std::make_unique<Xsens_MTi_G_710_serial_factory>()));
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
