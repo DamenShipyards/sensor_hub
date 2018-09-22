@@ -161,6 +161,13 @@ struct RadConverter: UnitaryConverter<DIM> {
   }
 };
 
+template<int DIM>
+struct TeslaConverter: UnitaryConverter<DIM> {
+  static constexpr double factor(int dim) {
+    return UnitaryConverter<DIM>::factor(dim, 1E-4);
+  }
+};
+
 template<uint16_t DID, uint16_t COORD, uint16_t FORMAT, int DIM, Quantity QUANT, 
          template<int D> typename Converter=UnitaryConverter>
 struct Data_value: public Data_packet {
@@ -203,7 +210,7 @@ using Acceleration = Data_value<XDI_Acceleration, XDI_CoordSysEnu, XDI_SubFormat
 using Free_acceleration = Data_value<XDI_FreeAcceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::fax>;
 using Rate_of_turn = Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::rr, RadConverter>;
 using Lat_lon = Data_value<XDI_LatLon, XDI_CoordSysEnu, XDI_SubFormatDouble, 2, Quantity::la, RadConverter>;
-using Magnetic_flux = Data_value<XDI_MagneticField, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::mx>;
+using Magnetic_flux = Data_value<XDI_MagneticField, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::mx, TeslaConverter>;
 using Velocity = Data_value<XDI_VelocityXYZ, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::vx>;
 using Altitude_ellipsoid = Data_value<XDI_AltitudeEllipsoid, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::h1>;
 using Altitude_msl = Data_value<XDI_AltitudeMsl, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::h2>;
