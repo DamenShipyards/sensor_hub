@@ -120,6 +120,13 @@ private:
     set_default("modbus.crs_min", 0);
     set_default("modbus.crs_max", 2 * M_PI);
 
+    set_default("modbus.mx_min", -0.00032768);
+    set_default("modbus.mx_max", 0.00032768);
+    set_default("modbus.my_min", -0.00032768);
+    set_default("modbus.my_max", 0.00032768);
+    set_default("modbus.mz_min", -0.00032768);
+    set_default("modbus.mz_max", 0.00032768);
+
     set_default("modbus.ax_min", -32.768);
     set_default("modbus.ax_max", 32.768);
     set_default("modbus.ay_min", -32.768);
