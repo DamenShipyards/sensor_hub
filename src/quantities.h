@@ -20,6 +20,8 @@
 #include <map>
 #include <deque>
 #include <list>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include "tools.h"
 
@@ -195,6 +197,52 @@ using Data_queue = std::deque<Stamped_value>;
 using Data_map = std::map<Quantity, Data_queue>;
 using Data_list = std::list<Stamped_value>;
 using Data_list_map = std::map<Quantity, Data_list>;
+
+inline double value_norm(Quantity quantity, double value) {
+  switch (quantity) {
+    case Quantity::lo:
+    case Quantity::ro: 
+    case Quantity::pi:
+    case Quantity::ya:
+      while (value >= M_PI)
+        value -= 2 * M_PI;
+      while (value < -M_PI)
+        value += 2 * M_PI;
+      return value;
+    case Quantity::hdg:
+    case Quantity::crs: 
+      while (value >= 2 * M_PI)
+        value -= 2 * M_PI;
+      while (value < 0)
+        value += 2 * M_PI;
+      return value;
+    default:
+      return value;
+  }
+}
+
+inline double value_diff(Quantity quantity, const double& value1, const double& value2) {
+  double result = value1 - value2;
+  switch (quantity) {
+    case Quantity::lo:
+    case Quantity::hdg:
+    case Quantity::crs: 
+    case Quantity::ro: 
+    case Quantity::pi:
+    case Quantity::ya:
+      while (result >= M_PI)
+        result -= 2 * M_PI;
+      while (result < -M_PI)
+        result += 2 * M_PI;
+      return result;
+    default:
+      return result;
+  }
+}
+
+inline double value_diff(const Stamped_quantity& qvalue, const double& value) {
+  return value_diff(qvalue.quantity, qvalue.value, value);
+}
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

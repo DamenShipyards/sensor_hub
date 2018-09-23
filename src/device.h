@@ -199,13 +199,17 @@ private:
  */
 template <typename Port, class ContextProvider>
 struct Port_device: public Device {
+
   Port_device()
       : Device(),
         port_(ContextProvider::get_context()){}
+
   ~Port_device() {
     disconnect();
   }
+
   typedef Port port_type;
+
   void connect(asio::yield_context yield) override {
     std::string connection_string = get_connection_string();
     try {
@@ -218,11 +222,13 @@ struct Port_device: public Device {
       log(level::error, "Failed to connect using \"%\" error \"%\"", connection_string, e.what());
     }
   }
+
   void disconnect() override {
     if (is_connected())
       set_connected(false);
     port_.close();
   }
+
   Port& get_port() {
     return port_;
   }

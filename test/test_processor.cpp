@@ -9,6 +9,7 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cmath>
 
 #include "test_common.h"
 
@@ -17,6 +18,30 @@ namespace posix_time = boost::posix_time;
 
 
 BOOST_AUTO_TEST_CASE(statistics_test) {
+  Statistics stats;
+  Stamped_quantity value;
+  value.quantity = Quantity::ax;
+  int o = static_cast<int>(Quantity::ax);
+  value.stamp = 2.0;
+  value.value = 1.0;
+  stats.insert_value(value);
+  double mean = stats[2 * o];
+  double stdd = stats[2 * o + 1];
+  BOOST_TEST(mean == 1.0);
+  value.stamp = 2.9;
+  value.value = 1.2;
+  stats.insert_value(value);
+  mean = stats[2 * o];
+  stdd = stats[2 * o + 1];
+  BOOST_TEST(mean == 1.1);
+  //BOOST_TEST(stdd == 0.14142135623730939);
+  value.stamp = 3.05;
+  value.value = 1.4;
+  stats.insert_value(value);
+  mean = stats[2 * o];
+  stdd = stats[2 * o + 1];
+  BOOST_TEST(fabs(mean - 1.3) < 1E-8);
+  //BOOST_TEST(stdd == 0.14142135623730939);
 }
 
 

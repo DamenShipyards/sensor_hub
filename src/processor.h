@@ -21,6 +21,7 @@
 #include <vector>
 
 
+
 struct Processor {
   Processor(): name_() {}
 
@@ -57,7 +58,7 @@ using Processor_ptr = std::shared_ptr<Processor>;
 
 struct Statistic {
   double mean;
-  double standard_deviation;
+  double m2;
 };
 
 
@@ -65,10 +66,74 @@ using Statistic_map = std::map<Quantity, Statistic>;
 
 
 struct Statistics: public Processor {
-  Statistics(): Processor(), data_(), statistics_() {}
+  Statistics(): Processor(), data_(), statistics_(), period_(1.0) {}
+
+  void insert_value(const Stamped_quantity& value) override {
+    Quantity quantity = value.quantity;
+    auto item = data_.try_emplace(quantity);
+    auto& list = item.first->second;
+    auto stat_item = statistics_.try_emplace(quantity);
+    auto& stat = stat_item.first->second;
+    if (list.empty()) {
+      stat.mean = value.value;
+      stat.m2 = 0;
+      list.push_back(value);
+      return;
+    }
+    double span = list.back().stamp - list.front().stamp;
+    double interval = value.stamp - list.back().stamp;
+    if (interval <= 0)
+      return;
+    double avg = value_norm(quantity, value.value - 0.5 * value_diff(value, list.back().value));
+    stat.mean = value_norm(quantity, stat.mean + interval / (interval + span) * value_diff(quantity, avg, stat.mean));
+    list.push_back(value);
+    while ((value.stamp - list.front().stamp) > period_) {
+      Stamped_value popped = list.front();
+      list.pop_front();
+      if (list.size() == 1) {
+        stat.mean = value.value;
+        stat.m2 = 0;
+        return;
+      }
+      avg = value_norm(quantity, popped.value - 0.5 * value_diff(quantity, popped.value, list.front().value));
+      interval = list.front().stamp - popped.stamp;
+      span = list.back().stamp - list.front().stamp;
+      stat.mean = value_norm(quantity, stat.mean - interval / span * value_diff(quantity, avg, stat.mean));
+    }
+  }
+
+  double operator[](int index) override {
+    int q = index / 2;
+    int m = index % 2;
+    auto qit = statistics_.find(static_cast<Quantity>(q));
+    if (qit == statistics_.end())
+      return 0;
+    if (m == 0) {
+      return qit->second.mean;
+    }
+    else {
+      auto lit = data_.find(static_cast<Quantity>(q));
+      if (lit == data_.end()) 
+        return 0;
+      int s = static_cast<int>(lit->second.size()) - 1;
+      if (s <= 0)
+        return 0;
+      return sqrt(qit->second.m2 / s);
+    }
+  }
+
+  std::string get_json() override {
+    return "{}";
+  }
+
+  size_t size() override {
+    return 2 * static_cast<size_t>(Quantity::end) - 1;
+  }
+
 private:
   Data_list_map data_;
   Statistic_map statistics_;
+  double period_;
 };
 
 
@@ -84,6 +149,20 @@ using Acceleration_peaks = std::vector<Acceleration_peak>;
 
 
 struct Acceleration_peak_history: public Processor {
+  void insert_value(const Stamped_quantity& value) override {
+  }
+
+  double operator[](int index) override {
+    return 0;
+  }
+
+  std::string get_json() override {
+    return "{}";
+  }
+
+  size_t size() override {
+    return 0;
+  }
 private:
 };
 
