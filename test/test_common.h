@@ -3,6 +3,9 @@
 #include <string>
 
 #include <boost/test/unit_test.hpp>
+#ifndef BOOST_COROUTINES_NO_DEPRECATION_WARNING
+#define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
+#endif
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 
