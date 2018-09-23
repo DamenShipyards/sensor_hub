@@ -17,6 +17,9 @@
 #include <exception>
 #include <sstream>
 #include <utility>
+#include <map>
+#include <deque>
+#include <list>
 
 #include "tools.h"
 
@@ -187,6 +190,11 @@ inline std::ostream& operator<<(std::ostream& os, Quantity quantity) {
   os << get_quantity_name(quantity);
   return os;
 }
+
+using Data_queue = std::deque<Stamped_value>;
+using Data_map = std::map<Quantity, Data_queue>;
+using Data_list = std::list<Stamped_value>;
+using Data_list_map = std::map<Quantity, Data_list>;
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

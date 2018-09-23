@@ -17,8 +17,6 @@
 #include <vector>
 #include <memory>
 #include <exception>
-#include <map>
-#include <deque>
 #include <iomanip>
 
 #include <fmt/core.h>
@@ -34,9 +32,8 @@ namespace pt = boost::property_tree;
 #include "quantities.h"
 #include "log.h"
 #include "datetime.h"
+#include "processor.h"
 
-using Data_queue = std::deque<Stamped_value>;
-using Data_map = std::map<Quantity, Data_queue>;
 
 /**
  * Base class for all sensor devices
@@ -45,7 +42,7 @@ using Data_map = std::map<Quantity, Data_queue>;
  */
 struct Device {
   Device(): id_(fmt::format("id_{:d}", seq_)), name_(fmt::format("device_{:d}", seq_)),
-            connected_(false), data_(), enable_logging_(false) {
+            connected_(false), data_(), enable_logging_(false), processors_() {
     log(level::debug, "Constructing Device");
     ++seq_;
   }
@@ -139,6 +136,10 @@ struct Device {
       log(level::info, "Using % as time source", name_);
     }
   }
+
+  void add_processor(Processor_ptr processor) {
+    processors_.push_back(processor);
+  }
 protected:
   void set_id(const std::string& id) {
     if (id != id_) {
@@ -147,13 +148,16 @@ protected:
     }
   }
 
-  void insert_value(Stamped_quantity&& value) {
+  void insert_value(const Stamped_quantity& value) {
     if (use_as_time_source_ && value.quantity == Quantity::ut) {
       adjust_clock_diff(value.value - value.stamp);
     }
     auto item = data_.try_emplace(value.quantity);
     auto& queue = item.first->second;
     queue.push_back(value);
+    for (auto&& processor: processors_) {
+      processor->insert_value(value);
+    }
     if (queue.size() > 0x0040000) {
       queue.pop_front();
     }
@@ -186,6 +190,7 @@ private:
   Data_map data_;
   bool enable_logging_;
   bool use_as_time_source_;
+  Processors processors_;
 };
 
 

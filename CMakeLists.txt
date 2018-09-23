@@ -47,8 +47,8 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/http.cpp
   ${SENSORHUB_SOURCE_DIR}/log.cpp
   ${SENSORHUB_SOURCE_DIR}/config.cpp
-  ${SENSORHUB_SOURCE_DIR}/quantities.cpp
   ${SENSORHUB_SOURCE_DIR}/modbus.cpp
+  ${SENSORHUB_SOURCE_DIR}/processor.cpp
 )
 
 file(GLOB FMTLIB_SOURCES
@@ -112,7 +112,7 @@ endmacro()
 new_test(test_asio)
 new_test(test_log log.cpp)
 new_test(test_serial)
-new_test(test_quantities quantities.cpp)
+new_test(test_quantities)
 new_test(test_tools)
 new_test(test_parse)
 new_test(test_usb log.cpp usb.cpp)
