@@ -20,7 +20,9 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 
+#include <boost/algorithm/string.hpp>
 
 
 struct Processor {
@@ -45,12 +47,36 @@ struct Processor {
     return 0;
   }
 
+  virtual void set_param(const std::string& name, const double& value) { 
+  }
+
   std::string get_name() {
     return name_;
   }
 
   void set_name(const std::string& name) {
     name_ = name;
+  }
+
+  void set_params(const std::string& params) {
+    std::vector<std::string> fields;
+    boost::split(fields, params, [](char c) { return c == ','; });
+    for (auto& field: fields) {
+      std::vector<std::string> keyval;
+      boost::split(keyval, field, [](char c) { return c == '='; });
+      if (keyval.size() != 2) {
+        log(level::error, "Expected key=value in processor parameters. Got %", field);
+        continue;
+      }
+      try {
+        double val = std::stod(keyval[1]);
+        set_param(keyval[0], val);
+      }
+      catch (std::exception& e) {
+        log(level::error, "%. Expected floating point argument in processor parameter. Got %.", e.what(), keyval[1]);
+        continue;
+      }
+    }
   }
 
 private:
@@ -182,6 +208,12 @@ struct Statistics: public Processor {
     return Statistic::size() * static_cast<size_t>(Quantity::end);
   }
 
+  void set_param(const std::string& name, const double& value) override { 
+    if (name == "period") {
+      period_ = value;
+    }
+  }
+
 private:
   Data_list_map data_;
   Statistic_map statistics_;
@@ -200,7 +232,7 @@ struct Acceleration_peak {
 using Acceleration_peaks = std::vector<Acceleration_peak>;
 
 
-struct Acceleration_peak_history: public Processor {
+struct Acceleration_history: public Processor {
   void insert_value(const Stamped_quantity& value) override {
   }
 
@@ -208,14 +240,25 @@ struct Acceleration_peak_history: public Processor {
     return 0;
   }
 
-  std::string get_json() override {
-    return "{}";
-  }
+  std::string get_json() override;
+  uint16_t get_modbus_reg(int index) override;
 
   size_t size() override {
     return 0;
   }
+
+  void set_param(const std::string& name, const double& value) override { 
+    if (name == "value_threshold") {
+      value_threshold_ = value;
+    }
+    else if (name == "duration_threshold") {
+      duration_threshold_ = value;
+    }
+  }
+
 private:
+  double value_threshold_;
+  double duration_threshold_;
 };
 
 

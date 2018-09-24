@@ -18,6 +18,7 @@
 #include "modbus.h"
 #include "device.h"
 #include "xsens.h"
+#include "processor.h"
 
 #include "driver/install.h"
 
@@ -115,6 +116,13 @@ struct Service {
   }
 
   /**
+   * Returns processor list associated with this service
+   */
+  Processors& get_processors() {
+    return processors_;
+  }
+
+  /**
    * Setup the service device list from provided configuration
    */
   void setup_devices(boost::property_tree::ptree& cfg) {
@@ -136,6 +144,27 @@ struct Service {
       device->enable_logging(cfg.get(fmt::format("{:s}.enable_logging", device_section), false));
       device->use_as_time_source(cfg.get(fmt::format("{:s}.use_as_time_source", device_section), false));
       devices_.push_back(std::move(device));
+    }
+  }
+
+  /**
+   * Setup the service processor list from provided configuration
+   */
+  void setup_processors(boost::property_tree::ptree& cfg) {
+    int processor_count = cfg.get("processors.count", 0);
+    for (int i = 0; i < processor_count; ++i) {
+      std::string processor_section = fmt::format("processor{:d}", i);
+      std::string processor_type = cfg.get(fmt::format("{:s}.type", processor_section), "missing_processor_type");
+      Processor_ptr processor = create_processor(processor_type);
+      processor->set_name(cfg.get(fmt::format("{:s}.name", processor_section), "missing_processor_name"));
+      processor->set_params(cfg.get(fmt::format("{:s}.parameters", processor_section), ""));
+      std::string device_name = cfg.get(fmt::format("{:s}.device", processor_section), "missing_processor_device");
+      for (auto&& device: devices_) {
+        if (device->get_name() == device_name) {
+          device->add_processor(processor);
+        }
+      }
+      processors_.push_back(processor);
     }
   }
 
@@ -190,10 +219,11 @@ private:
    * Private default constructor for singleton
    */
   Service()
-      : ctx_(), signals_(ctx_, SIGINT, SIGTERM), 
-        http_server_(nullptr), 
+      : ctx_(), signals_(ctx_, SIGINT, SIGTERM),
+        http_server_(nullptr),
         modbus_server_(nullptr),
-        devices_() {
+        devices_(),
+        processors_() {
     log(level::info, "Constructing service instance");
 		signals_.async_wait(
 				[this](boost::system::error_code ec, int signo)
@@ -213,6 +243,7 @@ private:
   std::unique_ptr<Http_server> http_server_;
   std::unique_ptr<Modbus_server> modbus_server_;
   Devices devices_;
+  Processors processors_;
 };
 
 
@@ -234,6 +265,7 @@ int enter_loop() {
   }
 
   service.setup_devices(cfg);
+  service.setup_processors(cfg);
 
   log(level::info, "Running IO service");
   try {
@@ -272,9 +304,17 @@ using Xsens_MTi_G_710_serial = Xsens_MTi_G_710<asio::serial_port, Context_provid
 using Xsens_MTi_G_710_usb_factory = Device_factory<Xsens_MTi_G_710_usb>;
 using Xsens_MTi_G_710_serial_factory = Device_factory<Xsens_MTi_G_710_serial>;
 
+using Statistics_factory = Processor_factory<Statistics>;
+using Acceleration_history_factory = Processor_factory<Acceleration_history>;
+
 static auto& mti_g_710_usb_factory =
     add_device_factory("xsens_mti_g_710_usb", std::move(std::make_unique<Xsens_MTi_G_710_usb_factory>()));
 static auto& mti_g_710_serial_factory =
     add_device_factory("xsens_mti_g_710_serial", std::move(std::make_unique<Xsens_MTi_G_710_serial_factory>()));
+
+static auto& statistics_factory =
+    add_processor_factory("statistics", std::move(std::make_unique<Statistics_factory>()));
+static auto& acceleration_history_factory =
+    add_processor_factory("acceleration_history", std::move(std::make_unique<Acceleration_history_factory>()));
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

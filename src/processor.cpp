@@ -98,4 +98,19 @@ uint16_t Statistics::get_modbus_reg(int index) {
   }
 }
 
+std::string Acceleration_history::get_json() {
+  using namespace rapidjson;
+  StringBuffer sb;
+  PrettyWriter<StringBuffer> writer(sb);
+  writer.StartObject();
+  writer.String("name"); writer.String(get_name());
+  writer.String("data"); writer.StartObject();
+  writer.EndObject();
+  writer.EndObject();
+  return sb.GetString();
+}
+
+uint16_t Acceleration_history::get_modbus_reg(int index) {
+  return 0;
+}
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
