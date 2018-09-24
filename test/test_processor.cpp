@@ -23,9 +23,10 @@ BOOST_AUTO_TEST_CASE(statistics_test) {
   Stamped_quantity value;
   value.quantity = Quantity::ax;
   int o = static_cast<int>(Quantity::ax);
-  double n = stats[3 * o];
-  double mean = stats[3 * o + 1];
-  double var = stats[3 * o + 2];
+  //double t = stats[Statistic::size() * o + Statistic::f_time];
+  double n = stats[Statistic::size() * o  + Statistic::f_n];
+  double mean = stats[Statistic::size() * o + Statistic::f_mean];
+  double var = stats[Statistic::size() * o + Statistic::f_variance];
   BOOST_TEST(n == 0);
   BOOST_TEST(mean == 0);
   BOOST_TEST(var == 0);
@@ -33,28 +34,19 @@ BOOST_AUTO_TEST_CASE(statistics_test) {
     value.stamp = i + 0.0;
     value.value = 0.9;
     stats.insert_value(value);
-    n = stats[3 * o];
-    mean = stats[3 * o + 1];
-    var = stats[3 * o + 2];
     value.stamp = i + 0.25;
     value.value = 1.1;
     stats.insert_value(value);
-    n = stats[3 * o];
-    mean = stats[3 * o + 1];
-    var = stats[3 * o + 2];
     value.stamp = i + 0.5;
     value.value = 1.3;
     stats.insert_value(value);
-    n = stats[3 * o];
-    mean = stats[3 * o + 1];
-    var = stats[3 * o + 2];
     value.stamp = i + 0.75;
     value.value = 1.1;
     stats.insert_value(value);
-    n = stats[3 * o];
-    mean = stats[3 * o + 1];
-    var = stats[3 * o + 2];
   }
+  n = stats[Statistic::size() * o  + Statistic::f_n];
+  mean = stats[Statistic::size() * o + Statistic::f_mean];
+  var = stats[Statistic::size() * o + Statistic::f_variance];
   BOOST_TEST(n == 5);
   BOOST_TEST(fabs(mean - 1.1) < 1E-8);
   BOOST_TEST(fabs(var - 0.01) < 1E-8);
@@ -75,9 +67,9 @@ BOOST_AUTO_TEST_CASE(statistics_test) {
     value.value = 2 * M_PI - 0.05;
     stats.insert_value(value);
   }
-  n = stats[3 * o];
-  mean = stats[3 * o + 1];
-  var = stats[3 * o + 2];
+  n = stats[Statistic::size() * o  + Statistic::f_n];
+  mean = stats[Statistic::size() * o + Statistic::f_mean];
+  var = stats[Statistic::size() * o + Statistic::f_variance];
   BOOST_TEST(n == 5);
   BOOST_TEST(fabs(mean - (2 * M_PI - 0.05)) < 1E-8);
   BOOST_TEST(fabs(var - 0.01) < 1E-8);
@@ -85,12 +77,15 @@ BOOST_AUTO_TEST_CASE(statistics_test) {
 
 
 BOOST_AUTO_TEST_CASE(random_statistics_test) {
+  // Setup mersenne twister pseudo random number generator
   std::uniform_real_distribution<double> distribution(-0.3, 0.5);
   std::mt19937 engine;
   auto generator = std::bind(distribution, engine);
+
   Stamped_quantity value;
   Statistics stats;
   value.quantity = Quantity::ax;
+
   for (int k = 0; k < 10; ++k) {
     std::vector<double> nums;
     for (int i = 0; i < 11; ++i) {
@@ -101,9 +96,11 @@ BOOST_AUTO_TEST_CASE(random_statistics_test) {
     }
 
     int o = static_cast<int>(Quantity::ax);
-    double n = stats[3 * o];
-    double mean = stats[3 * o + 1];
-    double stdd = sqrt(stats[3 * o + 2]);
+    double n = stats[Statistic::size() * o  + Statistic::f_n];
+    double mean = stats[Statistic::size() * o + Statistic::f_mean];
+    double stdd = sqrt(stats[Statistic::size() * o + Statistic::f_variance]);
+
+    // Compute expected values
     double sum = 0;
     for (int i = 1; i < 11; ++i) {
       sum += 0.5 * (nums[i] + nums[i - 1]);

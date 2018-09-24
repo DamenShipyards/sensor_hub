@@ -65,7 +65,7 @@ cdata_t error_resp = {packet_start, sys_command, XMID_Error};
 cdata_t set_output_configuration = {
   packet_start, sys_command,
   XMID_SetOutputConfiguration,
-  0x2C,
+  0x28,
   0x10, 0x10, 0x00, 0x00, // Utc time
   0x40, 0x20, 0x00, 0x64, // Acceleration, 100Hz
   0x40, 0x30, 0x00, 0x64, // Free Acceleration, 100Hz
@@ -76,8 +76,9 @@ cdata_t set_output_configuration = {
   0x50, 0x20, 0x00, 0x0A, // Altitude above ellipsoid, 10Hz
   0x50, 0x10, 0x00, 0x0A, // Altitude above MSL, 10Hz
   0x20, 0x30, 0x00, 0x0A, // Euler angles
-  0x20, 0x10, 0x00, 0x0A, // Quaternion
-  0x70                    // Checksum
+//  0x20, 0x10, 0x00, 0x0A, // Quaternion
+//  0x70                    // Checksum
+  0xAE                    // Checksum
 };
 
 cdata_t output_configuration_ack = {

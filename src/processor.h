@@ -33,6 +33,10 @@ struct Processor {
     return 0;
   }
 
+  virtual uint16_t get_modbus_reg(int index) {
+    return 0;
+  }
+
   virtual std::string get_json() {
     return "{}";
   }
@@ -58,9 +62,36 @@ using Processor_ptr = std::shared_ptr<Processor>;
 
 
 struct Statistic {
+  //< Time of reception of last sample
+  double time;
+  //< Number of samples in statistic
   int n;
+  //< Mean value of samples
   double mean;
+  //< RMS value of samples
   double variance;
+
+  double operator[] (const int index) const {
+    switch (index) {
+      case 0:
+        return time;
+      case 1:
+        return n;
+      case 2:
+        return mean;
+      case 3:
+        return variance;
+    }
+    return 0;
+  }
+
+  static constexpr size_t size() {
+    return 4;
+  }
+
+  enum {
+    f_time, f_n, f_mean, f_variance
+  } field_t;
 };
 
 
@@ -132,32 +163,23 @@ struct Statistics: public Processor {
     }
     // Keep a record of the number of samples
     stat.n = list.size();
+    stat.time = value.stamp;
   }
 
   double operator[](int index) override {
-    int q = index / 3;
-    int m = index % 3;
+    int q = index / Statistic::size();
+    int m = index % Statistic::size();
     auto qit = statistics_.find(static_cast<Quantity>(q));
     if (qit == statistics_.end())
       return 0;
-    switch (m) {
-      case 0:
-        return qit->second.n;
-      case 1:
-        return qit->second.mean;
-      case 2:
-        return qit->second.variance;
-      default:
-        return 0;
-    }
+    return qit->second[m];
   }
 
-  std::string get_json() override {
-    return "{}";
-  }
+  std::string get_json() override;
+  uint16_t get_modbus_reg(int index) override;
 
   size_t size() override {
-    return 3 * static_cast<size_t>(Quantity::end);
+    return Statistic::size() * static_cast<size_t>(Quantity::end);
   }
 
 private:

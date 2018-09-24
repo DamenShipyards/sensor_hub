@@ -195,7 +195,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     log(level::debug, "Emptying Xsens read buffer");
     asio::streambuf buf;
     boost::system::error_code ec;
-    auto bytes_read = this->get_port().async_read_some(buf.prepare(4096), yield[ec]);
+    this->get_port().async_read_some(buf.prepare(4096), yield[ec]);
   }
 
   void poll_data(asio::yield_context yield) {

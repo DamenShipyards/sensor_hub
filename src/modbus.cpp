@@ -26,6 +26,16 @@ static constexpr int plain_base_address = 10000;
 static constexpr int base_base_address = 0;
 
 
+Base_scale::Base_scale(): scale_() {
+  auto config = get_config();
+  for (Quantity_iter qi = Quantity_iter::begin(); qi != Quantity_iter::end(); ++qi) {
+    double min = config.get(fmt::format("modbus.{}_min", get_quantity_name(*qi)), -32.768);
+    double max = config.get(fmt::format("modbus.{}_max", get_quantity_name(*qi)), 32.768);
+    scale_[*qi] = {min, max - min};
+  }
+}
+
+
 void Modbus_handler::plain_map(const Device& device, int reg_index, const int count, response::read_input_registers& resp) {
   Quantity curq = Quantity::end;
   Stamped_value sample;
@@ -46,52 +56,6 @@ void Modbus_handler::plain_map(const Device& device, int reg_index, const int co
 }
 
 
-struct Scale {
-  double min;
-  double range;
-};
-
-
-struct Base_scale {
-
-  Base_scale(): scale_() {
-    auto config = get_config();
-    for (Quantity_iter qi = Quantity_iter::begin(); qi != Quantity_iter::end(); ++qi) {
-      double min = config.get(fmt::format("modbus.{}_min", get_quantity_name(*qi)), -32.768);
-      double max = config.get(fmt::format("modbus.{}_max", get_quantity_name(*qi)), 32.768);
-      scale_[*qi] = {min, max - min};
-    }
-  }
-
-  uint16_t scale_to_u16(Quantity quantity, double value) {
-    try {
-      Scale& scale = scale_[quantity];
-      value -= scale.min;
-      value /= scale.range;
-      value *= 0x10000;
-      return static_cast<uint16_t>(value);
-    }
-    catch (...) {
-      return 0;
-    }
-  }
-  
-  uint32_t scale_to_u32(Quantity quantity, double value) {
-    try {
-      Scale& scale = scale_[quantity];
-      value -= scale.min;
-      value /= scale.range;
-      value *= 0x100000000;
-      return static_cast<uint32_t>(value);
-    }
-    catch (...) {
-      return 0;
-    }
-  }
-
-private:
-  std::map<Quantity, Scale> scale_;
-};
 
 
 void Modbus_handler::base_map(const Device& device, int reg_index, const int count, response::read_input_registers& resp) {
