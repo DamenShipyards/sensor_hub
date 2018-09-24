@@ -102,6 +102,11 @@ bool contains(const Container& container, const Container& sub_container) {
   return contains_at(container, sub_container) >= 0;
 }
 
+
+inline double sqr(const double value) {
+  return value * value;
+}
+
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
 

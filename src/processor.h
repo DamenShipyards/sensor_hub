@@ -16,6 +16,7 @@
 
 #include "quantities.h"
 #include "log.h"
+#include "tools.h"
 
 #include <memory>
 #include <vector>
@@ -57,8 +58,9 @@ using Processor_ptr = std::shared_ptr<Processor>;
 
 
 struct Statistic {
+  int n;
   double mean;
-  double m2;
+  double variance;
 };
 
 
@@ -74,51 +76,79 @@ struct Statistics: public Processor {
     auto& list = item.first->second;
     auto stat_item = statistics_.try_emplace(quantity);
     auto& stat = stat_item.first->second;
+
+    // Initialize the statistic
     if (list.empty()) {
+      stat.n = 1;
       stat.mean = value.value;
-      stat.m2 = 0;
+      stat.variance = 0;
       list.push_back(value);
       return;
     }
+
+    // Update mean and variance with the new value
     double span = list.back().stamp - list.front().stamp;
     double interval = value.stamp - list.back().stamp;
+    // Require stricly increasing sample times
     if (interval <= 0)
       return;
+
+    // As value we won't use the sample value itself, but the average over the last interval i.e.
+    // 0.5 * (new_sample + previous_sample). 
+    // This is implemented as:
+    // new_sample - 0.5 * (new_sample - previous_sample)
+    // to avoid funny business with angles. Consider 0.5*(359+1) vs. 359-0.5*(value_diff(359,1)=-2)!
     double avg = value_norm(quantity, value.value - 0.5 * value_diff(value, list.back().value));
-    stat.mean = value_norm(quantity, stat.mean + interval / (interval + span) * value_diff(quantity, avg, stat.mean));
+    double old_mean = stat.mean;
+    stat.mean = value_norm(quantity, old_mean + value_diff(quantity, avg, old_mean) * interval / (interval + span));
+    double mean_shift_2 = sqr(value_diff(quantity, old_mean, stat.mean));
+    double mean_diff_2 = sqr(value_diff(quantity, avg, stat.mean));
+    stat.variance = (span * (stat.variance + mean_shift_2) + interval * mean_diff_2) / (span + interval); 
     list.push_back(value);
+
+    // Drop values from the back that have expired "period"
     while ((value.stamp - list.front().stamp) > period_) {
       Stamped_value popped = list.front();
       list.pop_front();
+      // Initialize the statistic
       if (list.size() == 1) {
+        stat.n = 1;
         stat.mean = value.value;
-        stat.m2 = 0;
+        stat.variance = 0;
         return;
       }
-      avg = value_norm(quantity, popped.value - 0.5 * value_diff(quantity, popped.value, list.front().value));
-      interval = list.front().stamp - popped.stamp;
+
+      // Reverse the effect of the dropped value on the mean and variance
       span = list.back().stamp - list.front().stamp;
-      stat.mean = value_norm(quantity, stat.mean - interval / span * value_diff(quantity, avg, stat.mean));
+      interval = list.front().stamp - popped.stamp;
+      avg = value_norm(quantity, popped.value - 0.5 * value_diff(quantity, popped.value, list.front().value));
+      old_mean = stat.mean;
+      // We can be sure "span" won't be zero because at this point there are at least two items in the
+      // list with stricly increasing time stamps
+      stat.mean = value_norm(quantity, old_mean - value_diff(quantity, avg, old_mean) * interval / span);
+      mean_shift_2 = sqr(value_diff(quantity, old_mean, stat.mean));
+      mean_diff_2 = sqr(value_diff(quantity, avg, old_mean));
+      stat.variance = ((span + interval) * stat.variance - interval * mean_diff_2) / span - mean_shift_2;
     }
+    // Keep a record of the number of samples
+    stat.n = list.size();
   }
 
   double operator[](int index) override {
-    int q = index / 2;
-    int m = index % 2;
+    int q = index / 3;
+    int m = index % 3;
     auto qit = statistics_.find(static_cast<Quantity>(q));
     if (qit == statistics_.end())
       return 0;
-    if (m == 0) {
-      return qit->second.mean;
-    }
-    else {
-      auto lit = data_.find(static_cast<Quantity>(q));
-      if (lit == data_.end()) 
+    switch (m) {
+      case 0:
+        return qit->second.n;
+      case 1:
+        return qit->second.mean;
+      case 2:
+        return qit->second.variance;
+      default:
         return 0;
-      int s = static_cast<int>(lit->second.size()) - 1;
-      if (s <= 0)
-        return 0;
-      return sqrt(qit->second.m2 / s);
     }
   }
 
@@ -127,7 +157,7 @@ struct Statistics: public Processor {
   }
 
   size_t size() override {
-    return 2 * static_cast<size_t>(Quantity::end) - 1;
+    return 3 * static_cast<size_t>(Quantity::end);
   }
 
 private:
