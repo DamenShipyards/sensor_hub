@@ -62,7 +62,7 @@ std::string Statistics::get_json() const {
       writer.String("time"); writer.Double(stat.time);
       writer.String("samples"); writer.Double(stat.n);
       writer.String("mean"); writer.Double(stat.mean);
-      writer.String("variance"); writer.Double(stat.variance);
+      writer.String("stddev"); writer.Double(sqrt(stat.variance));
       writer.EndObject();
     };
   }
@@ -89,8 +89,7 @@ uint16_t Statistics::get_modbus_reg(size_t index) const {
       return static_cast<uint16_t>(stat.n);
     case Statistic::f_mean + 1:
       base_scale.scale_to_u16(q, stat.mean);
-    case Statistic::f_variance + 1:
-      // Return stddev instead of variance
+    case Statistic::f_stddev + 1:
       base_scale.scale_to_u16(q, sqrt(stat.variance));
     default:
       // Shouldn't happen

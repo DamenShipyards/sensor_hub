@@ -26,10 +26,10 @@ BOOST_AUTO_TEST_CASE(statistics_test, * ut::tolerance(0.00000001)) {
   //double t = stats[Statistic::size() * o + Statistic::f_time];
   double n = stats[Statistic::size() * o  + Statistic::f_n];
   double mean = stats[Statistic::size() * o + Statistic::f_mean];
-  double var = stats[Statistic::size() * o + Statistic::f_variance];
+  double stdd = stats[Statistic::size() * o + Statistic::f_stddev];
   BOOST_TEST(n == 0);
   BOOST_TEST(mean == 0);
-  BOOST_TEST(var == 0);
+  BOOST_TEST(stdd == 0);
   for (int i = 0; i < 500000; ++i) {
     value.stamp = i + 0.0;
     value.value = 0.9;
@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_CASE(statistics_test, * ut::tolerance(0.00000001)) {
   }
   n = stats[Statistic::size() * o  + Statistic::f_n];
   mean = stats[Statistic::size() * o + Statistic::f_mean];
-  var = stats[Statistic::size() * o + Statistic::f_variance];
+  stdd = stats[Statistic::size() * o + Statistic::f_stddev];
   BOOST_TEST(n == 5);
   BOOST_TEST(mean == 1.1);
-  BOOST_TEST(var == 0.01);
+  BOOST_TEST(stdd == 0.1);
 
   value.quantity = Quantity::hdg;
   o = static_cast<int>(Quantity::hdg);
@@ -69,10 +69,10 @@ BOOST_AUTO_TEST_CASE(statistics_test, * ut::tolerance(0.00000001)) {
   }
   n = stats[Statistic::size() * o  + Statistic::f_n];
   mean = stats[Statistic::size() * o + Statistic::f_mean];
-  var = stats[Statistic::size() * o + Statistic::f_variance];
+  stdd = stats[Statistic::size() * o + Statistic::f_stddev];
   BOOST_TEST(n == 5);
   BOOST_TEST(mean == (2 * M_PI - 0.05));
-  BOOST_TEST(var ==  0.01);
+  BOOST_TEST(stdd ==  0.1);
 }
 
 
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(random_statistics_test, * ut::tolerance(0.00000001)) {
     int o = static_cast<int>(Quantity::ax);
     double n = stats[Statistic::size() * o  + Statistic::f_n];
     double mean = stats[Statistic::size() * o + Statistic::f_mean];
-    double stdd = sqrt(stats[Statistic::size() * o + Statistic::f_variance]);
+    double stdd = stats[Statistic::size() * o + Statistic::f_stddev];
 
     // Compute expected values
     double sum = 0;

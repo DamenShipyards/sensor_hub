@@ -98,7 +98,7 @@ struct Statistic {
   int n;
   //! Mean value of samples
   double mean;
-  //! RMS value of samples
+  //! RMS value of samples with respect to mean
   double variance;
 
   double operator[] (const size_t index) const {
@@ -110,7 +110,7 @@ struct Statistic {
       case 2:
         return mean;
       case 3:
-        return variance;
+        return sqrt(variance);
     }
     return 0;
   }
@@ -120,7 +120,7 @@ struct Statistic {
   }
 
   enum {
-    f_time, f_n, f_mean, f_variance
+    f_time, f_n, f_mean, f_stddev
   } field_t;
 };
 
@@ -134,7 +134,7 @@ struct Statistics: public Processor {
   void insert_value(const Stamped_quantity& value) override {
     Quantity quantity = value.quantity;
 
-    if (!filter.empty() && filter_.find(quantity) == filter_.end())
+    if (!filter_.empty() && filter_.find(quantity) == filter_.end())
       // We have a filter and it doesn't contain quantity: ignore this value
       return;
 
@@ -229,7 +229,7 @@ struct Statistics: public Processor {
     std::vector<std::string> quantities;
     log(level::info, "Set filter to % for %", filter, get_name());
     boost::split(quantities, filter, [](const char c) { return c == ','; });
-    for (auto& quantity: quantities) {
+    for (auto& quantity_str: quantities) {
       filter_.insert(get_quantity(quantity_str));
     }
   }
