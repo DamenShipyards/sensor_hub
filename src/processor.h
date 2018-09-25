@@ -50,6 +50,9 @@ struct Processor {
   virtual void set_param(const std::string& name, const double& value) { 
   }
 
+  virtual void set_filter(const std::string& filter) {
+  }
+
   std::string get_name() const {
     return name_;
   }
@@ -126,10 +129,15 @@ using Statistic_map = std::map<Quantity, Statistic>;
 
 
 struct Statistics: public Processor {
-  Statistics(): Processor(), data_(), statistics_(), period_(1.0) {}
+  Statistics(): Processor(), data_(), statistics_(), period_(1.0), filter_() {}
 
   void insert_value(const Stamped_quantity& value) override {
     Quantity quantity = value.quantity;
+
+    if (!filter.empty() && filter_.find(quantity) == filter_.end())
+      // We have a filter and it doesn't contain quantity: ignore this value
+      return;
+
     auto item = data_.try_emplace(quantity);
     auto& list = item.first->second;
     auto stat_item = statistics_.try_emplace(quantity);
@@ -212,8 +220,17 @@ struct Statistics: public Processor {
 
   void set_param(const std::string& name, const double& value) override { 
     if (name == "period") {
-      log(level::info, "Setting period to % for %", value, get_name());
       period_ = value;
+      log(level::info, "Set period to % for %", value, get_name());
+    }
+  }
+
+  void set_filter(const std::string& filter) override {
+    std::vector<std::string> quantities;
+    log(level::info, "Set filter to % for %", filter, get_name());
+    boost::split(quantities, filter, [](const char c) { return c == ','; });
+    for (auto& quantity: quantities) {
+      filter_.insert(get_quantity(quantity_str));
     }
   }
 
@@ -221,6 +238,7 @@ private:
   Data_list_map data_;
   Statistic_map statistics_;
   double period_;
+  std::set<Quantity> filter_;
 };
 
 

@@ -163,6 +163,15 @@ constexpr inline const char* get_quantity_name(Quantity quantity) {
   return get_quantity_name(quantity, quantity_sequence);
 }
 
+inline Quantity get_quantity(std::string& quantity_name) {
+  for (auto& qi = Quantity_iter::begin(); qi != Quantity_iter::end(); ++qi) {
+    if (name == get_quantity_name(*qi)) {
+      return *qi;
+    }
+  }
+  return Quantity::end;
+}
+
 struct Data_quantity {
   Quantity quantity;
 };

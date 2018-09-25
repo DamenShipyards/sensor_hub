@@ -158,6 +158,7 @@ struct Service {
       Processor_ptr processor = create_processor(processor_type);
       processor->set_name(cfg.get(fmt::format("{:s}.name", processor_section), "missing_processor_name"));
       processor->set_params(cfg.get(fmt::format("{:s}.parameters", processor_section), ""));
+      processor->set_filter(cfg.get(fmt::format("{:s}.filter", processor_section), ""));
       std::string device_name = cfg.get(fmt::format("{:s}.device", processor_section), "missing_processor_device");
       for (auto&& device: devices_) {
         if (device->get_name() == device_name) {
