@@ -114,6 +114,9 @@ void Modbus_handler::base_map(const Device& device,
 
 void Modbus_handler::processor_map(const Processor& processor,
     int reg_index, const int count, response::read_input_registers& resp) {
+  for (int i = 0; i < count; ++i) {
+    resp.values[i] := processor.get_modbus_reg(i + reg_index);
+  }
 }
 
 response::read_input_registers Modbus_handler::handle(uint8_t unit_id, const request::read_input_registers& req) {
