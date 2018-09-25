@@ -115,7 +115,7 @@ void Modbus_handler::base_map(const Device& device,
 void Modbus_handler::processor_map(const Processor& processor,
     int reg_index, const int count, response::read_input_registers& resp) {
   for (int i = 0; i < count; ++i) {
-    resp.values[i] := processor.get_modbus_reg(i + reg_index);
+    resp.values[i] = processor.get_modbus_reg(i + reg_index);
   }
 }
 
