@@ -191,13 +191,6 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return true;
   }
 
-  void empty_read_buffer(asio::yield_context yield) {
-    log(level::debug, "Emptying Xsens read buffer");
-    asio::streambuf buf;
-    boost::system::error_code ec;
-    this->get_port().async_read_some(buf.prepare(4096), yield[ec]);
-  }
-
   void poll_data(asio::yield_context yield) {
     log(level::debug, "Polling Xsens");
     asio::streambuf buf;
@@ -233,7 +226,6 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   bool goto_config(asio::yield_context yield) {
-    empty_read_buffer(yield);
     return exec_command(command::goto_config, command::config_ack, yield);
   }
 
