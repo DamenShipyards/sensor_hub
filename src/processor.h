@@ -31,15 +31,15 @@ struct Processor {
   virtual void insert_value(const Stamped_quantity& value) {
   }
 
-  virtual double operator[](int index) {
+  virtual double operator[](size_t index) {
     return 0;
   }
 
-  virtual uint16_t get_modbus_reg(int index) {
+  virtual uint16_t get_modbus_reg(size_t index) const {
     return 0;
   }
 
-  virtual std::string get_json() {
+  virtual std::string get_json() const {
     return "{}";
   }
 
@@ -50,7 +50,7 @@ struct Processor {
   virtual void set_param(const std::string& name, const double& value) { 
   }
 
-  std::string get_name() {
+  std::string get_name() const {
     return name_;
   }
 
@@ -73,7 +73,8 @@ struct Processor {
         set_param(keyval[0], val);
       }
       catch (std::exception& e) {
-        log(level::error, "%. Expected floating point argument in processor parameter. Got %.", e.what(), keyval[1]);
+        log(level::error, "%. Expected floating point argument in processor parameter. Got %.", 
+            e.what(), keyval[1]);
         continue;
       }
     }
@@ -88,16 +89,16 @@ using Processor_ptr = std::shared_ptr<Processor>;
 
 
 struct Statistic {
-  //< Time of reception of last sample
+  //! Time of reception of last sample
   double time;
-  //< Number of samples in statistic
+  //! Number of samples in statistic
   int n;
-  //< Mean value of samples
+  //! Mean value of samples
   double mean;
-  //< RMS value of samples
+  //! RMS value of samples
   double variance;
 
-  double operator[] (const int index) const {
+  double operator[] (const size_t index) const {
     switch (index) {
       case 0:
         return time;
@@ -157,7 +158,8 @@ struct Statistics: public Processor {
     // to avoid funny business with angles. Consider 0.5*(359+1) vs. 359-0.5*(value_diff(359,1)=-2)!
     double avg = value_norm(quantity, value.value - 0.5 * value_diff(value, list.back().value));
     double old_mean = stat.mean;
-    stat.mean = value_norm(quantity, old_mean + value_diff(quantity, avg, old_mean) * interval / (interval + span));
+    stat.mean = value_norm(quantity, old_mean + 
+        value_diff(quantity, avg, old_mean) * interval / (interval + span));
     double mean_shift_2 = sqr(value_diff(quantity, old_mean, stat.mean));
     double mean_diff_2 = sqr(value_diff(quantity, avg, stat.mean));
     stat.variance = (span * (stat.variance + mean_shift_2) + interval * mean_diff_2) / (span + interval); 
@@ -192,7 +194,7 @@ struct Statistics: public Processor {
     stat.time = value.stamp;
   }
 
-  double operator[](int index) override {
+  double operator[](size_t index) override {
     int q = index / Statistic::size();
     int m = index % Statistic::size();
     auto qit = statistics_.find(static_cast<Quantity>(q));
@@ -201,8 +203,8 @@ struct Statistics: public Processor {
     return qit->second[m];
   }
 
-  std::string get_json() override;
-  uint16_t get_modbus_reg(int index) override;
+  std::string get_json() const override;
+  uint16_t get_modbus_reg(size_t index) const override;
 
   size_t size() override {
     return Statistic::size() * static_cast<size_t>(Quantity::end);
@@ -210,6 +212,7 @@ struct Statistics: public Processor {
 
   void set_param(const std::string& name, const double& value) override { 
     if (name == "period") {
+      log(level::info, "Setting period to % for %", value, get_name());
       period_ = value;
     }
   }
@@ -222,43 +225,186 @@ private:
 
 
 struct Acceleration_peak {
-  double mean;
-  double standard_deviation;
+  //! Start of peak
+  double start;
+  //! Duration of peak
   double duration;
+  //! Absolute maximum value during peak
   double peak;
+  //! Mean value during peak
+  double mean;
+  //! Rms of values during peak
+  double rms;
+
+  double operator[] (const size_t index) const {
+    switch (index) {
+      case 0:
+        return start;
+      case 1:
+        return duration;
+      case 2:
+        return peak;
+      case 3:
+        return mean;
+      case 4:
+        return rms;
+    }
+    return 0;
+  }
+
+  static constexpr size_t size() {
+    return 5;
+  }
+
+  enum {
+    f_start, f_duration, f_peak, f_mean, f_rms
+  } field_t;
 };
 
 
-using Acceleration_peaks = std::vector<Acceleration_peak>;
+using Acceleration_peaks = std::deque<Acceleration_peak>;
 
 
 struct Acceleration_history: public Processor {
+  static constexpr unsigned x_dir = 1;
+  static constexpr unsigned y_dir = 2;
+  static constexpr unsigned z_dir = 4;
+
+  Acceleration_history()
+    : current_(), peaks_(), 
+      value_threshold_(1.0), duration_threshold_(1.0), item_count_(10), direction_(x_dir | y_dir), 
+      fax_(), fay_(), faz_() {}
+
+
   void insert_value(const Stamped_quantity& value) override {
+    if ((direction_ & x_dir) && (value.quantity == Quantity::fax)) {
+      if (fax_.stamp != 0) {
+        handle_value();
+      } 
+      fax_ = value;
+    } 
+    else if ((direction_ & y_dir) && (value.quantity == Quantity::fay)) {
+      if (fay_.stamp != 0) {
+        handle_value();
+      }
+      fay_ = value;
+    }
+    else if ((direction_ & z_dir) && (value.quantity == Quantity::faz)) {
+      if (faz_.stamp != 0) {
+        handle_value();
+      }
+      faz_ = value;
+    }
   }
 
-  double operator[](int index) override {
+  double operator[](const size_t index) override {
+    size_t i = index / Acceleration_peak::size();
+    size_t m = index % Acceleration_peak::size();
+    if (i < peaks_.size()) {
+      return peaks_[i][m];
+    }
     return 0;
   }
 
-  std::string get_json() override;
-  uint16_t get_modbus_reg(int index) override;
+  std::string get_json() const override;
+  uint16_t get_modbus_reg(size_t index) const override;
 
   size_t size() override {
-    return 0;
+    return Acceleration_peak::size() * peaks_.size();
   }
 
   void set_param(const std::string& name, const double& value) override { 
     if (name == "value_threshold") {
       value_threshold_ = value;
+      log(level::info, "Setting value_threshold to % for %", value_threshold_, get_name());
     }
     else if (name == "duration_threshold") {
       duration_threshold_ = value;
+      log(level::info, "Setting duration_threshold to % for %", duration_threshold_, get_name());
+    }
+    else if (name == "item_count") {
+      item_count_ = static_cast<size_t>(value);
+      log(level::info, "Set item_count to % for %", item_count_, get_name());
+    }
+    else if (name == "direction") {
+      direction_ = static_cast<unsigned>(value);
+      log(level::info, "Set direction to % for %", direction_, get_name());
     }
   }
 
 private:
+  void handle_value() {
+    double amp = 0;
+    double sqamp = 0;
+    switch (direction_) {
+      case x_dir:
+        amp = fax_.value;
+        sqamp = sqr(amp);
+        break;
+      case y_dir:
+        amp = fay_.value;
+        sqamp = sqr(amp);
+        break;
+      case z_dir:
+        amp = faz_.value;
+        sqamp = sqr(amp);
+        break;
+      default:
+        sqamp = sqr(fax_.value) + sqr(fay_.value) + sqr(faz_.value);
+        amp = sqrt(sqamp);
+    }
+    double stamp = std::max({fax_.stamp, fay_.stamp, faz_.stamp});
+    double aamp = fabs(amp);
+
+    if (aamp > value_threshold_) {
+      if (current_.start == 0) {
+        current_.start = stamp;
+        current_.duration = 0;
+        current_.peak = amp;
+        current_.mean = amp;
+        current_.rms = sqamp;
+      }
+      else {
+        if (aamp > fabs(current_.peak)) {
+          current_.peak = amp;
+        }
+
+        double new_duration = stamp - current_.start;
+        double interval = new_duration - current_.duration;
+        if (new_duration > 0) {
+          current_.duration = new_duration;
+          current_.mean += (amp - current_.mean) * interval / new_duration;
+          current_.rms += (sqamp - current_.rms) * interval / new_duration;
+        }
+      }
+    }
+    else {
+      if (current_.duration > duration_threshold_) {
+        current_.rms = sqrt(current_.rms);
+        peaks_.push_front(current_);
+        while (peaks_.size() > item_count_) {
+          peaks_.pop_back();
+        }
+      }
+      current_ = peak_zero;
+    }
+    fax_ = zero;
+    fay_ = zero;
+    faz_ = zero;
+  }
+
+  Acceleration_peak current_;
+  Acceleration_peaks peaks_;
   double value_threshold_;
   double duration_threshold_;
+  size_t item_count_;
+  unsigned direction_;
+
+  static constexpr Acceleration_peak peak_zero{0, 0, 0, 0, 0};
+  static constexpr Stamped_value zero{0, 0};
+  Stamped_value fax_;
+  Stamped_value fay_;
+  Stamped_value faz_;
 };
 
 

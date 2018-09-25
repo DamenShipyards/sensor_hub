@@ -18,7 +18,7 @@ namespace posix_time = boost::posix_time;
 
 
 
-BOOST_AUTO_TEST_CASE(statistics_test) {
+BOOST_AUTO_TEST_CASE(statistics_test, * ut::tolerance(0.00000001)) {
   Statistics stats;
   Stamped_quantity value;
   value.quantity = Quantity::ax;
@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(statistics_test) {
   mean = stats[Statistic::size() * o + Statistic::f_mean];
   var = stats[Statistic::size() * o + Statistic::f_variance];
   BOOST_TEST(n == 5);
-  BOOST_TEST(fabs(mean - 1.1) < 1E-8);
-  BOOST_TEST(fabs(var - 0.01) < 1E-8);
+  BOOST_TEST(mean == 1.1);
+  BOOST_TEST(var == 0.01);
 
   value.quantity = Quantity::hdg;
   o = static_cast<int>(Quantity::hdg);
@@ -71,12 +71,12 @@ BOOST_AUTO_TEST_CASE(statistics_test) {
   mean = stats[Statistic::size() * o + Statistic::f_mean];
   var = stats[Statistic::size() * o + Statistic::f_variance];
   BOOST_TEST(n == 5);
-  BOOST_TEST(fabs(mean - (2 * M_PI - 0.05)) < 1E-8);
-  BOOST_TEST(fabs(var - 0.01) < 1E-8);
+  BOOST_TEST(mean == (2 * M_PI - 0.05));
+  BOOST_TEST(var ==  0.01);
 }
 
 
-BOOST_AUTO_TEST_CASE(random_statistics_test) {
+BOOST_AUTO_TEST_CASE(random_statistics_test, * ut::tolerance(0.00000001)) {
   // Setup mersenne twister pseudo random number generator
   std::uniform_real_distribution<double> distribution(-0.3, 0.5);
   std::mt19937 engine;
@@ -113,12 +113,54 @@ BOOST_AUTO_TEST_CASE(random_statistics_test) {
     double expected_stdd = sqrt(sum / 10);
 
     BOOST_TEST(n == 11);
-    BOOST_TEST(fabs(mean - expected_mean) < 1E-8);
-    BOOST_TEST(fabs(stdd - expected_stdd) < 1E-8);
+    BOOST_TEST(mean == expected_mean);
+    BOOST_TEST(stdd == expected_stdd);
   }
 }
 
-BOOST_AUTO_TEST_CASE(horizontal_acceleration_peak_test) {
+BOOST_AUTO_TEST_CASE(horizontal_acceleration_peak_test, * ut::tolerance(0.00000001)) {
+  Acceleration_history history;
+
+  history.set_name("Test-Acceleration-History");
+  Stamped_quantity value;
+  for (int i = 0; i < 400; ++i) {
+    value.quantity = Quantity::fax;
+    value.stamp += 0.01 * M_PI;
+    value.value = sqrt(2) * sin(value.stamp);
+    history.insert_value(value);
+    value.quantity = Quantity::fay;
+    history.insert_value(value);
+  }
+  BOOST_TEST(history.size() == 20);
+  BOOST_TEST(history[0] == 9.958848711879645);
+  BOOST_TEST(history[1] == 2.0734511513692639);
+  BOOST_TEST(history[2] == 2.0);
+  BOOST_TEST(history[3] == 1.6603646188180439);
+  BOOST_TEST(history[6] == 2.0734511513692639);
+  BOOST_TEST(history[7] == 2.0);
+  BOOST_TEST(history[8] == 1.6603646188180439);
+
+
+  history.set_params("direction=1");
+
+  for (int i = 0; i < 400; ++i) {
+    value.quantity = Quantity::fax;
+    value.stamp += 0.01 * M_PI;
+    value.value = 2 * sin(value.stamp);
+    history.insert_value(value);
+    value.quantity = Quantity::fay;
+    history.insert_value(value);
+  }
+  BOOST_TEST(history.size() == 40);
+  BOOST_TEST(history[0] == (4 * M_PI + 9.958848711879645));
+  BOOST_TEST(history[1] == 2.0734511513692639);
+  BOOST_TEST(history[2] == -2.0);
+  BOOST_TEST(history[3] == -1.6603646188180439);
+  BOOST_TEST(history[4] == 1.6867085636136444);
+  BOOST_TEST(history[6] == 2.0734511513692639);
+  BOOST_TEST(history[7] == 2.0);
+  BOOST_TEST(history[8] == 1.6603646188180439);
+  BOOST_TEST(history[9] == 1.6867085636136444);
 }
 
 BOOST_AUTO_TEST_CASE(factory_test) {
