@@ -46,7 +46,7 @@ cdata_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
   0x80,                   // EnableInRunCompassCalibration
   0x00, 0x00, 0x00,       // Option flags to clear
   0x00 |
-  0x02                    // Disable DisableAutoMeasurement i.e. enable
+  0x02,                   // Disable DisableAutoMeasurement i.e. enable
   0x1E                    // Checksum
 };
 cdata_t option_flags_ack = {packet_start, sys_command, XMID_SetOptionFlagsAck};
