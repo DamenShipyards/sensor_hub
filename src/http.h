@@ -27,7 +27,8 @@ struct Request_handler {
   Request_handler(const Request_handler&) = delete;
   Request_handler& operator=(const Request_handler&) = delete;
 
-  explicit Request_handler(Devices& devices): devices_(devices), css_() {};
+  explicit Request_handler(const Devices& devices, const Processors& processors)
+    : devices_(devices), processors_(processors), css_() {};
 
   void handle_request(const Request& req, Reply& rep);
   std::string get_content(const std::string& path, std::string& content);
@@ -36,7 +37,8 @@ struct Request_handler {
     css_ = css;
   }
 private:
-  Devices& devices_;
+  const Devices& devices_;
+  const Processors& processors_;
   std::string css_;
   static bool url_decode(const std::string& in, std::string& out);
 };

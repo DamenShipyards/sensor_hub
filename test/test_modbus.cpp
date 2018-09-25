@@ -5,6 +5,7 @@
 
 #include "../src/modbus.h" 
 #include "../src/device.h" 
+#include "../src/processor.h"
 #include "../3rdparty/modbus/include/modbus/client.hpp"
 
 namespace asio = boost::asio;
@@ -48,7 +49,8 @@ BOOST_AUTO_TEST_CASE(talk_test) {
 
   Client client{ctx};
   Devices devices;
-  auto handler = boost::make_shared<Modbus_handler>(devices);
+  Processors processors;
+  auto handler = boost::make_shared<Modbus_handler>(devices, processors);
   Modbus_server server{ctx, handler, 1502};
 
   client.connect("localhost", 1502, boost::bind(&Client::on_connect, &client, _1));

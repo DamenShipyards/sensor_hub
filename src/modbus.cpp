@@ -22,8 +22,9 @@
 using namespace modbus;
 
 static Stamped_value zero = {};
-static constexpr int plain_base_address = 10000;
 static constexpr int base_base_address = 0;
+static constexpr int plain_base_address = 10000;
+static constexpr int processor_base_address = 20000;
 
 
 Base_scale::Base_scale(): scale_() {
@@ -36,7 +37,8 @@ Base_scale::Base_scale(): scale_() {
 }
 
 
-void Modbus_handler::plain_map(const Device& device, int reg_index, const int count, response::read_input_registers& resp) {
+void Modbus_handler::plain_map(const Device& device, 
+    int reg_index, const int count, response::read_input_registers& resp) {
   Quantity curq = Quantity::end;
   Stamped_value sample;
   for (int index = 0; index < count; ++index) {
@@ -56,9 +58,8 @@ void Modbus_handler::plain_map(const Device& device, int reg_index, const int co
 }
 
 
-
-
-void Modbus_handler::base_map(const Device& device, int reg_index, const int count, response::read_input_registers& resp) {
+void Modbus_handler::base_map(const Device& device, 
+    int reg_index, const int count, response::read_input_registers& resp) {
   static Base_scale base_scale;
 
   for (int index = 0; index < count; ++index) {
@@ -111,13 +112,23 @@ void Modbus_handler::base_map(const Device& device, int reg_index, const int cou
   }
 }
 
+void Modbus_handler::processor_map(const Processor& processor,
+    int reg_index, const int count, response::read_input_registers& resp) {
+}
+
 response::read_input_registers Modbus_handler::handle(uint8_t unit_id, const request::read_input_registers& req) {
   // Unit ID 255 means "not used" -> assume device 0
   if (unit_id == 0xFF)
     unit_id = 0;
   auto resp = Default_handler::handle(unit_id, req);
-  if (unit_id < devices_.size()) { 
-    Device& device = *devices_[unit_id];
+  if (req.address >= processor_base_address) {
+    if (unit_id < processors_.size()) {
+      const Processor& processor = *processors_[unit_id];
+      processor_map(processor, req.address - processor_base_address, req.count, resp);
+    }
+  }
+  else if (unit_id < devices_.size()) { 
+    const Device& device = *devices_[unit_id];
     if (req.address >= plain_base_address) {
       plain_map(device, req.address - plain_base_address, req.count, resp);
     }

@@ -375,7 +375,8 @@ std::string Request_handler::get_content(const std::string& path, std::string& c
     "</html>\n";
   static const char home[] =
     "<h1>Welcome to Damen Sensor Hub</h1>\n"
-    "<h2>Connected devices:</h2>\n<ul>{:s}</ul>"
+    "<h2>Configured devices:</h2>\n<ul>{:s}</ul>"
+    "<h2>Active processors:</h2>\n<ul>{:s}</ul>"
     "<hr><p class=\"attribution\">"
     "Version: {} built from revision: {}. Written by "
     "<a href=\"mailto:jaap.versteegh@damen.com?subject=Damen Sensor Hub\">Jaap Versteegh</a>";
@@ -394,8 +395,16 @@ std::string Request_handler::get_content(const std::string& path, std::string& c
         devices += fmt::format("<li class=\"device_disconnected\">{:s}: Not connected.", device.get_name());
       }
     }
+    std::string processors;
+    for (size_t i = 0; i < processors_.size(); ++i) {
+      const Processor& processor = *processors_[i];
+      processors += fmt::format(
+          "<li class=\"processor\"><a href=\"/processors/{:d}\">{:s}</a>",
+          i,
+          processor.get_name());
+    }
     content = fmt::format(html, css_, icon, 
-        fmt::format(home, devices, STRINGIFY(VERSION), STRINGIFY(GITREV)));
+        fmt::format(home, devices, processors, STRINGIFY(VERSION), STRINGIFY(GITREV)));
     return "text/html";
   }
   else if (path.substr(0, 9) == "/devices/") {
@@ -403,8 +412,19 @@ std::string Request_handler::get_content(const std::string& path, std::string& c
     content = "{}";
     for (size_t i = 0; i < devices_.size(); ++i) {
       const Device& device = *devices_[i];
-      if (std::to_string(i) == id || device.get_id() == id) {
+      if (std::to_string(i) == id || device.get_id() == id || device.get_name() == id) {
         content = get_device_json(device);
+      }
+    }
+    return "application/json";
+  }
+  else if (path.substr(0, 12) == "/processors/") {
+    std::string id = path.substr(12, 32);
+    content = "{}";
+    for (size_t i = 0; i < processors_.size(); ++i) {
+      const Processor& processor = *processors_[i];
+      if (std::to_string(i) == id || processor.get_name() == id) {
+        content = processor.get_json();
       }
     }
     return "application/json";

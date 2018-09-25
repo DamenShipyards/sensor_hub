@@ -63,13 +63,18 @@ private:
 
 
 struct Modbus_handler: public modbus::Default_handler {
-  Modbus_handler(const Devices& devices): modbus::Default_handler(), devices_(devices) {}
+  Modbus_handler(const Devices& devices, const Processors& processors)
+    : modbus::Default_handler(), devices_(devices), processors_(processors) {}
   using modbus::Default_handler::handle;
-  modbus::response::read_input_registers handle(uint8_t unit_id, const modbus::request::read_input_registers& req);
+  modbus::response::read_input_registers handle(
+      uint8_t unit_id, const modbus::request::read_input_registers& req);
 private:
   void plain_map(const Device& device, int reg_index, int count, modbus::response::read_input_registers& resp);
   void base_map(const Device& device, int reg_index, int count, modbus::response::read_input_registers& resp);
+  void processor_map(const Processor& processor, 
+      int reg_index, int count, modbus::response::read_input_registers& resp);
   const Devices& devices_;
+  const Processors& processors_;
 };
 
 using Modbus_server = modbus::Server<Modbus_handler>;

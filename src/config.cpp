@@ -104,6 +104,8 @@ private:
 
     set_default("modbus.ut_min", 0.0);
     set_default("modbus.ut_max", 1.0 * 0x100000000);
+    set_default("modbus.du_min", 0.0);
+    set_default("modbus.du_max", 0.001 * 0x100000000);
 
     set_default("modbus.la_min", -M_PI);
     set_default("modbus.la_max", M_PI);
@@ -159,6 +161,16 @@ private:
     set_default("device0.connection_string", "2639:0017,0");
     set_default("device0.enable_logging", true);
     set_default("device0.use_as_time_source", false);
+
+    set_default("processors.count", 2);
+    set_default("processor0.type", "acceleration_history");
+    set_default("processor0.name", "Xsens-Acceleration-Peaks");
+    set_default("processor0.parameters", "value_threshold=0.4,duration_threshold=0.5,item_count=5,direction=3");
+    set_default("processor0.device", "Xsens-MTi-G-710");
+    set_default("processor1.type", "statistics");
+    set_default("processor1.name", "Xsens-Statistics");
+    set_default("processor1.parameters", "period=2.0");
+    set_default("processor1.device", "Xsens-MTi-G-710");
   }
 };
 
