@@ -38,13 +38,16 @@ cdata_t measurement_ack = {packet_start, sys_command, XMID_GotoMeasurementAck};
 cdata_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
   0x08,
   0x00, 0x00, 0x00,       // Option flags to set:
+  0x00 |
   0x01 |                  // DisableAutoStore
   // 0x02 |               // DisableAutoMeasurement 
   // 0x04 |               // EnableBeidou (instead of GLONASS)
   0x10 |                  // EnableAHS (relate Yaw only, no heading)
   0x80,                   // EnableInRunCompassCalibration
-  0x00, 0x00, 0x00, 0x00, // Option flags to clear
-  0x20                    // Checksum
+  0x00, 0x00, 0x00,       // Option flags to clear
+  0x00 |
+  0x02                    // Disable DisableAutoMeasurement i.e. enable
+  0x1E                    // Checksum
 };
 cdata_t option_flags_ack = {packet_start, sys_command, XMID_SetOptionFlagsAck};
 
@@ -65,7 +68,8 @@ cdata_t error_resp = {packet_start, sys_command, XMID_Error};
 cdata_t set_output_configuration = {
   packet_start, sys_command,
   XMID_SetOutputConfiguration,
-  0x28,
+  0x2C,                   // Length
+//0x28,                   // Lenght (without quaternion output)
   0x10, 0x10, 0x00, 0x00, // Utc time
   0x40, 0x20, 0x00, 0x64, // Acceleration, 100Hz
   0x40, 0x30, 0x00, 0x64, // Free Acceleration, 100Hz
@@ -76,9 +80,9 @@ cdata_t set_output_configuration = {
   0x50, 0x20, 0x00, 0x0A, // Altitude above ellipsoid, 10Hz
   0x50, 0x10, 0x00, 0x0A, // Altitude above MSL, 10Hz
   0x20, 0x30, 0x00, 0x0A, // Euler angles
-//  0x20, 0x10, 0x00, 0x0A, // Quaternion
-//  0x70                    // Checksum
-  0xAE                    // Checksum
+  0x20, 0x10, 0x00, 0x0A, // Quaternion
+  0x70                    // Checksum
+//  0xAE                    // Checksum (without quaternion output)
 };
 
 cdata_t output_configuration_ack = {
