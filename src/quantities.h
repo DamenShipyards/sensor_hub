@@ -80,6 +80,7 @@ enum class Quantity {
   fax, ///< 32: X component of free acceleration, acceleration with respect to earth surface
   fay, ///< 33: Y component of free acceleration, acceleration with respect to earth surface
   faz, ///< 34: Z component of free acceleration, acceleration with respect to earth surface
+  du,  ///< 35: Duration, time interval
   end, ///< Enumeration end marker. Do not use
 };
 
@@ -126,6 +127,7 @@ QUANTITY_NAME(yr);
 QUANTITY_NAME(fax);
 QUANTITY_NAME(fay);
 QUANTITY_NAME(faz);
+QUANTITY_NAME(du);
 
 template <Quantity quantity>
 constexpr inline decltype(auto) get_quantity_name() {
