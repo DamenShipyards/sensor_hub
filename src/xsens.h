@@ -52,11 +52,17 @@ extern cdata_t config_ack;
 extern cdata_t goto_measurement;
 extern cdata_t measurement_ack;
 
+extern cdata_t init_mt;
+extern cdata_t mt_ack;
+
 extern cdata_t set_option_flags;
 extern cdata_t option_flags_ack;
 
 extern cdata_t req_reset;
 extern cdata_t reset_ack;
+
+extern cdata_t wakeup;
+extern cdata_t wakeup_ack;
 
 extern cdata_t req_product_code;
 extern cdata_t product_code_resp;
@@ -115,6 +121,11 @@ struct Packet_parser {
 
 template <typename Port, typename ContextProvider>
 struct Xsens: public Port_device<Port, ContextProvider> {
+
+  void wait(int milli_seconds, asio::yield_context yield) {
+    asio::deadline_timer waiter(ContextProvider::get_context(), posix_time::milliseconds(milli_seconds));
+    waiter.async_wait(yield);
+  }
 
   bool exec_command(cdata_t& command, cdata_t& expected_response, asio::yield_context yield, std::string* data=nullptr) {
     Port& port = this->get_port();
@@ -225,11 +236,44 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     }
   }
 
+  bool look_for_wakeup(asio::yield_context yield) {
+    // When the device just powered on, it sends wakeup messages.     
+    Port& port = this->get_port();
+    asio::streambuf read_buf;
+    boost::system::error_code ec;
+    data_t response{};
+    size_t bytes_read = port.async_read_some(read_buf.prepare(0x100), yield[ec]);
+    if (!ec) {
+      read_buf.commit(bytes_read);
+      auto buf_begin = asio::buffers_begin(read_buf.data());
+      auto buf_end = buf_begin + bytes_read;
+
+      cdata_t data(buf_begin, buf_end);
+      std::stringstream ssr;
+      ssr << data;
+      log(level::debug, "Received from XSens while looking for wakeup: %", ssr.str());
+
+      response.insert(response.end(), buf_begin, buf_end);
+
+      read_buf.consume(bytes_read);
+      if (contains(response, command::wakeup)) {
+        log(level::info, "Received WakeUp from XSens: Acknowledging");
+        asio::async_write(port, asio::buffer(command::wakeup_ack), yield);
+        // This device will spit out its configuration, which we will just swallow
+        port.async_read_some(read_buf.prepare(0x1000), yield[ec]);
+      }
+    }
+    // Always return true as we don't really care about how this was handled
+    return true;
+  }
+
   bool goto_config(asio::yield_context yield) {
+    this->wait(10, yield);
     return exec_command(command::goto_config, command::config_ack, yield);
   }
 
   bool goto_measurement(asio::yield_context yield) {
+    this->wait(10, yield);
     return exec_command(command::goto_measurement, command::measurement_ack, yield);
   }
 
@@ -242,11 +286,18 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   virtual bool reset(asio::yield_context yield) {
+    this->wait(10, yield);
     return this->exec_command(command::req_reset, command::reset_ack, yield);
+  }
+
+  bool init_mt(asio::yield_context yield) {
+    this->wait(10, yield);
+    return this->exec_command(command::init_mt, command::mt_ack, yield);
   }
 
 
   virtual bool request_product_code(asio::yield_context yield) {
+    this->wait(10, yield);
     std::string data;
     bool result = this->exec_command(command::req_product_code, command::product_code_resp, yield, &data);
     if (result) {
@@ -256,6 +307,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   virtual bool request_identifier(asio::yield_context yield) {
+    this->wait(10, yield);
     std::string data;
     bool result = this->exec_command(command::req_device_id, command::device_id_resp, yield, &data);
     if (result && data.size() == 4) {
@@ -272,6 +324,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   virtual bool request_firmware(asio::yield_context yield) {
+    this->wait(10, yield);
     std::string data;
     bool result = this->exec_command(command::req_firmware_rev, command::firmware_rev_resp, yield, &data);
     if (result && data.size() == 11) {
@@ -298,12 +351,15 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   bool initialize(asio::yield_context yield) override {
-    bool result = goto_config(yield)
-        && request_product_code(yield)
-        && request_identifier(yield)
-        && request_firmware(yield)
+    bool result = 
+        look_for_wakeup(yield) 
+        && goto_config(yield)
         && set_option_flags(yield)
+        && request_identifier(yield)
+        && request_product_code(yield)
+        && request_firmware(yield)
         && set_output_configuration(yield)
+        && init_mt(yield)
         && goto_measurement(yield);
 
 
@@ -347,10 +403,12 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
   }
 
   bool set_output_configuration(asio::yield_context yield) override {
+    this->wait(100, yield);
     return this->exec_command(command::set_output_configuration, command::output_configuration_ack, yield);
   }
 
   bool set_option_flags(asio::yield_context yield) override {
+    this->wait(100, yield);
     this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
     // We don't really care that much whether this command was successful, so just always return true
     return true;
