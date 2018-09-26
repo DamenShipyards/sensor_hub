@@ -1,0 +1,1 @@
+powershell -command "Start-Process start.bat -Verb runas"

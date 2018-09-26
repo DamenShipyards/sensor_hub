@@ -1,0 +1,1 @@
+sc stop "Damen Sensor Hub" && sc start "Damen Sensor Hub"

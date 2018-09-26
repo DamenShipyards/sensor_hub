@@ -1,0 +1,1 @@
+powershell -command "Start-Process stop.bat -Verb runas"

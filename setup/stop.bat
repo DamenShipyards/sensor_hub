@@ -1,0 +1,1 @@
+sc stop "Damen Sensor Hub"
