@@ -261,6 +261,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
         asio::async_write(port, asio::buffer(command::wakeup_ack), yield);
         // This device will spit out its configuration, which we will just swallow
         port.async_read_some(read_buf.prepare(0x1000), yield[ec]);
+        wait(500, yield);
       }
     }
     // Always return true as we don't really care about how this was handled
@@ -268,13 +269,12 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   bool goto_config(asio::yield_context yield) {
-    this->wait(10, yield);
     log(level::info, "Xsens GotoConfig");
     return exec_command(command::goto_config, command::config_ack, yield);
   }
 
   bool goto_measurement(asio::yield_context yield) {
-    this->wait(10, yield);
+    this->wait(50, yield);
     log(level::info, "Xsens GotoMeasurement");
     return exec_command(command::goto_measurement, command::measurement_ack, yield);
   }
@@ -288,20 +288,20 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   virtual bool reset(asio::yield_context yield) {
-    this->wait(10, yield);
+    this->wait(50, yield);
     log(level::info, "Xsens Reset");
     return this->exec_command(command::req_reset, command::reset_ack, yield);
   }
 
   bool init_mt(asio::yield_context yield) {
-    this->wait(10, yield);
+    this->wait(50, yield);
     log(level::info, "Xsens InitMT");
     return this->exec_command(command::init_mt, command::mt_ack, yield);
   }
 
 
   virtual bool request_product_code(asio::yield_context yield) {
-    this->wait(10, yield);
+    this->wait(50, yield);
     log(level::info, "Xsens GetProductCode");
     std::string data;
     bool result = this->exec_command(command::req_product_code, command::product_code_resp, yield, &data);
@@ -312,7 +312,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   virtual bool request_identifier(asio::yield_context yield) {
-    this->wait(10, yield);
+    this->wait(50, yield);
     log(level::info, "Xsens GetIdentifier");
     std::string data;
     bool result = this->exec_command(command::req_device_id, command::device_id_resp, yield, &data);
@@ -330,7 +330,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   virtual bool request_firmware(asio::yield_context yield) {
-    this->wait(10, yield);
+    this->wait(50, yield);
     log(level::info, "Xsens GetFirmwareVersion");
 
     std::string data;
@@ -411,13 +411,13 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
   }
 
   bool set_output_configuration(asio::yield_context yield) override {
-    this->wait(10, yield);
+    this->wait(50, yield);
     log(level::info, "Xsens SetOutputConfiguration");
     return this->exec_command(command::set_output_configuration, command::output_configuration_ack, yield);
   }
 
   bool set_option_flags(asio::yield_context yield) override {
-    this->wait(10, yield);
+    this->wait(50, yield);
     log(level::info, "Xsens SetOptionFlags");
     this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
     // We don't really care that much whether this command was successful, so just always return true
