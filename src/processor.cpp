@@ -60,7 +60,7 @@ std::string Statistics::get_json() const {
       writer.String(get_quantity_name(*it)); writer.StartObject();
       const Statistic& stat = sit->second;
       writer.String("time"); writer.Double(stat.time);
-      writer.String("samples"); writer.Double(stat.n);
+      writer.String("samples"); writer.Int(stat.n);
       writer.String("mean"); writer.Double(stat.mean);
       writer.String("stddev"); writer.Double(sqrt(stat.variance));
       writer.EndObject();
