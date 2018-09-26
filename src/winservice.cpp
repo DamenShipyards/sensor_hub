@@ -59,7 +59,7 @@ void print_usage()
             << " sensor_hub <command>" << std::endl
             << "   Commands:" << std::endl
             << "     install: Install the service" << std::endl
-            << "     uninstall: Remove the service" << std::endl;
+            << "     uninstall: Remove the service" << std::endl
             << "     version: Print version and exit" << std::endl;
 }
 

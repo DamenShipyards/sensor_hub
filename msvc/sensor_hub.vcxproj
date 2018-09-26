@@ -45,7 +45,7 @@
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>sensor_hub</TargetName>
-    <IncludePath>..\3rdparty\fmt\include;..\3rdparty\libusb\include;..\3rdparty\libwdi\include;..\3rdparty\xsens\include;C:\boost;$(IncludePath)</IncludePath>
+    <IncludePath>..\3rdparty\fmt\include;..\3rdparty\libusb\include;..\3rdparty\libwdi\include;..\3rdparty\rapidjson\include;..\3rdparty\modbus\include;..\3rdparty\xsens\include;C:\boost;$(IncludePath)</IncludePath>
     <LibraryPath>..\3rdparty\libusb\lib;..\3rdparty\libwdi\lib;C:\boost\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -81,7 +81,8 @@
     <ClCompile Include="..\src\http.cpp" />
     <ClCompile Include="..\src\log.cpp" />
     <ClCompile Include="..\src\loop.cpp" />
-    <ClCompile Include="..\src\quantities.cpp" />
+    <ClCompile Include="..\src\modbus.cpp" />
+    <ClCompile Include="..\src\processor.cpp" />
     <ClCompile Include="..\src\usb.cpp" />
     <ClCompile Include="..\src\winservice.cpp" />
     <ClCompile Include="..\src\xsens.cpp" />
@@ -94,6 +95,8 @@
     <ClInclude Include="..\src\http.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\loop.h" />
+    <ClInclude Include="..\src\modbus.h" />
+    <ClInclude Include="..\src\processor.h" />
     <ClInclude Include="..\src\quantities.h" />
     <ClInclude Include="..\src\spirit_x3.h" />
     <ClInclude Include="..\src\tools.h" />

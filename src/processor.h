@@ -21,6 +21,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <set>
 
 #include <boost/algorithm/string.hpp>
 
@@ -198,13 +199,13 @@ struct Statistics: public Processor {
       stat.variance = ((span + interval) * stat.variance - interval * mean_diff_2) / span - mean_shift_2;
     }
     // Keep a record of the number of samples
-    stat.n = list.size();
+    stat.n = static_cast<int>(list.size());
     stat.time = value.stamp;
   }
 
   double operator[](size_t index) override {
-    int q = index / Statistic::size();
-    int m = index % Statistic::size();
+    size_t q = index / Statistic::size();
+    size_t m = index % Statistic::size();
     auto qit = statistics_.find(static_cast<Quantity>(q));
     if (qit == statistics_.end())
       return 0;

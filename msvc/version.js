@@ -13,6 +13,12 @@ var product = "Unknown"
 var gitrevfile = FSO.OpenTextFile(CD + "\\gitrev.txt", ForReading);
 var gitrev = gitrevfile.ReadAll();
 
+String.prototype.trim = function()
+{
+  return this.replace(/^\s+|\s+$/g, '');
+};
+gitrev = gitrev.trim();
+
 
 for (i = 0; i < verlines.length; i++) {
   var verline = verlines[i].split('=');
@@ -61,4 +67,9 @@ outfile.WriteLine("{");
 outfile.WriteLine("VALUE \"Translation\", 1033, 1252");
 outfile.WriteLine("}");
 outfile.WriteLine("END");
+outfile.close();
+
+outfile = FSO.OpenTextFile(CD + "\\..\\src\\version.h", ForWriting, true, 0);
+outfile.WriteLine("#define GITREV " + gitrev);
+outfile.WriteLine("#define VERSION " + version);
 outfile.close();
