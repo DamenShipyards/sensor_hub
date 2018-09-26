@@ -39,17 +39,17 @@ cdata_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
   0x08,
   0x00, 0x00, 0x00,       // Option flags to set:
   0x00 |
-  0x01 |                  // Disable auto store
-  0x02 |                  // Disable auto measurement
+  // 0x01 |               // Disable auto store
+  ///0x02 |               // Disable auto measurement
   // 0x04 |               // EnableBeidou (instead of GLONASS)
   0x10 |                  // EnableAHS (relate Yaw only, no heading)
   0x80 |                  // EnableInRunCompassCalibration
   0x00,
   0x00, 0x00, 0x00,       // Option flags to clear
   0x00 |
-  0x04 |                  // Clear: EnableBeidou (use GLONASS)
+  // 0x02 |               // Clear: Disable auto measurement
   0x00,
-  0x1A                    // Checksum
+  0x21                    // Checksum
 };
 cdata_t option_flags_ack = {packet_start, sys_command, XMID_SetOptionFlagsAck};
 

@@ -269,11 +269,13 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
   bool goto_config(asio::yield_context yield) {
     this->wait(10, yield);
+    log(level::info, "Xsens GotoConfig");
     return exec_command(command::goto_config, command::config_ack, yield);
   }
 
   bool goto_measurement(asio::yield_context yield) {
     this->wait(10, yield);
+    log(level::info, "Xsens GotoMeasurement");
     return exec_command(command::goto_measurement, command::measurement_ack, yield);
   }
 
@@ -287,17 +289,20 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
   virtual bool reset(asio::yield_context yield) {
     this->wait(10, yield);
+    log(level::info, "Xsens Reset");
     return this->exec_command(command::req_reset, command::reset_ack, yield);
   }
 
   bool init_mt(asio::yield_context yield) {
     this->wait(10, yield);
+    log(level::info, "Xsens InitMT");
     return this->exec_command(command::init_mt, command::mt_ack, yield);
   }
 
 
   virtual bool request_product_code(asio::yield_context yield) {
     this->wait(10, yield);
+    log(level::info, "Xsens GetProductCode");
     std::string data;
     bool result = this->exec_command(command::req_product_code, command::product_code_resp, yield, &data);
     if (result) {
@@ -308,6 +313,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
   virtual bool request_identifier(asio::yield_context yield) {
     this->wait(10, yield);
+    log(level::info, "Xsens GetIdentifier");
     std::string data;
     bool result = this->exec_command(command::req_device_id, command::device_id_resp, yield, &data);
     if (result && data.size() == 4) {
@@ -325,6 +331,8 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
   virtual bool request_firmware(asio::yield_context yield) {
     this->wait(10, yield);
+    log(level::info, "Xsens GetFirmwareVersion");
+
     std::string data;
     bool result = this->exec_command(command::req_firmware_rev, command::firmware_rev_resp, yield, &data);
     if (result && data.size() == 11) {
