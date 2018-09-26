@@ -231,7 +231,9 @@ struct Statistics: public Processor {
     log(level::info, "Set filter to % for %", filter, get_name());
     boost::split(quantities, filter, [](const char c) { return c == ','; });
     for (auto& quantity_str: quantities) {
-      filter_.insert(get_quantity(quantity_str));
+      Quantity quantity = get_quantity(quantity_str);
+      if (quantity != Quantity::end)
+        filter_.insert(quantity );
     }
   }
 
