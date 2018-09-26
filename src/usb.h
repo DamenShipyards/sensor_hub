@@ -185,7 +185,7 @@ static void handle_transfer(libusb_transfer* transfer) {
       ec = boost::system::errc::make_error_code(boost::system::errc::bad_file_descriptor);
       break;
     case LIBUSB_TRANSFER_TIMED_OUT:
-      log(level::warning, "USB timeout");
+      log(level::info, "USB timeout");
       ec = boost::system::errc::make_error_code(boost::system::errc::timed_out);
       break;
     case LIBUSB_TRANSFER_ERROR:
