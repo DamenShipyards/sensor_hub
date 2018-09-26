@@ -24,7 +24,13 @@
           <Directory Id="ProgramMenu$(var.ShortName)" Name="$(var.LongName)" />		 
         </Directory>
       </Directory>
+	  <Directory Id="CommonAppDataFolder">
+	    <Directory Id="DamenData" Name="Damen">
+	      <Directory Id="SENSORHUBDATA" Name="SensorHub" />
+	    </Directory>
+	  </Directory>
     </Directory>
+	
     <DirectoryRef Id="APPLICATIONROOTDIRECTORY">
       <Component Id="$(var.ShortName).exe" Guid="{0db1be5c-8bfb-11e8-9516-408d5cb38438}">
         <File Id="$(var.ShortName).exe" Source="..\msvc\Release\$(var.ShortName).exe" KeyPath="yes" Checksum="yes" />
@@ -33,6 +39,12 @@
         <File Id="CHANGELOG" Source="..\CHANGELOG.md" KeyPath="yes" />
         <File Id="um.pdf" Source="..\manual\manual\$(var.ShortName).pdf" />
         <File Id="um.chm" Source="..\manual\manual\$(var.ShortName).chm" />
+		<File Id="start.bat" Source="start.bat" />
+		<File Id="stop.bat" Source="stop.bat" />
+		<File Id="restart.bat" Source="restart.bat" />
+		<File Id="start_elevated.bat" Source="start_elevated.bat" />
+		<File Id="stop_elevated.bat" Source="stop_elevated.bat" />
+		<File Id="restart_elevated.bat" Source="restart_elevated.bat" />
       </Component>
 	  <Component Id="Libraries" Guid="{5cdd4138-b5d4-11e8-85c2-077f20dccfae}">
 	    <File Id="libusb.dll" Source="..\3rdparty\libusb\lib\libusb-1.0.dll" />
@@ -41,9 +53,20 @@
     </DirectoryRef>
     <DirectoryRef Id="ProgramMenu$(var.ShortName)">
       <Component Id="ApplicationShortcuts" Guid="{2aa381b2-8bfb-11e8-9551-408d5cb38438}">
-        <Shortcut Id="UserManualShortcut" Name="User Manual" Description="$(var.LongName) User Manual" Target="[APPLICATIONROOTDIRECTORY]\um-$(var.ShortName).pdf" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
-        <Shortcut Id="ReleaseNotesShortcut" Name="Release Notes" Description="$(var.LongName) Release Notes" Target="[APPLICATIONROOTDIRECTORY]\rn-$(var.ShortName).pdf" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
-        <util:InternetShortcut Id="ReportIssueShortcut" Name="Report Issue" Target="http://svn.damen.local/wiki/IssueReporting" />
+	    <Shortcut Id="ConfigShortcut" Name="$(var.LongName) Config" Description="$(var.LongName) Config" Target="[SENSORHUBDATA]\Config\$(var.ShortName).conf" WorkingDirectory="SENSORHUBDATA" />
+		
+		<Shortcut Id="StartShortcut" Name="$(var.LongName) Start" Description="$(var.LongName) Start" Target="[APPLICATIONROOTDIRECTORY]\start_elevated.bat" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+		<Shortcut Id="StopShortcut" Name="$(var.LongName) Stop" Description="$(var.LongName) Stop" Target="[APPLICATIONROOTDIRECTORY]\stop_elevated.bat" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+		<Shortcut Id="ReStartShortcut" Name="$(var.LongName) Restart" Description="$(var.LongName) Restart" Target="[APPLICATIONROOTDIRECTORY]\restart_elevated.bat" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+		
+        <Shortcut Id="UserManualShortcut" Name="$(var.LongName) User Manual" Description="$(var.LongName) User Manual" Target="[APPLICATIONROOTDIRECTORY]\$(var.ShortName).pdf" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+		<Shortcut Id="HelpShortcut" Name="$(var.LongName) Help" Description="$(var.LongName) Help" Target="[APPLICATIONROOTDIRECTORY]\$(var.ShortName).chm" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+        <Shortcut Id="ReleaseNotesShortcut" Name="$(var.LongName) Change Log" Description="$(var.LongName) Release Notes" Target="[APPLICATIONROOTDIRECTORY]\CHANGELOG.md" WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+		
+        <Shortcut Id="HttpShortcut" Name="$(var.LongName)" Description="$(var.LongName) HTTP"  Target="[URL]" Icon="IconSensorHub">
+		  <Icon Id="IconSensorHub" SourceFile="..\img\sensor_hub.ico" />
+		</Shortcut>
+		
         <RegistryValue Root="HKCU" Key="Software\Damen\$(var.ShortName)" Name="msi_installed" Type="integer" Value="1" KeyPath="yes" />
 		<RemoveFolder Id="ProgramMenu$(var.ShortName)" On="uninstall" />
 		<RemoveFolder Id="RemoveProgramMenuDamenShipyards" Directory="ProgramMenuDamenShipyards" On="uninstall" />
@@ -57,6 +80,7 @@
 	  <MergeRef Id="VCRuntime" />
     </Feature>
     <!-- (Un)Install the windows service -->
+	<SetProperty Id="URL" Value="http://localhost:16080/" Sequence="execute"  Before="CreateShortcuts" />
     <SetProperty Id="InstallService" Value='"[APPLICATIONROOTDIRECTORY]\$(var.ShortName).exe" install' After="CostFinalize" />
 	<SetProperty Id="UnInstallService" Value='"[APPLICATIONROOTDIRECTORY]\$(var.ShortName).exe" uninstall' After="CostFinalize" />
     <CustomAction Id="InstallService" BinaryKey="WixCA" DllEntry="CAQuietExec64" Impersonate="no" Execute="deferred" Return="check" />
