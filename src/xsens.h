@@ -193,7 +193,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
         return false;
     }
     catch (std::exception& e) {
-      // Probably a timeout
+      // Probably a timeout i.e. USB cancelled by timer
       log(level::error, "%: Error executing command: %", this->get_name(), e.what());
       timeout.cancel();
       port.cancel();
