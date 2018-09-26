@@ -159,7 +159,7 @@ private:
     set_default("device0.type", "xsens_mti_g_710_usb");
     set_default("device0.name", "Xsens-MTi-G-710");
     set_default("device0.connection_string", "2639:0017,0");
-    set_default("device0.enable_logging", true);
+    set_default("device0.enable_logging", false);
     set_default("device0.use_as_time_source", false);
 
     set_default("processors.count", 5);
