@@ -411,12 +411,14 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
   }
 
   bool set_output_configuration(asio::yield_context yield) override {
-    this->wait(100, yield);
+    this->wait(10, yield);
+    log(level::info, "Xsens SetOutputConfiguration");
     return this->exec_command(command::set_output_configuration, command::output_configuration_ack, yield);
   }
 
   bool set_option_flags(asio::yield_context yield) override {
-    this->wait(100, yield);
+    this->wait(10, yield);
+    log(level::info, "Xsens SetOptionFlags");
     this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
     // We don't really care that much whether this command was successful, so just always return true
     return true;
