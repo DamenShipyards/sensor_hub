@@ -96,11 +96,11 @@ private:
 
     set_default("http.enabled", true);
     set_default("http.address", "localhost");
-    set_default("http.port", 10080);
+    set_default("http.port", 16080);
     set_default("http.css", "html { font-family: sans-serif; background-color: #85b0d0; }");
 
     set_default("modbus.enabled", true);
-    set_default("modbus.port", 502);
+    set_default("modbus.port", 16502);
 
     set_default("modbus.ut_min", 0.0);
     set_default("modbus.ut_max", 1.0 * 0x100000000);
