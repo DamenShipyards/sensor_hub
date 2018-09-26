@@ -12,7 +12,7 @@ set SIGNSHA1=742ECBBE6C66BB716C80C1FEA18FAB8FFEBC15BA
 rem ================================================
 
 rem Remove existing build directory
-del /S %BUILDDIR% /Y
+del /S %BUILDDIR% /Q
 
 rem Configure first...
 call configure.bat
@@ -32,6 +32,8 @@ set FULLEXE=%BUILDDIR%\\%EXE%
 rem Sign the executable
 %SIGNTOOL% sign /sha1 %SIGNSHA1% /d %DESCRIPTION% /du %URL% /t http://timestamp.globalsign.com/scripts/timestamp.dll %FULLEXE%
 @if errorlevel 1 goto error
+
+@copy ..\3rdparty\libusb\lib\libusb-1.0.dll %BUILDDIR%\\
 
 goto success
 
