@@ -1,0 +1,9 @@
+The HTTP services offers a human readable index page at / and json data at
+@itemize
+@item /sensors/<index>
+@item /processors/<index>
+@end itemize
+
+The default configured port for the HTTP service is 16080, but this can be modified in @xref{Configuration}
+
+So to access the HTTP service in default configuration, you would need to visit @url{http://localhost:16080/}

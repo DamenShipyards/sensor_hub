@@ -29,13 +29,18 @@ Published by Orca Software
 
 @ifnottex
 @node Top
-@top Sensor Hub @VERSION@, Manual revision 1
+@top Sensor Hub @VERSION@, Manual revision 2
 
 This manual is for Sensor Hub version @VERSION@
 @end ifnottex
 
 @menu
 * Introduction:: Welcome
+* Configuration:: Configuration
+* Sensors:: Sensors
+* Processors:: Processors
+* HTTP:: HTTP
+* Modbus:: Modbus
 * Index:: Index
 * References:: References
 @end menu
@@ -44,6 +49,25 @@ This manual is for Sensor Hub version @VERSION@
 @chapter Introduction
 @include introduction.texi
 
+@node Configuration
+@chapter Configuration
+@include configuration.texi
+
+@node Sensors
+@chapter Sensors
+@include sensors.texi
+
+@node Processors
+@chapter Processors
+@include processors.texi
+
+@node HTTP
+@chapter HTTP
+@include http.texi
+
+@node Modbus
+@chapter Modbus
+@include modbus.texi
 
 @node Index
 @unnumbered Index

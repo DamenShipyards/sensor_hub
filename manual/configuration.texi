@@ -1,0 +1,8 @@
+The service configuration is stored in a windows ini file format. The default location for this
+file on Windows is @code{C:\ProgramData\Damen\SensorHub\Config\sensor_hub.conf} and @code{/etc/sensor_hub/sensor_hub.conf} or 
+@code{~/.config/sensor_hub/sensor_hub.conf} on linux.
+
+The service/daemon needs to be restarted for a new configuration to become active.
+
+Service log files can be found in @code{C:\ProgramData\Damen\SensorHub\Log} on windows and in @code{/var/log/sensor_hub} or
+@code{~/.local/var/log} on linux.

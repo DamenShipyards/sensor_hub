@@ -1,4 +1,8 @@
 This is the user manual for Sensor Hub. 
 
-Sensor Hub is a daemon for collecting and redistributing sensor data.
+Sensor Hub is a service/daemon for collecting and redistributing sensor data. Currently the only sensor supported 
+is the Xsens MTi-G-710. @ref{HTTP} and @ref{Modbus} services are available for redistribution of the data.
 
+Data is acquired from @ref{Sensors} via some IO interface (e.g. USB or serial port). 
+@ref{Processors} can be configured to process the raw data from the sensor. 
+This processed data is also made avaible through the HTTP and Modbus services.

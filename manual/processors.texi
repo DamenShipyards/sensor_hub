@@ -1,0 +1,53 @@
+@menu
+* Statistics:: Statistics of quantities
+* Acceleration History:: History of acceleration peaks
+@end menu
+
+Processor get fed data from a device and produce other data based on that. Processors can be configured in @ref{Configuration}. The configuration needs to contain at least the name of the device that data is to be taken from. Furthermore  @code{parameters} and @code{filter} can be configured that have a specific meaning for each processor.
+
+The @ref{Modbus} base address for processors is 20000. A specific processor can be accessed by supplying a slave/unit id.
+
+@node Statistics
+@section Statistics
+
+The statistics processor creates a mean value and standard device. Configuration parameter @code{period} indicates the time span 
+for the statistic. Output is:
+@multitable @columnfractions .2 .1 .7
+@headitem Field @tab Modbus register count@tab Description
+@item time @tab 2 @tab Arrival time of last sample
+@item samples @tab 1 @tab Number of samples in statistic
+@item mean @tab 1 @tab Mean value of samples
+@item stddev @tab 1 @tab Standard deviation of sample value with respect to mean
+@end multitable
+
+To access a statistic of a specific quantity, @xref{Quantities}, through modbus you need to add 5 * the quantity index to
+the base address and then the field offset. So for accessing the mean of the X acceleration you would get: 
+@code{20000 + 5 * 19 + 3 = 20098} for the modbus register.
+
+
+@node Acceleration History
+@section Acceleration History
+
+The accelereration history processor maintains a list of peak accelerations. What constitutes an acceleration peak is 
+determined by the processor parameters:
+@multitable @columnfractions .2 .8
+@headitem Parameter @ tab Description
+@item @code{value_threshold} @tab Value that is considered an excess acceleration
+@item @code{duration_threshold} @tab Time that sample values need to exceed value_threshold 
+@item @code{direction} @tab Acceleration directions considered (X: 1, Y: 2, Z: 4)
+@item @code{item_count} @tab Number of peaks to remember
+@end multitable
+
+@multitable @columnfractions .2 .1 .7
+@headitem Field @tab Modbus register count@tab Description
+@item start @tab 2 @tab Start time of peak
+@item duration @tab 1 @tab Duration of peak
+@item peak @tab 1 @tab Absolute maximum value during peak
+@item mean @tab 1 @tab Mean value of samples during peak
+@item rms @tab 1 @tab RMS value of samples during peak
+@end multitable
+
+To access a peak through modbus you need to add 6 * the peak index to
+the base address and then the field offset. So for accessing the mean of the third peak, you would get: 
+@code{20000 + 6 * 3 + 4 = 20022} for the modbus register. Note that the most recent peak comes first.
+
