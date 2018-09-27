@@ -177,7 +177,7 @@ static void handle_transfer(libusb_transfer* transfer) {
       log(level::debug, "USB transferred % bytes", bytes_transferred);
       break;
     case LIBUSB_TRANSFER_CANCELLED:
-      log(level::warning, "USB transfer cancelled");
+      log(level::info, "USB transfer cancelled");
       ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
       break;
     case LIBUSB_TRANSFER_NO_DEVICE:
