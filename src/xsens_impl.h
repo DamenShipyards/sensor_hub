@@ -29,6 +29,7 @@ cbyte_t packet_start = 0xFA;
 cbyte_t sys_command = 0xFF;
 cbyte_t conf_command = 0x01;
 
+// TODO: Should be reworked to avoid duplication and add automatic checksum
 cdata_t goto_config = {packet_start, sys_command, XMID_GotoConfig, 0x00, 0xD1};
 cdata_t config_ack = {packet_start, sys_command, XMID_GotoConfigAck};
 
@@ -73,11 +74,13 @@ cdata_t firmware_rev_resp = {packet_start, sys_command, XMID_FirmwareRevision};
 
 cdata_t error_resp = {packet_start, sys_command, XMID_Error};
 
-cdata_t set_output_configuration = {
+
+cdata_t get_output_configuration = {packet_start, sys_command, XMID_ReqOutputConfiguration, 0x00, 0x41};
+cdata_t get_output_configuration_ack = {
   packet_start, sys_command,
-  XMID_SetOutputConfiguration,
+  XMID_ReqOutputConfigurationAck,
   0x2C,                   // Length
-  0x10, 0x10, 0x00, 0x00, // Utc time
+  0x10, 0x10, 0xFF, 0xFF, // Utc time
   0x40, 0x20, 0x00, 0x64, // Acceleration, 100Hz
   0x40, 0x30, 0x00, 0x64, // Free Acceleration, 100Hz
   0x80, 0x20, 0x00, 0x64, // Rate of turn, 100Hz
@@ -88,7 +91,25 @@ cdata_t set_output_configuration = {
   0x50, 0x10, 0x00, 0x0A, // Altitude above MSL, 10Hz
   0x20, 0x30, 0x00, 0x0A, // Euler angles, 10 Hz
   0x20, 0x10, 0x00, 0x0A, // Quaternion, 10 Hz
-  0x70                    // Checksum
+  0x71                    // Checksum
+};
+
+cdata_t set_output_configuration = {
+  packet_start, sys_command,
+  XMID_SetOutputConfiguration,
+  0x2C,                   // Length
+  0x10, 0x10, 0xFF, 0xFF, // Utc time
+  0x40, 0x20, 0x00, 0x64, // Acceleration, 100Hz
+  0x40, 0x30, 0x00, 0x64, // Free Acceleration, 100Hz
+  0x80, 0x20, 0x00, 0x64, // Rate of turn, 100Hz
+  0x50, 0x43, 0x00, 0x0A, // LatLon, 10Hz
+  0xC0, 0x20, 0x00, 0x0A, // Magnetic flux, 10Hz
+  0xD0, 0x10, 0x00, 0x0A, // Velocity, 10Hz
+  0x50, 0x20, 0x00, 0x0A, // Altitude above ellipsoid, 10Hz
+  0x50, 0x10, 0x00, 0x0A, // Altitude above MSL, 10Hz
+  0x20, 0x30, 0x00, 0x0A, // Euler angles, 10 Hz
+  0x20, 0x10, 0x00, 0x0A, // Quaternion, 10 Hz
+  0x72                    // Checksum
 };
 
 cdata_t output_configuration_ack = {
@@ -142,7 +163,7 @@ struct Date_time_value: public Data_packet {
     using namespace posix_time;
     if (flags & valid_utc) {
       ptime t(
-          gregorian::date(year, month, day), 
+          gregorian::date(year, month, day),
           hours(hour) + minutes(minute) + seconds(second) + microseconds(nano/1000)
       );
       return Values_type{{quantity, 1E-6 * (t - unix_epoch).total_microseconds()}};
@@ -179,7 +200,7 @@ struct TeslaConverter: UnitaryConverter<DIM> {
   }
 };
 
-template<uint16_t DID, uint16_t COORD, uint16_t FORMAT, int DIM, Quantity QUANT, 
+template<uint16_t DID, uint16_t COORD, uint16_t FORMAT, int DIM, Quantity QUANT,
          template<int D> typename Converter=UnitaryConverter>
 struct Data_value: public Data_packet {
   typedef Converter<DIM> converter;
@@ -237,7 +258,7 @@ auto done = [](auto& ctx) { _pass(ctx) = _val(ctx).len < 0; };
 x3::rule<struct unknown_data, Data_packet> const unknown_data = "unknown_data";
 auto unknown_data_def = big_word[set_did] >> byte_[set_len] >> *(eps[more] >> omit[byte_]) >> eps[done];
 BOOST_SPIRIT_DEFINE(unknown_data)
-  
+
 #define RULE_DEFINE(name, type) \
 x3::rule<struct name, type> const name = "\"" #name "\""; \
 auto name##_def = type::get_parse_rule(); \
@@ -258,10 +279,10 @@ RULE_DEFINE(quaternion, Quaternion)
 #undef RULE_DEFINE
 
 auto data_parser = *(
-    date_time | 
-    acceleration | 
-    free_acceleration | 
-    rate_of_turn | 
+    date_time |
+    acceleration |
+    free_acceleration |
+    rate_of_turn |
     lat_lon |
     magnetic_flux |
     velocity |
@@ -271,10 +292,10 @@ auto data_parser = *(
     quaternion |
     unknown_data);
 
-struct Packet_parser::Data_packets 
+struct Packet_parser::Data_packets
   : public std::vector<
     boost::variant<
-      Data_packet, 
+      Data_packet,
       Date_time,
       Acceleration,
       Free_acceleration,
@@ -300,9 +321,9 @@ struct Packet_parser::Data_visitor {
 
 
 Packet_parser::Packet_parser()
-    : queue(), data(), 
-      data_packets(std::make_unique<Data_packets>()), 
-      visitor(std::make_unique<Data_visitor>()), 
+    : queue(), data(),
+      data_packets(std::make_unique<Data_packets>()),
+      visitor(std::make_unique<Data_visitor>()),
       cur(queue.begin()) {
 }
 

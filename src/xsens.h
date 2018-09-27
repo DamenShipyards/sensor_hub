@@ -75,6 +75,8 @@ extern cdata_t firmware_rev_resp;
 
 extern cdata_t req_utc_time;
 
+extern cdata_t get_output_configuration;
+extern cdata_t get_output_configuration_ack;
 extern cdata_t set_output_configuration;
 extern cdata_t output_configuration_ack;
 
@@ -237,11 +239,12 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   bool look_for_wakeup(asio::yield_context yield) {
-    // When the device just powered on, it sends wakeup messages.     
+    // When the device just powered on, it sends wakeup messages.
     Port& port = this->get_port();
     asio::streambuf read_buf;
     boost::system::error_code ec;
     data_t response{};
+    log(level::info, "Xsens LookForWakeup");
     size_t bytes_read = port.async_read_some(read_buf.prepare(0x100), yield[ec]);
     if (!ec) {
       read_buf.commit(bytes_read);
@@ -277,6 +280,10 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     this->wait(50, yield);
     log(level::info, "Xsens GotoMeasurement");
     return exec_command(command::goto_measurement, command::measurement_ack, yield);
+  }
+
+  virtual bool get_output_configuration(asio::yield_context yield) {
+    return true;
   }
 
   virtual bool set_output_configuration(asio::yield_context yield) {
@@ -317,9 +324,9 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     std::string data;
     bool result = this->exec_command(command::req_device_id, command::device_id_resp, yield, &data);
     if (result && data.size() == 4) {
-      std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}", 
-          static_cast<uint8_t>(data[0]), 
-          static_cast<uint8_t>(data[1]), 
+      std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}",
+          static_cast<uint8_t>(data[0]),
+          static_cast<uint8_t>(data[1]),
           static_cast<uint8_t>(data[2]),
           static_cast<uint8_t>(data[3])
       );
@@ -337,7 +344,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     bool result = this->exec_command(command::req_firmware_rev, command::firmware_rev_resp, yield, &data);
     if (result && data.size() == 11) {
       uint8_t maj = data[0];
-      uint8_t min = data[1]; 
+      uint8_t min = data[1];
       uint8_t rev = data[2];
       uint32_t build = *reinterpret_cast<uint32_t*>(data.data() + 3);
       uint32_t svnrev = *reinterpret_cast<uint32_t*>(data.data() + 7);
@@ -359,15 +366,15 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   }
 
   bool initialize(asio::yield_context yield) override {
-    bool result = 
-        look_for_wakeup(yield) 
+    bool result =
+        look_for_wakeup(yield)
         && goto_config(yield)
         && set_option_flags(yield)
         && request_identifier(yield)
         && request_product_code(yield)
         && request_firmware(yield)
-        && set_output_configuration(yield)
-        && init_mt(yield)
+        && (get_output_configuration(yield)
+            || (set_output_configuration(yield) && init_mt(yield)))
         && goto_measurement(yield);
 
 
@@ -408,6 +415,12 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
 
   ~Xsens_MTi_G_710() override {
     log(level::info, "Destroying Xsens_MTi_G_710");
+  }
+
+  bool get_output_configuration(asio::yield_context yield) override {
+    this->wait(50, yield);
+    log(level::info, "Xsens GetOutputConfiguration");
+    return this->exec_command(command::get_output_configuration, command::get_output_configuration_ack, yield);
   }
 
   bool set_output_configuration(asio::yield_context yield) override {
