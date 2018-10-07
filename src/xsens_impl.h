@@ -43,12 +43,14 @@ cdata_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
   // 0x01 |               // Disable auto store
   ///0x02 |               // Disable auto measurement
   // 0x04 |               // EnableBeidou (instead of GLONASS)
-  0x10 |                  // EnableAHS (relate Yaw only, no heading)
+  //0x10 |                  // EnableAHS (relate Yaw only, no heading)
   0x80 |                  // EnableInRunCompassCalibration
   0x00,
   0x00, 0x00, 0x00,       // Option flags to clear
   0x00 |
   // 0x02 |               // Clear: Disable auto measurement
+  0x10 |                  // Clear: EnableAHS (apparently doesn't work well with MTi-G-710)
+                          //        see: https://base.xsens.com/hc/en-us/requests/1182
   0x00,
   0x21                    // Checksum
 };
