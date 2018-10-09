@@ -14,6 +14,7 @@
 #include "log.h"
 #include "loop.h"
 #include "tools.h"
+#include "version.h"
 
 // Return codes
 #define PROGRAM_SUCCESS 0
@@ -207,7 +208,7 @@ int main(int argc, char* argv[])
 
     {
       Pid_file pid_file{pid_file_name};
-      log(level::info, "Daemon started: %", p);
+      log(level::info, "Daemon started: % version %", p, STRINGIFY(VERSION));
       int result = enter_loop();
       log(level::info, "Daemon stopped: result %", result);
       return result;

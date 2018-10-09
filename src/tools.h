@@ -15,6 +15,7 @@
 #define TOOLS_H_
 
 #include <type_traits>
+#include <iostream>
 
 #include "version.h"
 

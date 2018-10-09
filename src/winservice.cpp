@@ -20,6 +20,7 @@
 #include "log.h"
 #include "loop.h"
 #include "tools.h"
+#include "version.h"
 
 #include <Windows.h>
 
@@ -400,7 +401,7 @@ int _tmain (int argc, TCHAR *argv[])
   pth p{argv[0]};
   p = fs::canonical(p);
   p.make_preferred();
-  log(level::info, "Starting %", p);
+  log(level::info, "Starting % version %", p, STRINGIFY(VERSION));
 
   SERVICE_TABLE_ENTRY ServiceTable[] =
   {
