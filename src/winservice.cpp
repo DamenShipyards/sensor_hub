@@ -19,6 +19,7 @@
 
 #include "log.h"
 #include "loop.h"
+#include "tools.h"
 
 #include <Windows.h>
 
@@ -61,30 +62,6 @@ void print_usage()
             << "     install: Install the service" << std::endl
             << "     uninstall: Remove the service" << std::endl
             << "     version: Print version and exit" << std::endl;
-}
-
-void print_version_info(const TCHAR* exe, utf_converter& conv_utf8) {
-  DWORD dummy;
-  int version_buf_len = GetFileVersionInfoSize(exe, &dummy);
-  char* version_buf = (char*)malloc(version_buf_len);
-  if (version_buf != NULL) {
-    if (GetFileVersionInfo(exe, dummy, version_buf_len, version_buf)) {
-      TCHAR* value;
-      unsigned value_len;
-      if (VerQueryValue(version_buf,
-          _T("\\StringFileInfo\\040904E4\\FileVersion"),
-        (LPVOID*)&value, &value_len)) {
-        std::cout << "File version: " << conv_utf8.to_bytes(value) << std::endl;
-      };
-      if (VerQueryValue(version_buf,
-          _T("\\StringFileInfo\\040904E4\\SourceRevision"),
-          (LPVOID*)&value, &value_len)) {
-        std::cout << "Build from revision: " << conv_utf8.to_bytes(value) << std::endl;
-      }
-    }
-    std::cout << "Written by Jaap Versteegh <jaap.versteegh@damen.com>" << std::endl;
-    free(version_buf);
-  }
 }
 
 void print_error(int error)
@@ -462,7 +439,7 @@ int _tmain (int argc, TCHAR *argv[])
       return ret;
     }
     else if (_tcscmp(argv[1], _T("version")) == 0) {
-      print_version_info(argv[0], conv_utf8);
+      print_version();
       return ret;
     }
     else {

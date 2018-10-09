@@ -13,7 +13,6 @@
 
 #include "log.h"
 #include "loop.h"
-#include "version.h"
 #include "tools.h"
 
 // Return codes
@@ -48,16 +47,10 @@ void print_usage() {
 }
 
 
-void print_version() {
-  std::cout << "Damen Sensor Hub version : " << STRINGIFY(VERSION) << std::endl;
-  std::cout << "Built from git revision  : " << STRINGIFY(GITREV) << std::endl;
-  std::cout << "Written by Jaap Versteegh <jaap.versteegh@damen.com>" << std::endl;
-}
-
-
 struct Pid_error: public std::runtime_error {
   using runtime_error::runtime_error;
 };
+
 
 struct Pid_file {
   Pid_file(const pth& fpath): fpath_(fpath), fd_(0) {

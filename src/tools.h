@@ -16,6 +16,8 @@
 
 #include <type_traits>
 
+#include "version.h"
+
 #define STRIFY2(X) #X
 #define STRINGIFY(X) STRIFY2(X)
 
@@ -105,6 +107,13 @@ bool contains(const Container& container, const Container& sub_container) {
 
 inline double sqr(const double value) {
   return value * value;
+}
+
+
+inline void print_version() {
+  std::cout << "Damen Sensor Hub version : " << STRINGIFY(VERSION) << std::endl;
+  std::cout << "Built from git revision  : " << STRINGIFY(GITREV) << std::endl;
+  std::cout << "Written by Jaap Versteegh <jaap.versteegh@damen.com>" << std::endl;
 }
 
 #endif
