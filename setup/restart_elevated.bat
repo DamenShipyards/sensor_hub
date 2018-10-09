@@ -1,1 +1,1 @@
-powershell -command "Start-Process start.bat -Verb runas"
+powershell -command "Start-Process restart.bat -Verb runas"
