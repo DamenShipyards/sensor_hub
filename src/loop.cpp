@@ -74,7 +74,7 @@ struct Service {
    * Start built-in HTTP server
    */
   void start_http_server(const std::string& host, const int port) {
-    log(level::info, "Starting HTTP server");
+    log(level::info, "Starting HTTP server on %:%", host, port);
     auto handler = std::make_shared<Request_handler>(devices_, processors_);
     http_server_ = std::make_unique<Http_server>(ctx_, handler, host, port);
   }
@@ -93,7 +93,7 @@ struct Service {
    * Start built-in modbus server
    */
   void start_modbus_server(const int port) {
-    log(level::info, "Starting Modbus server");
+    log(level::info, "Starting Modbus server on port %", port);
     auto handler = boost::make_shared<Modbus_handler>(devices_, processors_);
     modbus_server_ = std::make_unique<Modbus_server>(ctx_, handler, port);
   }
