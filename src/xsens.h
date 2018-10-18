@@ -80,6 +80,9 @@ extern cdata_t get_output_configuration_ack;
 extern cdata_t set_output_configuration;
 extern cdata_t output_configuration_ack;
 
+extern cdata_t set_string_output_type;
+extern cdata_t string_output_type_ack;
+
 extern cdata_t error_resp;
 }
 
@@ -294,6 +297,10 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return true;
   }
 
+  virtual bool set_string_output_type(asio::yield_context yield) {
+    return true;
+  }
+
   virtual bool reset(asio::yield_context yield) {
     this->wait(50, yield);
     log(level::info, "Xsens Reset");
@@ -369,10 +376,11 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     bool result =
         look_for_wakeup(yield)
         && goto_config(yield)
-        && set_option_flags(yield)
         && request_identifier(yield)
         && request_product_code(yield)
         && request_firmware(yield)
+        && set_option_flags(yield)
+        && set_string_output_type(yield)
         && (get_output_configuration(yield)
             || (set_output_configuration(yield) && init_mt(yield)))
         && goto_measurement(yield);
@@ -432,11 +440,14 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
   bool set_option_flags(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetOptionFlags");
-    this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
-    // We don't really care that much whether this command was successful, so just always return true
-    return true;
+    return this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
   }
 
+  bool set_string_output_type(asio::yield_context yield) override {
+    this->wait(50, yield);
+    log(level::info, "Xsens SetStringOutputType");
+    return this->exec_command(command::set_string_output_type, command::string_output_type_ack, yield);
+  }
 };
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

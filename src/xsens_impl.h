@@ -76,6 +76,12 @@ cdata_t firmware_rev_resp = {packet_start, sys_command, XMID_FirmwareRevision};
 
 cdata_t error_resp = {packet_start, sys_command, XMID_Error};
 
+cdata_t set_string_output_type = {packet_start, sys_command, XMID_SetStringOutputType,
+  0x02,
+  0x00, 0x00,
+  0x71};
+cdata_t string_output_type_ack = {packet_start, sys_command, XMID_SetStringOutputTypeAck};
+
 
 cdata_t get_output_configuration = {packet_start, sys_command, XMID_ReqOutputConfiguration, 0x00, 0x41};
 cdata_t get_output_configuration_ack = {
