@@ -16,6 +16,7 @@
 #include "version.h"
 #include "tools.h"
 #include "config.h"
+#include "log.h"
 
 #include <cmath>
 
@@ -120,6 +121,8 @@ void Modbus_handler::processor_map(const Processor& processor,
 }
 
 response::read_input_registers Modbus_handler::handle(uint8_t unit_id, const request::read_input_registers& req) {
+  log(level::debug, "Received modbus read_input_registers for unit %, reg %, count %",
+      static_cast<int>(unit_id), req.address, req.count);
   // Unit ID 255 means "not used" -> assume device 0
   if (unit_id == 0xFF)
     unit_id = 0;
@@ -127,11 +130,13 @@ response::read_input_registers Modbus_handler::handle(uint8_t unit_id, const req
   if (req.address >= processor_base_address) {
     if (unit_id < processors_.size()) {
       const Processor& processor = *processors_[unit_id];
+      log(level::debug, "Returning values for processor %", processor.get_name());
       processor_map(processor, req.address - processor_base_address, req.count, resp);
     }
   }
   else if (unit_id < devices_.size()) { 
     const Device& device = *devices_[unit_id];
+    log(level::debug, "Returning values for device %", device.get_name());
     if (req.address >= plain_base_address) {
       plain_map(device, req.address - plain_base_address, req.count, resp);
     }
