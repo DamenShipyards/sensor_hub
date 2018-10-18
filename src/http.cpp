@@ -374,7 +374,7 @@ std::string Request_handler::get_content(const std::string& path, std::string& c
     "<body>{:s}</body>\n"
     "</html>\n";
   static const char home[] =
-    "<h1>Welcome to Damen Sensor Hub</h1>\n"
+    "<h1>Damen Sensor Hub</h1>\n"
     "<h2>Configured devices:</h2>\n<ul>{:s}</ul>"
     "<h2>Active processors:</h2>\n<ul>{:s}</ul>"
     "<hr><p class=\"attribution\">"
