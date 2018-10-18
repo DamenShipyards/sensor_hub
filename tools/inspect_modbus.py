@@ -19,5 +19,8 @@ client = ModbusClient(ip, port)
 
 while True:
     request = client.read_input_registers(0x00, 100, unit=0)
-    print(request.registers)
+    if isinstance(request, Exception):
+        print(request)
+    else:
+        print(request.registers)
     time.sleep(4)
