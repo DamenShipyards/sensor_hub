@@ -42,10 +42,13 @@ namespace posix_time = boost::posix_time;
 
 
 struct Service {
+
   //! Disable copying for singleton service
   Service(Service const&) = delete;
+
   //! Disable assignment for singleton service
   void operator=(Service const&) = delete;
+
 
   /**
    * Return singleton instance
@@ -54,6 +57,7 @@ struct Service {
     static Service instance;
     return instance;
   }
+
 
   /**
    * Get service IO context
@@ -70,6 +74,7 @@ struct Service {
     return *modbus_server_;
   }
 
+
   /**
    * Start built-in HTTP server
    */
@@ -78,6 +83,7 @@ struct Service {
     auto handler = std::make_shared<Request_handler>(devices_, processors_);
     http_server_ = std::make_unique<Http_server>(ctx_, handler, host, port);
   }
+
 
   /**
    * Stop built-in HTTP server
@@ -89,6 +95,7 @@ struct Service {
     }
   }
 
+
   /**
    * Start built-in modbus server
    */
@@ -97,6 +104,7 @@ struct Service {
     auto handler = boost::make_shared<Modbus_handler>(devices_, processors_);
     modbus_server_ = std::make_unique<Modbus_server>(ctx_, handler, port);
   }
+
 
   /**
    * Stop built-in modbus server
@@ -108,6 +116,7 @@ struct Service {
     }
   }
 
+
   /**
    * Returns device list associated with this service
    */
@@ -115,12 +124,14 @@ struct Service {
     return devices_;
   }
 
+
   /**
    * Returns processor list associated with this service
    */
   Processors& get_processors() {
     return processors_;
   }
+
 
   /**
    * Setup the service device list from provided configuration
@@ -147,6 +158,7 @@ struct Service {
     }
   }
 
+
   /**
    * Setup the service processor list from provided configuration
    */
@@ -169,6 +181,7 @@ struct Service {
     }
   }
 
+
   /**
    * Close all devices
    */
@@ -176,31 +189,81 @@ struct Service {
     devices_.clear();
   }
 
-  /**
-   * Called every second
-   */
-  void one_second_service(asio::yield_context yield) {
-    asio::deadline_timer tmr(ctx_, posix_time::seconds(1));
-    tmr.async_wait(yield);
-    asio::spawn(ctx_, boost::bind(&Service::one_second_service, this, _1));
-  }
 
   /**
-   * Called every ten seconds
-   *
-   * Checks all devices for their connection status and tries to connect
-   * them if they weren't already
+   * Attempt to connect all configured devices
    */
-  void ten_seconds_service(asio::yield_context yield) {
-    asio::deadline_timer tmr(ctx_, posix_time::seconds(10));
-    tmr.async_wait(yield);
-    asio::spawn(ctx_, boost::bind(&Service::ten_seconds_service, this, _1));
+  void connect_devices(asio::yield_context yield) {
     for (auto&& device: devices_) {
       if (!device->is_connected()) {
         device->connect(yield);
       }
     }
   }
+
+
+  /**
+   * Called every second
+   */
+  void one_second_service(asio::yield_context yield) {
+    boost::system::error_code ec;
+    tmr_.async_wait(yield[ec]);
+    if (!ec) {
+      // Setup next tick
+      tmr_.expires_from_now(posix_time::seconds(1));
+      asio::spawn(ctx_, boost::bind(&Service::one_second_service, this, _1));
+
+      static int counter = 0;
+      ++counter;
+      if (counter % 10 == 0) {
+        ten_seconds_service(yield);
+      }
+      if (counter % 60 == 0) {
+        one_minute_service(yield);
+      }
+      if (counter % 300 == 0) {
+        five_minutes_service(yield);
+      }
+      if (counter % 3600 == 0) {
+        hourly_service(yield);
+      }
+    }
+  }
+
+
+  /**
+   * Called every ten seconds
+   */
+  void ten_seconds_service(asio::yield_context yield) {
+    connect_devices(yield);
+  }
+
+
+  /**
+   * Called every minute of uptime
+   */
+  void one_minute_service(asio::yield_context yield) {
+  }
+
+
+  /**
+   * Called every five minutes of uptime
+   */
+  void five_minutes_service(asio::yield_context yield) {
+    static int counter = 0;
+    counter += 5;
+    log(level::debug, "Uptime: % minutes", counter);
+  }
+
+
+  /**
+   * Called every hour of uptime
+   */
+  void hourly_service(asio::yield_context yield) {
+    static int counter = 0;
+    log(level::info, "Uptime: % hours", ++counter);
+  }
+
 
   /**
    * Run service
@@ -210,8 +273,8 @@ struct Service {
    * stopped.
    */
   int run() {
+    tmr_.expires_from_now(posix_time::seconds(1));
     asio::spawn(ctx_, boost::bind(&Service::one_second_service, this, _1));
-    asio::spawn(ctx_, boost::bind(&Service::ten_seconds_service, this, _1));
     return static_cast<int>(ctx_.run());
   }
 
@@ -220,7 +283,9 @@ private:
    * Private default constructor for singleton
    */
   Service()
-      : ctx_(), signals_(ctx_, SIGINT, SIGTERM),
+      : ctx_(), 
+        tmr_(ctx_),
+        signals_(ctx_, SIGINT, SIGTERM),
         http_server_(nullptr),
         modbus_server_(nullptr),
         devices_(),
@@ -240,6 +305,7 @@ private:
     );
 	}
   asio::io_context ctx_;
+  asio::deadline_timer tmr_;
   boost::asio::signal_set signals_;
   std::unique_ptr<Http_server> http_server_;
   std::unique_ptr<Modbus_server> modbus_server_;
@@ -253,6 +319,7 @@ int enter_loop() {
 
   boost::property_tree::ptree& cfg = get_config();
   set_log_level(cfg.get("logging.level", "info"));
+  log(level::debug, "Debug logging enabled");
 
   Service& service = Service::get_instance();
 
