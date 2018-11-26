@@ -15,6 +15,27 @@ namespace asio = boost::asio;
 
 std::string usb_device;
 
+
+tt::assertion_result usb_dev_available()  {
+  FILE *lsusb = popen("/usr/bin/lsusb", "r");
+  if (lsusb == nullptr) {
+    return false;
+  }
+  char buffer[1024];
+  char* line = fgets(buffer, sizeof(buffer), lsusb);
+  bool usb_present = false;
+  while (line != nullptr) {
+    usb_present = strstr(line, usb_device.c_str()) != nullptr;
+    if (usb_present)
+      break;
+    line = fgets(buffer, sizeof(buffer), lsusb);
+  }
+  pclose(lsusb);
+
+  return usb_present;
+}
+
+
 tt::assertion_result usb_available(ut::test_unit_id test_id) {
   const char* device_str = getenv("USB");
   if (device_str != nullptr) {
@@ -27,44 +48,16 @@ tt::assertion_result usb_available(ut::test_unit_id test_id) {
     usb_device = "2639:0017";
   }
 
-  FILE *lsusb = popen("/usr/bin/lsusb", "r");
-  if (lsusb == nullptr) {
-    return false;
-  }
-  char buffer[1024];
-  char* line = fgets(buffer, sizeof(buffer), lsusb);
-  bool usb_present = false;
-  while (line != nullptr) {
-    usb_present = strstr(line, usb_device.c_str()) != nullptr;
-    if (usb_present)
-      break;
-    line = fgets(buffer, sizeof(buffer), lsusb);
-  }
-  pclose(lsusb);
-
-  return usb_present;
+  return usb_dev_available();
 }
+
 
 tt::assertion_result xsens_available(ut::test_unit_id test_id) {
   usb_device = "2639:0017";
 
-  FILE *lsusb = popen("/usr/bin/lsusb", "r");
-  if (lsusb == nullptr) {
-    return false;
-  }
-  char buffer[1024];
-  char* line = fgets(buffer, sizeof(buffer), lsusb);
-  bool usb_present = false;
-  while (line != nullptr) {
-    usb_present = strstr(line, usb_device.c_str()) != nullptr;
-    if (usb_present)
-      break;
-    line = fgets(buffer, sizeof(buffer), lsusb);
-  }
-  pclose(lsusb);
-
-  return usb_present;
+  return usb_dev_available();
 }
+
 
 struct Ctx {
   static asio::io_context& get_context() {
