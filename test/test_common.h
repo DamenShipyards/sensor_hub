@@ -45,6 +45,27 @@ tt::assertion_result usb_available(ut::test_unit_id test_id) {
   return usb_present;
 }
 
+tt::assertion_result xsens_available(ut::test_unit_id test_id) {
+  usb_device = "2639:0017";
+
+  FILE *lsusb = popen("/usr/bin/lsusb", "r");
+  if (lsusb == nullptr) {
+    return false;
+  }
+  char buffer[1024];
+  char* line = fgets(buffer, sizeof(buffer), lsusb);
+  bool usb_present = false;
+  while (line != nullptr) {
+    usb_present = strstr(line, usb_device.c_str()) != nullptr;
+    if (usb_present)
+      break;
+    line = fgets(buffer, sizeof(buffer), lsusb);
+  }
+  pclose(lsusb);
+
+  return usb_present;
+}
+
 struct Ctx {
   static asio::io_context& get_context() {
     static asio::io_context instance;

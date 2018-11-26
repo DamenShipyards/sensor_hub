@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE(construction_test) {
   Device_ptr dev = std::make_unique<Xsens_MTi_G_710<Usb, Ctx> >();
 }
 
-BOOST_AUTO_TEST_CASE(connection_test) {
+BOOST_AUTO_TEST_CASE(connection_test, *ut::precondition(xsens_available)) {
   asio::io_context& ctx = Ctx::get_context();
   Xsens_MTi_G_710<Usb, Ctx> xsens;
   asio::deadline_timer tmr(ctx, posix_time::milliseconds(5000));
