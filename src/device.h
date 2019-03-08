@@ -24,6 +24,7 @@
 #ifndef BOOST_COROUTINES_NO_DEPRECATION_WARNING
 #define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
 #endif
+#include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 namespace asio = boost::asio;
 #include <boost/property_tree/ptree.hpp>
@@ -33,6 +34,7 @@ namespace pt = boost::property_tree;
 #include "log.h"
 #include "datetime.h"
 #include "processor.h"
+#include "types.h"
 
 
 /**
@@ -239,6 +241,92 @@ struct Port_device: public Device {
 
   Port& get_port() {
     return port_;
+  }
+
+  bool exec_command(
+      cdata_t& command, 
+      cdata_t& expected_response, 
+      cdata_t& error_response, 
+      asio::yield_context yield, 
+      std::string* data=nullptr,
+      int timeout=1000) {
+    Port& port = this->get_port();
+
+    // Set a timeout for the command to complete
+    asio::deadline_timer timeout_timer(ContextProvider::get_context(), posix_time::milliseconds(timeout));
+    timeout_timer.async_wait(
+        [&](const boost::system::error_code& error) {
+          if (!error)
+            port.cancel();
+        });
+
+    // Write out the command string...
+    asio::async_write(port, asio::buffer(command), yield);
+
+    std::stringstream ssc;
+    ssc << command;
+    log(level::debug, "Sent to XSens: %", ssc.str());
+
+    // ... and look for the expected response
+    try {
+      int repeats = 4;
+      data_t response{};
+      int response_found = -1;
+      do {
+        asio::streambuf read_buf;
+        size_t bytes_read = port.async_read_some(read_buf.prepare(0x1000), yield);
+        read_buf.commit(bytes_read);
+        auto buf_begin = asio::buffers_begin(read_buf.data());
+        auto buf_end = buf_begin + bytes_read;
+
+        cdata_t data(buf_begin, buf_end);
+        std::stringstream ssr;
+        ssr << data;
+        log(level::debug, "Received from %: %", this->get_name(), ssr.str());
+
+        response.insert(response.end(), buf_begin, buf_end);
+
+        read_buf.consume(bytes_read);
+        response_found = contains_at(response, expected_response);
+        int error_found = contains_at(response, error_response);
+        if (error_found >= 0) {
+          if (error_found + 4 < static_cast<int>(response.size())) {
+            log(level::error, "Received % error: %", this->get_name(), static_cast<int>(response[error_found + 4]));
+            timeout_timer.cancel();
+            return false;
+          }
+        }
+      } while (--repeats > 0 && response_found < 0);
+
+      timeout_timer.cancel();
+
+      if (repeats > 0) {
+        if (data != nullptr) {
+          if (response_found + 3 < static_cast<int>(response.size())) {
+            uint8_t size = response[response_found + 3];
+            if (response_found + 4 + size < static_cast<int>(response.size())) {
+              auto data_start = response.begin() + response_found + 4;
+              data->insert(data->end(), data_start, data_start + size);
+            }
+          }
+        }
+      }
+      else
+        return false;
+    }
+    catch (std::exception& e) {
+      // Probably a timeout i.e. USB cancelled by timer
+      log(level::error, "%: Error executing command: %", this->get_name(), e.what());
+      timeout_timer.cancel();
+      port.cancel();
+      return false;
+    }
+    return true;
+  }
+
+  void wait(int milli_seconds, asio::yield_context yield) {
+    asio::deadline_timer waiter(ContextProvider::get_context(), posix_time::milliseconds(milli_seconds));
+    waiter.async_wait(yield);
   }
 protected:
   Port port_;

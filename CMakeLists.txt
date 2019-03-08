@@ -49,6 +49,8 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/config.cpp
   ${SENSORHUB_SOURCE_DIR}/modbus.cpp
   ${SENSORHUB_SOURCE_DIR}/processor.cpp
+  ${SENSORHUB_SOURCE_DIR}/ublox.cpp
+  ${SENSORHUB_SOURCE_DIR}/types.cpp
 )
 
 file(GLOB FMTLIB_SOURCES

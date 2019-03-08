@@ -1,6 +1,6 @@
 /**
- * \file xsens_impl.h
- * \brief Implementation details for Xsens device base class
+ * \file ublox_impl.h
+ * \brief Implementation details for u-blox device base class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
  * \copyright
@@ -13,16 +13,13 @@
 #ifndef XSENS_IMPL_H_
 #define XSENS_IMPL_H_
 
-#include "datetime.h"
-#include "types.h"
-#include "spirit_x3.h"
-
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <boost/date_time/date.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 
+#include "datetime.h"
 
 namespace gregorian = boost::gregorian;
 

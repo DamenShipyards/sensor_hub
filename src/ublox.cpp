@@ -1,6 +1,6 @@
 /**
- * \file xsens.cpp
- * \brief Provide implementation for Xsens device base class
+ * \file ublox.cpp
+ * \brief Provide implementation for u-blox device base class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
  * \copyright
@@ -11,10 +11,11 @@
  * forbidden.
  */
 
-#include "xsens.h"
+#include "ublox.h"
 
-#include "xsens_impl.h"
+#include "ublox_impl.h"
 
 #include <memory>
+
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

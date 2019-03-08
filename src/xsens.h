@@ -11,11 +11,11 @@
  * forbidden.
  */
 
+#include "spirit_x3.h"
 #include "device.h"
 #include "log.h"
 #include "usb.h"
 #include "tools.h"
-#include "spirit_x3.h"
 #include "datetime.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -132,81 +132,6 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     waiter.async_wait(yield);
   }
 
-  bool exec_command(cdata_t& command, cdata_t& expected_response, asio::yield_context yield, std::string* data=nullptr) {
-    Port& port = this->get_port();
-
-    // Set a timeout for the command to complete
-    asio::deadline_timer timeout(ContextProvider::get_context(), posix_time::milliseconds(1000));
-    timeout.async_wait(
-        [&](const boost::system::error_code& error) {
-          if (!error)
-            port.cancel();
-        });
-
-    // Write out the command string...
-    asio::async_write(port, asio::buffer(command), yield);
-
-    std::stringstream ssc;
-    ssc << command;
-    log(level::debug, "Sent to XSens: %", ssc.str());
-
-    // ... and look for the expected response
-    try {
-      int repeats = 4;
-      data_t response{};
-      int response_found = -1;
-      do {
-        asio::streambuf read_buf;
-        size_t bytes_read = port.async_read_some(read_buf.prepare(0x1000), yield);
-        read_buf.commit(bytes_read);
-        auto buf_begin = asio::buffers_begin(read_buf.data());
-        auto buf_end = buf_begin + bytes_read;
-
-        cdata_t data(buf_begin, buf_end);
-        std::stringstream ssr;
-        ssr << data;
-        log(level::debug, "Received from XSens: %", ssr.str());
-
-        response.insert(response.end(), buf_begin, buf_end);
-
-        read_buf.consume(bytes_read);
-        response_found = contains_at(response, expected_response);
-        int error_found = contains_at(response, command::error_resp);
-        if (error_found >= 0) {
-          if (error_found + 4 < static_cast<int>(response.size())) {
-            log(level::error, "Received Xsens error: %", static_cast<int>(response[error_found + 4]));
-            timeout.cancel();
-            return false;
-          }
-        }
-      } while (--repeats > 0 && response_found < 0);
-
-      timeout.cancel();
-
-      if (repeats > 0) {
-        if (data != nullptr) {
-          if (response_found + 3 < static_cast<int>(response.size())) {
-            uint8_t size = response[response_found + 3];
-            if (response_found + 4 + size < static_cast<int>(response.size())) {
-              auto data_start = response.begin() + response_found + 4;
-              data->insert(data->end(), data_start, data_start + size);
-            }
-          }
-        }
-      }
-      else
-        return false;
-    }
-    catch (std::exception& e) {
-      // Probably a timeout i.e. USB cancelled by timer
-      log(level::error, "%: Error executing command: %", this->get_name(), e.what());
-      timeout.cancel();
-      port.cancel();
-      return false;
-    }
-    return true;
-  }
-
   void poll_data(asio::yield_context yield) {
     log(level::debug, "Polling Xsens");
     asio::streambuf buf;
@@ -276,13 +201,13 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
   bool goto_config(asio::yield_context yield) {
     log(level::info, "Xsens GotoConfig");
-    return exec_command(command::goto_config, command::config_ack, yield);
+    return this->exec_command(command::goto_config, command::config_ack, command::error_resp, yield);
   }
 
   bool goto_measurement(asio::yield_context yield) {
     this->wait(50, yield);
     log(level::info, "Xsens GotoMeasurement");
-    return exec_command(command::goto_measurement, command::measurement_ack, yield);
+    return this->exec_command(command::goto_measurement, command::measurement_ack, command::error_resp, yield);
   }
 
   virtual bool get_output_configuration(asio::yield_context yield) {
@@ -304,13 +229,13 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   virtual bool reset(asio::yield_context yield) {
     this->wait(50, yield);
     log(level::info, "Xsens Reset");
-    return this->exec_command(command::req_reset, command::reset_ack, yield);
+    return this->exec_command(command::req_reset, command::reset_ack, command::error_resp, yield);
   }
 
   bool init_mt(asio::yield_context yield) {
     this->wait(50, yield);
     log(level::info, "Xsens InitMT");
-    return this->exec_command(command::init_mt, command::mt_ack, yield);
+    return this->exec_command(command::init_mt, command::mt_ack, command::error_resp, yield);
   }
 
 
@@ -318,7 +243,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     this->wait(50, yield);
     log(level::info, "Xsens GetProductCode");
     std::string data;
-    bool result = this->exec_command(command::req_product_code, command::product_code_resp, yield, &data);
+    bool result = this->exec_command(command::req_product_code, command::product_code_resp, command::error_resp, yield, &data);
     if (result) {
       log(level::info, "Product code: %", data);
     }
@@ -329,7 +254,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     this->wait(50, yield);
     log(level::info, "Xsens GetIdentifier");
     std::string data;
-    bool result = this->exec_command(command::req_device_id, command::device_id_resp, yield, &data);
+    bool result = this->exec_command(command::req_device_id, command::device_id_resp, command::error_resp, yield, &data);
     if (result && data.size() == 4) {
       std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}",
           static_cast<uint8_t>(data[0]),
@@ -348,7 +273,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     log(level::info, "Xsens GetFirmwareVersion");
 
     std::string data;
-    bool result = this->exec_command(command::req_firmware_rev, command::firmware_rev_resp, yield, &data);
+    bool result = this->exec_command(command::req_firmware_rev, command::firmware_rev_resp, command::error_resp, yield, &data);
     if (result && data.size() == 11) {
       uint8_t maj = data[0];
       uint8_t min = data[1];
@@ -428,25 +353,25 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
   bool get_output_configuration(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens GetOutputConfiguration");
-    return this->exec_command(command::get_output_configuration, command::get_output_configuration_ack, yield);
+    return this->exec_command(command::get_output_configuration, command::get_output_configuration_ack, command::error_resp, yield);
   }
 
   bool set_output_configuration(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetOutputConfiguration");
-    return this->exec_command(command::set_output_configuration, command::output_configuration_ack, yield);
+    return this->exec_command(command::set_output_configuration, command::output_configuration_ack, command::error_resp, yield);
   }
 
   bool set_option_flags(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetOptionFlags");
-    return this->exec_command(command::set_option_flags, command::option_flags_ack, yield);
+    return this->exec_command(command::set_option_flags, command::option_flags_ack, command::error_resp, yield);
   }
 
   bool set_string_output_type(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetStringOutputType");
-    return this->exec_command(command::set_string_output_type, command::string_output_type_ack, yield);
+    return this->exec_command(command::set_string_output_type, command::string_output_type_ack, command::error_resp, yield);
   }
 };
 
