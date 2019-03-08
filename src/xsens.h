@@ -12,15 +12,14 @@
  */
 
 #include "spirit_x3.h"
+#include "types.h"
 #include "device.h"
 #include "log.h"
 #include "usb.h"
 #include "tools.h"
 #include "datetime.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
-#include <boost/endian/conversion.hpp>
 
 #include <xsens/xsxbusmessageid.h>
 #include <xsens/xsdataidentifier.h>
@@ -226,7 +225,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return true;
   }
 
-  virtual bool reset(asio::yield_context yield) {
+  bool reset(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens Reset");
     return this->exec_command(command::req_reset, command::reset_ack, command::error_resp, yield);

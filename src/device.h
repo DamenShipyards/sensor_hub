@@ -328,6 +328,10 @@ struct Port_device: public Device {
     asio::deadline_timer waiter(ContextProvider::get_context(), posix_time::milliseconds(milli_seconds));
     waiter.async_wait(yield);
   }
+
+  virtual bool reset(asio::yield_context yield) {
+    return true;
+  }
 protected:
   Port port_;
 };

@@ -27,50 +27,10 @@
 
 
 
-namespace command {
+namespace ubx_command {
 
 extern cbyte_t packet_start;
 extern cbyte_t sys_command;
-extern cbyte_t conf_command;
-
-extern cdata_t goto_config;
-extern cdata_t config_ack;
-
-extern cdata_t goto_measurement;
-extern cdata_t measurement_ack;
-
-extern cdata_t init_mt;
-extern cdata_t mt_ack;
-
-extern cdata_t set_option_flags;
-extern cdata_t option_flags_ack;
-
-extern cdata_t req_reset;
-extern cdata_t reset_ack;
-
-extern cdata_t wakeup;
-extern cdata_t wakeup_ack;
-
-extern cdata_t req_product_code;
-extern cdata_t product_code_resp;
-
-extern cdata_t req_device_id;
-extern cdata_t device_id_resp;
-
-extern cdata_t req_firmware_rev;
-extern cdata_t firmware_rev_resp;
-
-extern cdata_t req_utc_time;
-
-extern cdata_t get_output_configuration;
-extern cdata_t get_output_configuration_ack;
-extern cdata_t set_output_configuration;
-extern cdata_t output_configuration_ack;
-
-extern cdata_t set_string_output_type;
-extern cdata_t string_output_type_ack;
-
-extern cdata_t error_resp;
 }
 
 
@@ -84,26 +44,8 @@ using Values_type = std::vector<Quantity_value>;
 using Values_queue = std::deque<Quantity_value>;
 
 struct Packet_parser {
-  Packet_parser();
-  ~Packet_parser();
-  struct Data_packets;
-  struct Data_visitor;
-  std::deque<uint8_t> queue;
-  std::vector<uint8_t> data;
-  std::unique_ptr<Data_packets> data_packets;
-  std::unique_ptr<Data_visitor> visitor;
-  typename std::deque<uint8_t>::iterator cur;
-
-  template <typename Iterator>
-  void parse(Iterator begin, Iterator end) {
-    if (queue.size() > 0x1000)
-      // Something is wrong. Hose the queue
-      queue.clear();
-    queue.insert(queue.end(), begin, end);
-    parse();
-  }
-  void parse();
-  Values_queue& get_values();
+  Packet_parser() {};
+  ~Packet_parser() {};
 };
 
 } // ubx_parser
@@ -119,11 +61,10 @@ struct Ublox: public Port_device<Port, ContextProvider> {
 
     if (result) {
       log(level::info, "Successfully initialized Ublox device");
-      start_polling();
     }
     else {
       log(level::error, "Failed to initialize Ublox device");
-      if (reset(yield)) {
+      if (this->reset(yield)) {
         log(level::info, "Successfully reset device");
       }
     }

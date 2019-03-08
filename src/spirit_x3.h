@@ -14,6 +14,9 @@
 #ifndef SPIRIT_X3_H_
 #define SPIRIT_X3_H_
 
+#include <cstdint>
+
+#include <boost/config.hpp>
 #include <boost/endian/detail/intrinsic.hpp>
 // Inject missing endian_reverse into boost::endian namepace so floating point parsing in spirit works
 namespace boost { namespace endian {
