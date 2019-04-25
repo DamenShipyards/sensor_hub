@@ -13,9 +13,9 @@
 #ifndef XSENS_IMPL_H_
 #define XSENS_IMPL_H_
 
-#include "datetime.h"
-#include "types.h"
-#include "spirit_x3.h"
+#include "../datetime.h"
+#include "../types.h"
+#include "../spirit_x3.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>

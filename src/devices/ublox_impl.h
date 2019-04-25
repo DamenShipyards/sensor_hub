@@ -13,13 +13,14 @@
 #ifndef XSENS_IMPL_H_
 #define XSENS_IMPL_H_
 
+#include "../datetime.h"
+
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <boost/date_time/date.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 
-#include "datetime.h"
 
 namespace gregorian = boost::gregorian;
 

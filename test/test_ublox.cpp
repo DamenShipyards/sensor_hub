@@ -1,5 +1,5 @@
 #define BOOST_TEST_MODULE ublox_test
-#include "../src/ublox.h" 
+#include "../src/devices/ublox.h" 
 
 #include "test_common.h"
 

@@ -13,7 +13,6 @@
 
 #include "config.h"
 #include "log.h"
-#include "xsens.h"
 #include "loop.h"
 
 #include <boost/filesystem.hpp>

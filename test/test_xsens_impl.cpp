@@ -1,8 +1,8 @@
 #define BOOST_TEST_MODULE parse_test
 #include <boost/test/unit_test.hpp>
 
-#include "../src/xsens.h"
-#include "../src/xsens_impl.h"
+#include "../src/devices/xsens.h"
+#include "../src/devices/xsens_impl.h"
 
 #include <iostream>
 #include <ostream>

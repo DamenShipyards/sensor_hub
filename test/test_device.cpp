@@ -4,7 +4,6 @@
 
 #include "../src/device.h" 
 #include "../src/usb.h"
-#include "../src/xsens.h"
 
 #include <iostream>
 #include <typeinfo>

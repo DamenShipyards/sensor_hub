@@ -11,12 +11,12 @@
  * forbidden.
  */
 
-#include "device.h"
-#include "log.h"
-#include "tools.h"
-#include "spirit_x3.h"
-#include "datetime.h"
-#include "types.h"
+#include "../device.h"
+#include "../log.h"
+#include "../tools.h"
+#include "../spirit_x3.h"
+#include "../datetime.h"
+#include "../types.h"
 
 #include <boost/bind.hpp>
 

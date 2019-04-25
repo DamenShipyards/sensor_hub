@@ -40,7 +40,6 @@ add_definitions(-DBOOST_LOG_DYN_LINK)
 
 set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/loop.cpp
-  ${SENSORHUB_SOURCE_DIR}/xsens.cpp
   ${SENSORHUB_SOURCE_DIR}/device.cpp
   ${SENSORHUB_SOURCE_DIR}/datetime.cpp
   ${SENSORHUB_SOURCE_DIR}/usb.cpp
@@ -49,8 +48,9 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/config.cpp
   ${SENSORHUB_SOURCE_DIR}/modbus.cpp
   ${SENSORHUB_SOURCE_DIR}/processor.cpp
-  ${SENSORHUB_SOURCE_DIR}/ublox.cpp
   ${SENSORHUB_SOURCE_DIR}/types.cpp
+  ${SENSORHUB_SOURCE_DIR}/devices/xsens.cpp
+  ${SENSORHUB_SOURCE_DIR}/devices/ublox.cpp
 )
 
 file(GLOB FMTLIB_SOURCES
@@ -121,10 +121,11 @@ new_test(test_usb log.cpp usb.cpp)
 new_test(test_device log.cpp device.cpp datetime.cpp)
 new_test(test_processor log.cpp processor.cpp datetime.cpp modbus.cpp config.cpp)
 new_test(test_datetime datetime.cpp log.cpp)
-new_test(test_xsens xsens.cpp usb.cpp device.cpp log.cpp datetime.cpp types.cpp)
-new_test(test_xsens_impl datetime.cpp log.cpp types.cpp)
 new_test(test_modbus modbus.cpp log.cpp config.cpp)
-new_test(test_ublox ublox.cpp device.cpp log.cpp datetime.cpp types.cpp)
+
+new_test(test_xsens devices/xsens.cpp usb.cpp device.cpp log.cpp datetime.cpp types.cpp)
+new_test(test_xsens_impl datetime.cpp log.cpp types.cpp)
+new_test(test_ublox devices/ublox.cpp device.cpp log.cpp datetime.cpp types.cpp)
 new_test(test_ublox_impl datetime.cpp log.cpp types.cpp)
 
 if(DOXYGEN_FOUND)

@@ -1,8 +1,8 @@
 #define BOOST_TEST_MODULE ublox_parse_test
 #include <boost/test/unit_test.hpp>
 
-#include "../src/ublox.h"
-#include "../src/ublox_impl.h"
+#include "../src/devices/ublox.h"
+#include "../src/devices/ublox_impl.h"
 
 #include <iostream>
 #include <ostream>
