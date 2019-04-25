@@ -23,10 +23,19 @@
 
 namespace gregorian = boost::gregorian;
 
-namespace command {
+namespace ubx_command {
 
-cbyte_t ubx_start = 0xFA;
-cbyte_t ubx_head = 0xFF;
+cbyte_t start = 0xB5;
+cbyte_t head = 0x62;
+
+cbyte_t class_ack = 0x05;
+cbyte_t class_cfg = 0x06;
+
+cbyte_t id_null = 0x00;
+cbyte_t id_one = 0x01;
+
+cdata_t ack = {start, head, class_ack, id_one};
+cdata_t nak = {start, head, class_ack, id_null};
 
 
 } // namespace data
