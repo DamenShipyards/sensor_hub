@@ -14,7 +14,8 @@ string(STRIP ${CMAKE_CXX_COMPILER} CMAKE_CXX_COMPILER)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(Boost 1.67.0 REQUIRED 
+set(BUILD_SHARED_LIBS ON)
+find_package(Boost 1.70.0 REQUIRED 
   system date_time filesystem log log_setup unit_test_framework thread regex coroutine chrono
 )
 
@@ -75,7 +76,14 @@ link_directories(
 link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBUSB_1_LIBRARY}
-  boost_system boost_date_time boost_filesystem boost_log boost_log_setup boost_thread boost_chrono boost_coroutine
+  Boost::system
+  Boost::date_time
+  Boost::filesystem
+  Boost::log
+  Boost::log_setup
+  Boost::thread
+  Boost::chrono
+  Boost::coroutine
 )
 
 
@@ -104,7 +112,15 @@ macro(new_test NEW_TEST)
     RUNTIME_OUTPUT_DIRECTORY test
   )
   target_link_libraries(${NEW_TEST} 
-    ${Boost_LIBRARIES}
+    Boost::system 
+    Boost::date_time
+    Boost::filesystem
+    Boost::log
+    Boost::log_setup
+    Boost::thread
+    Boost::chrono
+    Boost::coroutine
+    Boost::unit_test_framework
     ${LIBUSB_1_LIBRARY}
   )
   add_definitions(-DBOOST_TEST_DYN_LINK)
