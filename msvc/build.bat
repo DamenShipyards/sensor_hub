@@ -23,7 +23,7 @@ call %VCVARS%
 @if errorlevel 1 goto error
 
 rem Build the project
-msbuild %PROJECT%
+msbuild -m %PROJECT%
 @if errorlevel 1 goto error
 
 rem Assemble full path to executable

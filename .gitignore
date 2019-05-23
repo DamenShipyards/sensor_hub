@@ -10,9 +10,9 @@
 /msvc/Debug
 /msvc/sensor_hub.VC.VC.opendb
 /msvc/sensor_hub.VC.db
-/msvc/.vs/sensor_hub/v15/Browse.VC.db
-/msvc/.vs/sensor_hub/v15/ipch/
-/msvc/.vs/sensor_hub/v15/Browse.VC.opendb
+/msvc/.vs/sensor_hub/v1?/Browse.VC.db
+/msvc/.vs/sensor_hub/v1?/ipch/
+/msvc/.vs/sensor_hub/v1?/Browse.VC.opendb
 /msvc/sensor_hub.vcxproj.user
 /msvc/version.aps
 /msvc/gitrev.txt

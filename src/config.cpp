@@ -11,6 +11,8 @@
  * forbidden.
  */
 
+#define _USE_MATH_DEFINES
+
 #include "config.h"
 #include "log.h"
 #include "loop.h"

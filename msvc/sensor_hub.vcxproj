@@ -70,6 +70,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
       <AdditionalDependencies>libusb-1.0.lib;version.lib;libwdi.lib;getopt.lib;setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -78,19 +79,25 @@
     <ClCompile Include="..\src\config.cpp" />
     <ClCompile Include="..\src\datetime.cpp" />
     <ClCompile Include="..\src\device.cpp" />
+    <ClCompile Include="..\src\devices\ublox.cpp" />
+    <ClCompile Include="..\src\devices\xsens.cpp" />
     <ClCompile Include="..\src\http.cpp" />
     <ClCompile Include="..\src\log.cpp" />
     <ClCompile Include="..\src\loop.cpp" />
     <ClCompile Include="..\src\modbus.cpp" />
     <ClCompile Include="..\src\processor.cpp" />
+    <ClCompile Include="..\src\types.cpp" />
     <ClCompile Include="..\src\usb.cpp" />
     <ClCompile Include="..\src\winservice.cpp" />
-    <ClCompile Include="..\src\xsens.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\datetime.h" />
     <ClInclude Include="..\src\device.h" />
+    <ClInclude Include="..\src\devices\ublox.h" />
+    <ClInclude Include="..\src\devices\ublox_impl.h" />
+    <ClInclude Include="..\src\devices\xsens.h" />
+    <ClInclude Include="..\src\devices\xsens_impl.h" />
     <ClInclude Include="..\src\driver\install.h" />
     <ClInclude Include="..\src\http.h" />
     <ClInclude Include="..\src\log.h" />
@@ -100,9 +107,8 @@
     <ClInclude Include="..\src\quantities.h" />
     <ClInclude Include="..\src\spirit_x3.h" />
     <ClInclude Include="..\src\tools.h" />
+    <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\src\usb.h" />
-    <ClInclude Include="..\src\xsens.h" />
-    <ClInclude Include="..\src\xsens_impl.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
