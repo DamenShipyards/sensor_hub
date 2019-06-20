@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
@@ -17,10 +13,6 @@
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v141</PlatformToolset>
@@ -29,9 +21,6 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -47,9 +36,6 @@
     <TargetName>sensor_hub</TargetName>
     <IncludePath>..\3rdparty\fmt\include;..\3rdparty\libusb\include;..\3rdparty\libwdi\include;..\3rdparty\rapidjson\include;..\3rdparty\modbus\include;..\3rdparty\xsens\include;C:\boost;$(IncludePath)</IncludePath>
     <LibraryPath>..\3rdparty\libusb\lib;..\3rdparty\libwdi\lib;C:\boost\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <TargetName>sensor_hub</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -86,6 +72,8 @@
     <ClCompile Include="..\src\loop.cpp" />
     <ClCompile Include="..\src\modbus.cpp" />
     <ClCompile Include="..\src\processor.cpp" />
+    <ClCompile Include="..\src\processors\acceleration_history.cpp" />
+    <ClCompile Include="..\src\processors\statistics.cpp" />
     <ClCompile Include="..\src\types.cpp" />
     <ClCompile Include="..\src\usb.cpp" />
     <ClCompile Include="..\src\winservice.cpp" />
@@ -104,6 +92,8 @@
     <ClInclude Include="..\src\loop.h" />
     <ClInclude Include="..\src\modbus.h" />
     <ClInclude Include="..\src\processor.h" />
+    <ClInclude Include="..\src\processors\acceleration_history.h" />
+    <ClInclude Include="..\src\processors\statistics.h" />
     <ClInclude Include="..\src\quantities.h" />
     <ClInclude Include="..\src\spirit_x3.h" />
     <ClInclude Include="..\src\tools.h" />

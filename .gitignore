@@ -17,6 +17,7 @@
 /msvc/version.aps
 /msvc/gitrev.txt
 /msvc/version.rc
+/msvc/sensor_hub.aps
 
 # I use this as local build directory
 /build
