@@ -21,14 +21,14 @@
 
 #include <fmt/core.h>
 
+// asio uses "old" boost::coroutine instead of boost::coroutine2
 #ifndef BOOST_COROUTINES_NO_DEPRECATION_WARNING
 #define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
 #endif
+
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
-namespace asio = boost::asio;
 #include <boost/property_tree/ptree.hpp>
-namespace pt = boost::property_tree;
 
 #include "quantities.h"
 #include "log.h"
@@ -36,6 +36,8 @@ namespace pt = boost::property_tree;
 #include "processor.h"
 #include "types.h"
 
+namespace asio = boost::asio;
+namespace pt = boost::property_tree;
 
 /**
  * Base class for all sensor devices

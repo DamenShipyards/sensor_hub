@@ -20,6 +20,8 @@
 #include <deque>
 #include <exception>
 #include <boost/asio.hpp>
+
+// Avoid warnings from libusb.h which we won't fix
 #ifdef __GNUG__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"

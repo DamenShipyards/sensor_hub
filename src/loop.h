@@ -15,10 +15,9 @@
 #define LOOP_H_
 
 #include <boost/chrono.hpp>
-namespace chrono = boost::chrono;
-
 #include <boost/asio.hpp>
 
+namespace chrono = boost::chrono;
 namespace asio = boost::asio;
 
 /**
