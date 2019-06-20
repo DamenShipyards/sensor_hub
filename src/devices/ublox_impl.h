@@ -70,8 +70,6 @@ struct Data_packet {
 };
 
 
-
-
 } // parser
 
 }  // namespace ubx

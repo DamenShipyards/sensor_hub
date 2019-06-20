@@ -16,4 +16,20 @@
 // Implementation is put in a separate header for inclusion in tests
 #include "xsens_impl.h"
 
+// For context provider
+#include "../loop.h"
+
+// Add factories to registry
+using Xsens_MTi_G_710_usb = xsens::MTi_G_710<Usb, Context_provider>;
+using Xsens_MTi_G_710_serial = xsens::MTi_G_710<asio::serial_port, Context_provider>;
+
+using Xsens_MTi_G_710_usb_factory = Device_factory<Xsens_MTi_G_710_usb>;
+using Xsens_MTi_G_710_serial_factory = Device_factory<Xsens_MTi_G_710_serial>;
+
+static auto& mti_g_710_usb_factory =
+    add_device_factory("xsens_mti_g_710_usb", std::move(std::make_unique<Xsens_MTi_G_710_usb_factory>()));
+static auto& mti_g_710_serial_factory =
+    add_device_factory("xsens_mti_g_710_serial", std::move(std::make_unique<Xsens_MTi_G_710_serial_factory>()));
+
+
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

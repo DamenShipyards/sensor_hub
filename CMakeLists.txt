@@ -139,7 +139,7 @@ new_test(test_processor log.cpp processor.cpp datetime.cpp modbus.cpp config.cpp
 new_test(test_datetime datetime.cpp log.cpp)
 new_test(test_modbus modbus.cpp log.cpp config.cpp)
 
-new_test(test_xsens devices/xsens.cpp usb.cpp device.cpp log.cpp datetime.cpp types.cpp)
+new_test(test_xsens usb.cpp device.cpp log.cpp datetime.cpp types.cpp)
 new_test(test_xsens_impl datetime.cpp log.cpp types.cpp)
 new_test(test_ublox devices/ublox.cpp device.cpp log.cpp datetime.cpp types.cpp)
 new_test(test_ublox_impl datetime.cpp log.cpp types.cpp)

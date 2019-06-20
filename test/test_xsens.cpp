@@ -1,5 +1,6 @@
 #define BOOST_TEST_MODULE xsens_test
 #include "../src/devices/xsens.h" 
+#include "../src/devices/xsens_impl.h" 
 #include "../src/usb.h" 
 
 #include "test_common.h"

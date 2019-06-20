@@ -85,13 +85,13 @@ private:
 
 
 template <typename Port, typename ContextProvider>
-struct Ublox_NEO_M8U: public Ublox<Port, ContextProvider> {
+struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
-  Ublox_NEO_M8U(): Ublox<Port, ContextProvider>() {
+  NEO_M8U(): Ublox<Port, ContextProvider>() {
     log(level::info, "Constructing Ublox_NEO_M8U");
   }
 
-  ~Ublox_NEO_M8U() override {
+  ~NEO_M8U() override {
     log(level::info, "Destroying Ublox_NEO_M8U");
   }
 
