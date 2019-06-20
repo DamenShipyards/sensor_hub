@@ -365,13 +365,4 @@ asio::io_context& Context_provider::get_context() {
   return Service::get_instance().get_context();
 }
 
-
-using Statistics_factory = Processor_factory<Statistics>;
-using Acceleration_history_factory = Processor_factory<Acceleration_history>;
-
-static auto& statistics_factory =
-    add_processor_factory("statistics", std::move(std::make_unique<Statistics_factory>()));
-static auto& acceleration_history_factory =
-    add_processor_factory("acceleration_history", std::move(std::make_unique<Acceleration_history_factory>()));
-
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

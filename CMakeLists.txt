@@ -52,6 +52,8 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/types.cpp
   ${SENSORHUB_SOURCE_DIR}/devices/xsens.cpp
   ${SENSORHUB_SOURCE_DIR}/devices/ublox.cpp
+  ${SENSORHUB_SOURCE_DIR}/processors/statistics.cpp
+  ${SENSORHUB_SOURCE_DIR}/processors/acceleration_history.cpp
 )
 
 file(GLOB FMTLIB_SOURCES
@@ -135,7 +137,11 @@ new_test(test_tools)
 new_test(test_parse)
 new_test(test_usb log.cpp usb.cpp)
 new_test(test_device log.cpp device.cpp datetime.cpp)
-new_test(test_processor log.cpp processor.cpp datetime.cpp modbus.cpp config.cpp)
+new_test(test_processor 
+  processor.cpp 
+  processors/statistics.cpp 
+  processors/acceleration_history.cpp 
+  log.cpp datetime.cpp modbus.cpp config.cpp)
 new_test(test_datetime datetime.cpp log.cpp)
 new_test(test_modbus modbus.cpp log.cpp config.cpp)
 

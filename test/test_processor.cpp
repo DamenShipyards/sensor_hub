@@ -3,6 +3,8 @@
 #include <boost/bind.hpp>
 
 #include "../src/processor.h" 
+#include "../src/processors/statistics.h" 
+#include "../src/processors/acceleration_history.h" 
 
 #include <iostream>
 #include <typeinfo>
