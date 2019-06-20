@@ -26,17 +26,17 @@
 #include <iterator>
 
 
+namespace ubx {
 
-namespace ubx_command {
+namespace command {
 
 extern cbyte_t packet_start;
 extern cbyte_t sys_command;
+
 }
 
 
-
-
-namespace ubx_parser {
+namespace parser {
 
 namespace x3 = boost::spirit::x3;
 
@@ -48,7 +48,7 @@ struct Packet_parser {
   ~Packet_parser() {};
 };
 
-} // ubx_parser
+} //  namespace parser
 
 
 
@@ -76,11 +76,11 @@ struct Ublox: public Port_device<Port, ContextProvider> {
     Device::use_as_time_source(value);
   }
 
-  const ubx_parser::Packet_parser& get_parser() const {
+  const parser::Packet_parser& get_parser() const {
     return parser_;
   }
 private:
-  ubx_parser::Packet_parser parser_;
+  parser::Packet_parser parser_;
 };
 
 
@@ -96,5 +96,7 @@ struct Ublox_NEO_M8U: public Ublox<Port, ContextProvider> {
   }
 
 };
+
+}  //namespace ubx
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

@@ -366,8 +366,8 @@ asio::io_context& Context_provider::get_context() {
 }
 
 
-using Xsens_MTi_G_710_usb = Xsens_MTi_G_710<Usb, Context_provider>;
-using Xsens_MTi_G_710_serial = Xsens_MTi_G_710<asio::serial_port, Context_provider>;
+using Xsens_MTi_G_710_usb = xsens::MTi_G_710<Usb, Context_provider>;
+using Xsens_MTi_G_710_serial = xsens::MTi_G_710<asio::serial_port, Context_provider>;
 
 using Xsens_MTi_G_710_usb_factory = Device_factory<Xsens_MTi_G_710_usb>;
 using Xsens_MTi_G_710_serial_factory = Device_factory<Xsens_MTi_G_710_serial>;

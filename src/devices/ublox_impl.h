@@ -21,10 +21,11 @@
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 
+namespace ubx {
 
 namespace gregorian = boost::gregorian;
 
-namespace ubx_command {
+namespace command {
 
 cbyte_t start = 0xB5;
 cbyte_t head = 0x62;
@@ -41,7 +42,7 @@ cdata_t nak = {start, head, class_ack, id_null};
 
 } // namespace data
 
-namespace ubx_parser {
+namespace parser {
 
 using x3::repeat;
 using x3::omit;
@@ -56,6 +57,7 @@ using x3::big_bin_double;
 using x3::_attr;
 using x3::_val;
 using x3::_pass;
+
 
 struct Data_packet {
   Data_packet(): id(0), len(0) {}
@@ -72,6 +74,7 @@ struct Data_packet {
 
 } // parser
 
+}  // namespace ubx
 
 #endif
 

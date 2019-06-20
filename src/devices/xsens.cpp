@@ -13,8 +13,7 @@
 
 #include "xsens.h"
 
+// Implementation is put in a separate header for inclusion in tests
 #include "xsens_impl.h"
-
-#include <memory>
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

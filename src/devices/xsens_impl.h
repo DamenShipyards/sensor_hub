@@ -23,6 +23,7 @@
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 
+namespace xsens {
 
 namespace gregorian = boost::gregorian;
 
@@ -128,7 +129,7 @@ cdata_t output_configuration_ack = {
   XMID_SetOutputConfigurationAck
 };
 
-} // namespace data
+} // namespace command
 
 namespace parser {
 
@@ -146,6 +147,7 @@ using x3::_attr;
 using x3::_val;
 using x3::_pass;
 
+
 struct Data_packet {
   Data_packet(): id(0), len(0) {}
   Data_packet(const uint16_t did): id(did), len(0) {}
@@ -155,6 +157,7 @@ struct Data_packet {
     return Values_type();
   }
 };
+
 
 template <int SIZE>
 struct Date_time_value: public Data_packet {
@@ -189,6 +192,7 @@ struct Date_time_value: public Data_packet {
   }
 };
 
+
 template<int DIM>
 struct UnitaryConverter {
   static constexpr double factor(int dim, double f=1.0) {
@@ -197,6 +201,7 @@ struct UnitaryConverter {
   }
 };
 
+
 template<int DIM>
 struct RadConverter: UnitaryConverter<DIM> {
   static constexpr double factor(int dim) {
@@ -204,12 +209,14 @@ struct RadConverter: UnitaryConverter<DIM> {
   }
 };
 
+
 template<int DIM>
 struct TeslaConverter: UnitaryConverter<DIM> {
   static constexpr double factor(int dim) {
     return UnitaryConverter<DIM>::factor(dim, 1E-4);
   }
 };
+
 
 template<uint16_t DID, uint16_t COORD, uint16_t FORMAT, int DIM, Quantity QUANT,
          template<int D> typename Converter=UnitaryConverter>
@@ -390,19 +397,21 @@ Values_queue& Packet_parser::get_values() {
   return visitor->values;
 }
 
-} // parser
+}  // namespace parser
 
-BOOST_FUSION_ADAPT_STRUCT(parser::Date_time, nano, year, month, day, hour, minute, second, flags)
-BOOST_FUSION_ADAPT_STRUCT(parser::Acceleration, data)
-BOOST_FUSION_ADAPT_STRUCT(parser::Free_acceleration, data)
-BOOST_FUSION_ADAPT_STRUCT(parser::Rate_of_turn, data)
-BOOST_FUSION_ADAPT_STRUCT(parser::Lat_lon, data)
-BOOST_FUSION_ADAPT_STRUCT(parser::Magnetic_flux, data)
-BOOST_FUSION_ADAPT_STRUCT(parser::Velocity, data)
-BOOST_FUSION_ADAPT_STRUCT(parser::Altitude_ellipsoid, data)
-BOOST_FUSION_ADAPT_STRUCT(parser::Altitude_msl, data)
-BOOST_FUSION_ADAPT_STRUCT(parser::Euler_angles, data)
-BOOST_FUSION_ADAPT_STRUCT(parser::Quaternion, data)
+}  // namespace xsens
+
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Date_time, nano, year, month, day, hour, minute, second, flags)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Acceleration, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Free_acceleration, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Rate_of_turn, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Lat_lon, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Magnetic_flux, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Velocity, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Altitude_ellipsoid, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Altitude_msl, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Euler_angles, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Quaternion, data)
 
 #endif
 

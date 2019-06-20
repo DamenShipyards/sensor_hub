@@ -30,14 +30,9 @@
 #include <deque>
 #include <iterator>
 
+namespace xsens {
+
 namespace posix_time = boost::posix_time;
-
-// Data types for data communicated with the sensor
-typedef unsigned char byte_t;
-typedef const byte_t cbyte_t;
-typedef std::vector<byte_t> data_t;
-typedef const data_t cdata_t;
-
 
 namespace command {
 
@@ -84,9 +79,6 @@ extern cdata_t string_output_type_ack;
 
 extern cdata_t error_resp;
 }
-
-
-extern std::ostream& operator<<(std::ostream& os, cdata_t data);
 
 
 namespace parser {
@@ -339,13 +331,13 @@ private:
 
 
 template <typename Port, typename ContextProvider>
-struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
+struct MTi_G_710: public Xsens<Port, ContextProvider> {
 
-  Xsens_MTi_G_710(): Xsens<Port, ContextProvider>() {
+  MTi_G_710(): Xsens<Port, ContextProvider>() {
     log(level::info, "Constructing Xsens_MTi_G_710");
   }
 
-  ~Xsens_MTi_G_710() override {
+  ~MTi_G_710() override {
     log(level::info, "Destroying Xsens_MTi_G_710");
   }
 
@@ -373,5 +365,7 @@ struct Xsens_MTi_G_710: public Xsens<Port, ContextProvider> {
     return this->exec_command(command::set_string_output_type, command::string_output_type_ack, command::error_resp, yield);
   }
 };
+
+}  // namespace xsens
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

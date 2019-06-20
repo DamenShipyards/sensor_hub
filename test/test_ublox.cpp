@@ -5,6 +5,8 @@
 
 #include <memory>
 
+using namespace ubx;
+
 
 BOOST_AUTO_TEST_CASE(construction_test) {
   Device_ptr dev = std::make_unique<Ublox_NEO_M8U<asio::serial_port, Ctx> >();

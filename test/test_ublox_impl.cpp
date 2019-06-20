@@ -14,6 +14,7 @@
 
 namespace x3 = boost::spirit::x3;
 using namespace std::string_literals;
+using namespace ubx;
 
 
 auto to_float = [](char *c){
