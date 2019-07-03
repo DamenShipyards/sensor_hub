@@ -387,6 +387,9 @@ void Packet_parser::parse() {
         }
       }
     }
+    else {
+      log(level::debug, "Xsens checksum error");
+    }
     data.clear();
     data_packets->clear();
   }
