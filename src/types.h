@@ -19,15 +19,15 @@
 #include "spirit_x3.h"
 
 // Data types for data communicated with the sensors
-typedef unsigned char byte_t;
-typedef const byte_t cbyte_t;
-typedef std::vector<byte_t> bytes_t;
-typedef const bytes_t cbytes_t;
+alias byte_t = unsigned char;
+alias cbyte_t = byte_t const;
+alias bytes_t = std::vector<byte_t>;
+alias cbytes_t = bytes_t const;
 
 namespace posix_time = boost::posix_time;
 
 extern std::ostream& operator<<(std::ostream& os, cbytes_t data);
-//extern bytes_t operator<<(cbytes_t data, cbytes_t tail);
+extern bytes_t operator<<(cbytes_t data, cbytes_t tail);
 
 #endif  // define TYPES_H_
 
