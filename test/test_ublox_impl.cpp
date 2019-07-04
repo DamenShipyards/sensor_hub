@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE ublox_parse_test
+#define BOOST_TEST_MODULE ublox_test
 #include <boost/test/unit_test.hpp>
 
 #include "../src/devices/ublox.h"
@@ -12,21 +12,11 @@
 #include <algorithm>
 
 
-namespace x3 = boost::spirit::x3;
-using namespace std::string_literals;
 using namespace ubx;
 
 
-auto to_float = [](char *c){
-  char data[4];
-  for (int i=3; i>=0; --i) {
-    data[i] = *c++;
-  }
-  return *reinterpret_cast<float*>(&data);
-};
-
 BOOST_AUTO_TEST_CASE(ublox_parse_acceleration_test) {
-  std::string data = "\x40\x20\x0c\xbd\x77\x48\x07\xbc\x0e\xdc\x7b\x41\x1c\xd1\x56"s;
+  std::string data = "\x40\x20\x0c\xbd\x77\x48\x07\xbc\x0e\xdc\x7b\x41\x1c\xd1\x56";
   /*
   auto cur = data.begin();
   ubx_parser::Acceleration acceleration;
@@ -40,3 +30,8 @@ BOOST_AUTO_TEST_CASE(ublox_parse_acceleration_test) {
   */
 }
 
+cdata_t empty_packet = { 0xB5, 0x62, 0x00, 0x00, 0x00, 0x00 };
+BOOST_AUTO_TEST_CASE(ublox_data_packet_test) {
+  auto packet = parser::Data_packet();
+  BOOST_TEST(packet.get_data() == empty_packet);
+}

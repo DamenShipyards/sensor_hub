@@ -27,20 +27,54 @@ namespace gregorian = boost::gregorian;
 
 namespace command {
 
-cbyte_t start = 0xB5;
-cbyte_t head = 0x62;
+cbyte_t sync_1 = 0xB5;
+cbyte_t sync_2 = 0x62;
+cdata_t preamble = { sync_1, sync_2 };
 
-cbyte_t class_ack = 0x05;
-cbyte_t class_cfg = 0x06;
+cbyte_t cls_nav = 0x01;
+namespace nav {
+  cbyte_t posllh = 0x02;
+  cbyte_t dop = 0x04;
+  cbyte_t att = 0x05;
+  cbyte_t sol = 0x06;
+  cbyte_t clock = 0x22;
+  cbyte_t dgps = 0x31;
+  cbyte_t sbas = 0x32;
+}  // namespace nav
 
-cbyte_t id_null = 0x00;
-cbyte_t id_one = 0x01;
+cbyte_t cls_ack = 0x05;
+namespace ack {
+  cbyte_t nak = 0x00;
+  cbyte_t ack = 0x01;
+}  // namespace ack
 
-cdata_t ack = {start, head, class_ack, id_one};
-cdata_t nak = {start, head, class_ack, id_null};
+cbyte_t cls_cfg = 0x06;
+namespace cfg {
+  cbyte_t msg = 0x01;
+  cbyte_t rate = 0x08;
+  cbyte_t nav5 = 0x24;
+  cbyte_t nmea = 0x17;
+  cbyte_t gnss = 0x3E;
+  cbyte_t hnr = 0x5C;
+  cbyte_t pms = 0x86;
+}  // namespace cfg
+
+cbyte_t cls_mon = 0x0A;
+namespace mon {
+  cbyte_t ver = 0x04;
+  cbyte_t gnss = 0x28;
+}  // namespace mon
+
+cbyte_t cls_esf = 0x10;
+namespace esf {
+  cbyte_t meas = 0x02;
+  cbyte_t raw = 0x03;
+  cbyte_t status = 0x10;
+  cbyte_t ins = 0x15;
+}  // namespace esf
 
 
-} // namespace data
+}  // namespace command
 
 namespace parser {
 
@@ -60,12 +94,52 @@ using x3::_pass;
 
 
 struct Data_packet {
-  Data_packet(): id(0), len(0) {}
-  Data_packet(const uint16_t did): id(did), len(0) {}
-  uint16_t id;
-  int len;
-  virtual Values_type get_values() const {
-    return Values_type();
+  Data_packet(): cls_(), id_(), length_(), checksum_(), payload_() {}
+  Data_packet(const byte_t cls, const byte_t id): cls_(cls), id_(id), length_(), payload_() {
+    checksum_ = get_checksum();
+  }
+  Data_packet(const byte_t cls, const byte_t id, cdata_t payload): cls_(cls), id_(id), payload_(payload) {
+    length_ = get_length();
+    checksum_ = get_checksum();
+  }
+  Data_packet(cdata_t data): cls_(), id_(), length_(), payload_() {
+    auto l = data.size();
+    if (l > 0)
+      cls_ = data[0];
+    if (l > 1)
+      id_ = data[1];
+    if (l > 3)
+      length_ = data[2] + (data[3] << 8);
+    for (auto i = 0; i < length_; ++i) {
+      payload_.push_back(data.at(i + 4));
+    }
+    checksum_ = get_checksum();
+  }
+  data_t get_data() { 
+    return command::preamble << cls_ << id_ << payload_ << get_checksum();
+  }
+private:
+  byte_t cls_;
+  byte_t id_;
+  uint16_t length_;
+  uint16_t checksum_;
+  data_t payload_;
+
+  uint16_t get_length() {
+    return payload_.size();
+  }
+
+  uint16_t get_checksum() {
+    byte_t chk_a = 0;
+    byte_t chk_b = 0;
+    static auto add_byte = [&](const byte_t byte) {
+      chk_a += byte;
+      chk_b += chk_a;
+    };
+    add_byte(cls_);
+    add_byte(id_);
+    std::for_each(payload_.begin(), payload_.end(), add_byte);
+    return (chk_b << 8) + chk_a;
   }
 };
 
