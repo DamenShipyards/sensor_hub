@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(ublox_parse_acceleration_test) {
   /*
   auto cur = data.begin();
   ubx_parser::Acceleration acceleration;
-  BOOST_TEST(std::is_floating_point<parser::Acceleration::data_type>::value);
+  BOOST_TEST(std::is_floating_point<parser::Acceleration::bytes_type>::value);
   auto result = x3::parse(cur, data.end(), ubx_parser::acceleration, acceleration);
   BOOST_TEST(result);
   BOOST_TEST(acceleration.data.size() == 3);
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(ublox_parse_acceleration_test) {
   */
 }
 
-cdata_t empty_packet = { 0xB5, 0x62, 0x00, 0x00, 0x00, 0x00 };
+cbytes_t empty_packet = { 0xB5, 0x62, 0x00, 0x00, 0x00, 0x00 };
 BOOST_AUTO_TEST_CASE(ublox_data_packet_test) {
   auto packet = parser::Data_packet();
   BOOST_TEST(packet.get_data() == empty_packet);

@@ -21,13 +21,13 @@
 // Data types for data communicated with the sensors
 typedef unsigned char byte_t;
 typedef const byte_t cbyte_t;
-typedef std::vector<byte_t> data_t;
-typedef const data_t cdata_t;
+typedef std::vector<byte_t> bytes_t;
+typedef const bytes_t cbytes_t;
 
 namespace posix_time = boost::posix_time;
 
-extern std::ostream& operator<<(std::ostream& os, cdata_t data);
-//extern data_t operator<<(cdata_t data, cdata_t tail);
+extern std::ostream& operator<<(std::ostream& os, cbytes_t data);
+//extern bytes_t operator<<(cbytes_t data, cbytes_t tail);
 
 #endif  // define TYPES_H_
 

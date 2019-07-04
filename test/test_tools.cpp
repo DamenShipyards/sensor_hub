@@ -17,21 +17,21 @@
 // Data types for data communicated with the sensor
 typedef unsigned char byte_t;
 typedef const byte_t cbyte_t;
-typedef std::vector<byte_t> data_t;
-typedef const data_t cdata_t;
+typedef std::vector<byte_t> bytes_t;
+typedef const bytes_t cbytes_t;
 
 BOOST_AUTO_TEST_CASE(test_contains) {
-  cdata_t c1{0x01, 0x02, 0x03, 0x04, 0x04};
-  cdata_t c2{0x01, 0x02, 0x03};
-  cdata_t c3{0x02, 0x03, 0x04};
-  cdata_t c4{0x03, 0x04, 0x04};
-  cdata_t c5{0x04};
-  cdata_t c6{0x04, 0x04};
-  cdata_t c7{0x04, 0x04, 0x04};
-  cdata_t c8{0x04, 0x04, 0x01};
-  cdata_t c9{};
-  cdata_t c10{0x01};
-  cdata_t c11{0x01, 0x03};
+  cbytes_t c1{0x01, 0x02, 0x03, 0x04, 0x04};
+  cbytes_t c2{0x01, 0x02, 0x03};
+  cbytes_t c3{0x02, 0x03, 0x04};
+  cbytes_t c4{0x03, 0x04, 0x04};
+  cbytes_t c5{0x04};
+  cbytes_t c6{0x04, 0x04};
+  cbytes_t c7{0x04, 0x04, 0x04};
+  cbytes_t c8{0x04, 0x04, 0x01};
+  cbytes_t c9{};
+  cbytes_t c10{0x01};
+  cbytes_t c11{0x01, 0x03};
   BOOST_TEST(contains(c1, c1));
   BOOST_TEST(contains(c1, c2));
   BOOST_TEST(contains(c1, c3));

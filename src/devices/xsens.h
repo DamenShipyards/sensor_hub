@@ -40,44 +40,44 @@ extern cbyte_t packet_start;
 extern cbyte_t sys_command;
 extern cbyte_t conf_command;
 
-extern cdata_t goto_config;
-extern cdata_t config_ack;
+extern cbytes_t goto_config;
+extern cbytes_t config_ack;
 
-extern cdata_t goto_measurement;
-extern cdata_t measurement_ack;
+extern cbytes_t goto_measurement;
+extern cbytes_t measurement_ack;
 
-extern cdata_t init_mt;
-extern cdata_t mt_ack;
+extern cbytes_t init_mt;
+extern cbytes_t mt_ack;
 
-extern cdata_t set_option_flags;
-extern cdata_t option_flags_ack;
+extern cbytes_t set_option_flags;
+extern cbytes_t option_flags_ack;
 
-extern cdata_t req_reset;
-extern cdata_t reset_ack;
+extern cbytes_t req_reset;
+extern cbytes_t reset_ack;
 
-extern cdata_t wakeup;
-extern cdata_t wakeup_ack;
+extern cbytes_t wakeup;
+extern cbytes_t wakeup_ack;
 
-extern cdata_t req_product_code;
-extern cdata_t product_code_resp;
+extern cbytes_t req_product_code;
+extern cbytes_t product_code_resp;
 
-extern cdata_t req_device_id;
-extern cdata_t device_id_resp;
+extern cbytes_t req_device_id;
+extern cbytes_t device_id_resp;
 
-extern cdata_t req_firmware_rev;
-extern cdata_t firmware_rev_resp;
+extern cbytes_t req_firmware_rev;
+extern cbytes_t firmware_rev_resp;
 
-extern cdata_t req_utc_time;
+extern cbytes_t req_utc_time;
 
-extern cdata_t get_output_configuration;
-extern cdata_t get_output_configuration_ack;
-extern cdata_t set_output_configuration;
-extern cdata_t output_configuration_ack;
+extern cbytes_t get_output_configuration;
+extern cbytes_t get_output_configuration_ack;
+extern cbytes_t set_output_configuration;
+extern cbytes_t output_configuration_ack;
 
-extern cdata_t set_string_output_type;
-extern cdata_t string_output_type_ack;
+extern cbytes_t set_string_output_type;
+extern cbytes_t string_output_type_ack;
 
-extern cdata_t error_resp;
+extern cbytes_t error_resp;
 }
 
 
@@ -136,7 +136,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
           auto buf_begin = asio::buffers_begin(buf.data());
           auto buf_end = buf_begin + buf.size();
 #ifdef DEBUG
-          cdata_t data(buf_begin, buf_end);
+          cbytes_t data(buf_begin, buf_end);
           std::stringstream ss;
           ss << data;
           log(level::debug, "XSens received: %", ss.str());
@@ -162,7 +162,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     Port& port = this->get_port();
     asio::streambuf read_buf;
     boost::system::error_code ec;
-    data_t response{};
+    bytes_t response{};
     log(level::info, "Xsens LookForWakeup");
     size_t bytes_read = port.async_read_some(read_buf.prepare(0x100), yield[ec]);
     if (!ec) {
@@ -170,7 +170,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
       auto buf_begin = asio::buffers_begin(read_buf.data());
       auto buf_end = buf_begin + bytes_read;
 
-      cdata_t data(buf_begin, buf_end);
+      cbytes_t data(buf_begin, buf_end);
       std::stringstream ssr;
       ssr << data;
       log(level::debug, "Received from XSens while looking for wakeup: %", ssr.str());

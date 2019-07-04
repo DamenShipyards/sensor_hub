@@ -29,7 +29,7 @@ namespace command {
 
 cbyte_t sync_1 = 0xB5;
 cbyte_t sync_2 = 0x62;
-cdata_t preamble = { sync_1, sync_2 };
+cbytes_t preamble = { sync_1, sync_2 };
 
 cbyte_t cls_nav = 0x01;
 namespace nav {
@@ -98,11 +98,11 @@ struct Data_packet {
   Data_packet(const byte_t cls, const byte_t id): cls_(cls), id_(id), length_(), payload_() {
     checksum_ = get_checksum();
   }
-  Data_packet(const byte_t cls, const byte_t id, cdata_t payload): cls_(cls), id_(id), payload_(payload) {
+  Data_packet(const byte_t cls, const byte_t id, cbytes_t payload): cls_(cls), id_(id), payload_(payload) {
     length_ = get_length();
     checksum_ = get_checksum();
   }
-  Data_packet(cdata_t data): cls_(), id_(), length_(), payload_() {
+  Data_packet(cbytes_t data): cls_(), id_(), length_(), payload_() {
     auto l = data.size();
     if (l > 0)
       cls_ = data[0];
@@ -115,15 +115,15 @@ struct Data_packet {
     }
     checksum_ = get_checksum();
   }
-  data_t get_data() { 
-    return command::preamble << cls_ << id_ << payload_ << get_checksum();
+  bytes_t get_data() { 
+    //return command::preamble << cls_ << id_ << payload_ << get_checksum();
   }
 private:
   byte_t cls_;
   byte_t id_;
   uint16_t length_;
   uint16_t checksum_;
-  data_t payload_;
+  bytes_t payload_;
 
   uint16_t get_length() {
     return payload_.size();

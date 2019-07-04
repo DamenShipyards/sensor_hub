@@ -13,7 +13,7 @@
 
 #include "types.h"
 
-std::ostream& operator<<(std::ostream& os, cdata_t data) {
+std::ostream& operator<<(std::ostream& os, cbytes_t data) {
   os << std::hex;
   std::string sep = "";
   for (auto&& b: data) {

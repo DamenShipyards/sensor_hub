@@ -34,13 +34,13 @@ cbyte_t sys_command = 0xFF;
 cbyte_t conf_command = 0x01;
 
 // TODO: Should be reworked to avoid duplication and add automatic checksum
-cdata_t goto_config = {packet_start, sys_command, XMID_GotoConfig, 0x00, 0xD1};
-cdata_t config_ack = {packet_start, sys_command, XMID_GotoConfigAck};
+cbytes_t goto_config = {packet_start, sys_command, XMID_GotoConfig, 0x00, 0xD1};
+cbytes_t config_ack = {packet_start, sys_command, XMID_GotoConfigAck};
 
-cdata_t goto_measurement = {packet_start, sys_command, XMID_GotoMeasurement, 0x00, 0xF1};
-cdata_t measurement_ack = {packet_start, sys_command, XMID_GotoMeasurementAck};
+cbytes_t goto_measurement = {packet_start, sys_command, XMID_GotoMeasurement, 0x00, 0xF1};
+cbytes_t measurement_ack = {packet_start, sys_command, XMID_GotoMeasurementAck};
 
-cdata_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
+cbytes_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
   0x08,
   0x00, 0x00, 0x00,       // Option flags to set:
   0x00 |
@@ -58,37 +58,37 @@ cdata_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
   0x00,
   0x21                    // Checksum
 };
-cdata_t option_flags_ack = {packet_start, sys_command, XMID_SetOptionFlagsAck};
+cbytes_t option_flags_ack = {packet_start, sys_command, XMID_SetOptionFlagsAck};
 
-cdata_t req_reset = {packet_start, sys_command, XMID_Reset, 0x00, 0xC1};
-cdata_t reset_ack = {packet_start, sys_command, XMID_ResetAck, 0x00, 0xC0};
+cbytes_t req_reset = {packet_start, sys_command, XMID_Reset, 0x00, 0xC1};
+cbytes_t reset_ack = {packet_start, sys_command, XMID_ResetAck, 0x00, 0xC0};
 
-cdata_t req_device_id = {packet_start, sys_command, XMID_ReqDid, 0x00, 0x01};
-cdata_t device_id_resp = {packet_start, sys_command, XMID_DeviceId};
+cbytes_t req_device_id = {packet_start, sys_command, XMID_ReqDid, 0x00, 0x01};
+cbytes_t device_id_resp = {packet_start, sys_command, XMID_DeviceId};
 
-cdata_t init_mt = {packet_start, sys_command, XMID_Initbus, 0x00, 0xFF};
-cdata_t mt_ack = {packet_start, sys_command, XMID_InitBusResults};
+cbytes_t init_mt = {packet_start, sys_command, XMID_Initbus, 0x00, 0xFF};
+cbytes_t mt_ack = {packet_start, sys_command, XMID_InitBusResults};
 
-cdata_t wakeup = {packet_start, sys_command, XMID_Wakeup, 0x00, 0xC3};
-cdata_t wakeup_ack = {packet_start, sys_command, XMID_WakeupAck, 0x00, 0xC2};
+cbytes_t wakeup = {packet_start, sys_command, XMID_Wakeup, 0x00, 0xC3};
+cbytes_t wakeup_ack = {packet_start, sys_command, XMID_WakeupAck, 0x00, 0xC2};
 
-cdata_t req_product_code = {packet_start, sys_command, XMID_ReqProductCode, 0x00, 0xE5};
-cdata_t product_code_resp = {packet_start, sys_command, XMID_ProductCode};
+cbytes_t req_product_code = {packet_start, sys_command, XMID_ReqProductCode, 0x00, 0xE5};
+cbytes_t product_code_resp = {packet_start, sys_command, XMID_ProductCode};
 
-cdata_t req_firmware_rev = {packet_start, sys_command, XMID_ReqFirmwareRevision, 0x00, 0xEF};
-cdata_t firmware_rev_resp = {packet_start, sys_command, XMID_FirmwareRevision};
+cbytes_t req_firmware_rev = {packet_start, sys_command, XMID_ReqFirmwareRevision, 0x00, 0xEF};
+cbytes_t firmware_rev_resp = {packet_start, sys_command, XMID_FirmwareRevision};
 
-cdata_t error_resp = {packet_start, sys_command, XMID_Error};
+cbytes_t error_resp = {packet_start, sys_command, XMID_Error};
 
-cdata_t set_string_output_type = {packet_start, sys_command, XMID_SetStringOutputType,
+cbytes_t set_string_output_type = {packet_start, sys_command, XMID_SetStringOutputType,
   0x02,
   0x00, 0x00,
   0x71};
-cdata_t string_output_type_ack = {packet_start, sys_command, XMID_SetStringOutputTypeAck};
+cbytes_t string_output_type_ack = {packet_start, sys_command, XMID_SetStringOutputTypeAck};
 
 
-cdata_t get_output_configuration = {packet_start, sys_command, XMID_ReqOutputConfiguration, 0x00, 0x41};
-cdata_t get_output_configuration_ack = {
+cbytes_t get_output_configuration = {packet_start, sys_command, XMID_ReqOutputConfiguration, 0x00, 0x41};
+cbytes_t get_output_configuration_ack = {
   packet_start, sys_command,
   XMID_ReqOutputConfigurationAck,
   0x2C,                   // Length
@@ -106,7 +106,7 @@ cdata_t get_output_configuration_ack = {
   0x71                    // Checksum
 };
 
-cdata_t set_output_configuration = {
+cbytes_t set_output_configuration = {
   packet_start, sys_command,
   XMID_SetOutputConfiguration,
   0x2C,                   // Length
@@ -124,7 +124,7 @@ cdata_t set_output_configuration = {
   0x72                    // Checksum
 };
 
-cdata_t output_configuration_ack = {
+cbytes_t output_configuration_ack = {
   packet_start, sys_command,
   XMID_SetOutputConfigurationAck
 };
@@ -230,9 +230,9 @@ struct Data_value: public Data_packet {
           typename std::conditional<FORMAT == XDI_SubFormatFp1220, uint32_t,
           typename std::conditional<FORMAT == XDI_SubFormatFp1632, std::vector<uint16_t>,
           typename std::conditional<FORMAT == XDI_SubFormatDouble, double, void
-          >::type >::type >::type >::type data_type;
+          >::type >::type >::type >::type bytes_type;
 
-  std::vector<data_type> data;
+  std::vector<bytes_type> data;
 
   Values_type get_values() const override {
     Values_type result;

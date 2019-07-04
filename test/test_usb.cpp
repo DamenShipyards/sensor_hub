@@ -24,8 +24,8 @@
 // Data types for data communicated with the sensor
 typedef unsigned char byte_t;
 typedef const byte_t cbyte_t;
-typedef std::vector<byte_t> data_t;
-typedef const data_t cdata_t;
+typedef std::vector<byte_t> bytes_t;
+typedef const bytes_t cbytes_t;
 
 
 namespace asio = boost::asio;
@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(usb_read_test, *ut::precondition(usb_available)) {
   BOOST_TEST(bytes_read == 128U);
 }
 
-static data_t response1;
-static data_t response2;
+static bytes_t response1;
+static bytes_t response2;
 static int i = 20;
 // Command bytes
 cbyte_t packet_start = 0xFA;
@@ -78,12 +78,12 @@ cbyte_t sys_command = 0xFF;
 cbyte_t conf_command = 0x01;
 
 // Command strings
-cdata_t goto_config = { packet_start, sys_command, 0x30, 0x00, 0xD1 }; // switch to config mode
-cdata_t goto_measurement = { packet_start, sys_command, 0x10, 0x00, 0xF1 }; // switch to measurement mode
+cbytes_t goto_config = { packet_start, sys_command, 0x30, 0x00, 0xD1 }; // switch to config mode
+cbytes_t goto_measurement = { packet_start, sys_command, 0x10, 0x00, 0xF1 }; // switch to measurement mode
 
 // Response header strings
-cdata_t config_ok = { packet_start, sys_command, 0x31, 0x00, 0xD0};
-cdata_t measurement_ok = { packet_start, sys_command, 0x11, 0x00, 0xF0};
+cbytes_t config_ok = { packet_start, sys_command, 0x31, 0x00, 0xD0};
+cbytes_t measurement_ok = { packet_start, sys_command, 0x11, 0x00, 0xF0};
 
 void xsens(Usb& usb, boost::asio::yield_context yield) {
   asio::streambuf read_buf;
@@ -94,7 +94,7 @@ void xsens(Usb& usb, boost::asio::yield_context yield) {
   do {
     size_t bytes_read1 = usb.async_read_some(read_buf.prepare(256), yield);
     read_buf.commit(bytes_read1);
-    response1 = data_t(asio::buffers_begin(read_buf.data()), asio::buffers_begin(read_buf.data()) + bytes_read1);
+    response1 = bytes_t(asio::buffers_begin(read_buf.data()), asio::buffers_begin(read_buf.data()) + bytes_read1);
     read_buf.consume(bytes_read1);
     j = contains_at(response1, config_ok);
   } while (--i > 0 && j < 0);
@@ -102,7 +102,7 @@ void xsens(Usb& usb, boost::asio::yield_context yield) {
   boost::asio::async_write(usb, asio::buffer(goto_measurement), yield);
   size_t bytes_read2 = boost::asio::async_read(usb, read_buf.prepare(config_ok.size()), yield);
   read_buf.commit(bytes_read2);
-  response2 = data_t(asio::buffers_begin(read_buf.data()), asio::buffers_begin(read_buf.data()) + bytes_read2);
+  response2 = bytes_t(asio::buffers_begin(read_buf.data()), asio::buffers_begin(read_buf.data()) + bytes_read2);
   read_buf.consume(bytes_read2);
 
   read_returned = true;

@@ -246,9 +246,9 @@ struct Port_device: public Device {
   }
 
   bool exec_command(
-      cdata_t& command, 
-      cdata_t& expected_response, 
-      cdata_t& error_response, 
+      cbytes_t& command, 
+      cbytes_t& expected_response, 
+      cbytes_t& error_response, 
       asio::yield_context yield, 
       std::string* data=nullptr,
       int timeout=1000) {
@@ -272,7 +272,7 @@ struct Port_device: public Device {
     // ... and look for the expected response
     try {
       int repeats = 4;
-      data_t response{};
+      bytes_t response{};
       int response_found = -1;
       do {
         asio::streambuf read_buf;
@@ -281,7 +281,7 @@ struct Port_device: public Device {
         auto buf_begin = asio::buffers_begin(read_buf.data());
         auto buf_end = buf_begin + bytes_read;
 
-        cdata_t data(buf_begin, buf_end);
+        cbytes_t data(buf_begin, buf_end);
         std::stringstream ssr;
         ssr << data;
         log(level::debug, "Received from %: %", this->get_name(), ssr.str());
