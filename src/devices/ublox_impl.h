@@ -116,7 +116,7 @@ struct Data_packet {
     checksum_ = get_checksum();
   }
   bytes_t get_data() { 
-    //return command::preamble << cls_ << id_ << payload_ << get_checksum();
+    return command::preamble << cls_ << id_ << payload_ << get_checksum();
   }
 private:
   byte_t cls_;
