@@ -1,6 +1,7 @@
 #define BOOST_TEST_MODULE ublox_test
 #include <boost/test/unit_test.hpp>
 
+#include "../src/types.h"
 #include "../src/devices/ublox.h"
 #include "../src/devices/ublox_impl.h"
 
@@ -8,6 +9,7 @@
 #include <ostream>
 #include <iomanip>
 #include <string>
+#include <sstream>
 #include <cstdint>
 #include <algorithm>
 
@@ -30,8 +32,12 @@ BOOST_AUTO_TEST_CASE(ublox_parse_acceleration_test) {
   */
 }
 
-cbytes_t empty_packet = { 0xB5, 0x62, 0x00, 0x00, 0x00, 0x00 };
+cbytes_t empty_packet = { 0xB5, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+cbytes_t cfg_gnss_dummy = {0xb5, 0x62, 0x06, 0x3E, 0x00, 0x00, 0x00, 0x00};
+
 BOOST_AUTO_TEST_CASE(ublox_data_packet_test) {
   auto packet = parser::Data_packet();
   BOOST_TEST(packet.get_data() == empty_packet);
+  packet = parser::Data_packet(command::cls_cfg, command::cfg::gnss);
+  BOOST_TEST(packet.get_data() == cfg_gnss_dummy);
 }
