@@ -50,13 +50,68 @@ namespace ack {
 
 cbyte_t cls_cfg = 0x06;
 namespace cfg {
+  cbyte_t prt = 0x00;
+  cbytes_t prt_payload = {
+    0x03,  // PortID: 3 -> USB
+    0x00,  // Reserved
+    0x00, 0x00,  // txReady (not interested)
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Reserved
+    0x01, 0x00,  // InProtoMask: 1 -> UBX only
+    0x01, 0x00   // OutProtoMask: 1 -> UBX only
+  };
+
   cbyte_t msg = 0x01;
+
   cbyte_t rate = 0x08;
+  cbytes_t rate_payload = { 
+    0x64, 0x00, // MeasRate: 100ms -> 10Hz
+    0x02, 0x00, // NavRate: 2 (1 solution per 2 measurements) -> 5Hz output
+    0x00, 0x00, // TimeRef: UTC
+  };
+
   cbyte_t nav5 = 0x24;
-  cbyte_t nmea = 0x17;
+  cbytes_t nav5_payload = { 
+    0x47, 0x04,   // Parameters flag: dyn,el,fix; static; utc
+    0x05,  // DynMode: 5 -> Sea
+    0x03,  // FixMode: 3 -> 2D and 3D
+    0x00, 0x00, 0x00, 0x00,  // FixedAlt: 0 -> 2D altitude 
+    0xFF, 0xFF, 0x00, 0x00,  // FixedAltVar: 2D altitude variance (quoi?)
+    0x0A,  // MinElev: 10 -> 10 degree minimum sat elevation
+    0x00,  // Reserved
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Position mask: don't care
+    0x00,  // StaticHoldThresh: 0 -> Disable static navigation
+    0x00,  // DGNNSTimeOut: 0 -> don't care
+    0x00,  // CnoThreshNumSVs: don't care
+    0x00,  // CnoThresh: don't care
+    0x00, 0x00,  // Reserved
+    0x00, 0x00,  // StaticHoldMaxDist: 0 -> Disable static navigation
+    0x00,  // UtcStandard: 0 -> Auto
+    0x00, 0x00, 0x00, 0x00, 0x00  // Reserved
+  };
+
   cbyte_t gnss = 0x3E;
+  cbyte_t gnss_payload = {
+    0x00,  // Version
+    0x00,  // Number of tracking channels in device (read only)
+    0xFF,  // Number of tracking channels used (all)
+    0x07,  // Number of configuration blocks
+  };
+
   cbyte_t hnr = 0x5C;
+  cbytes_t hnr_payload = { 
+    0x0A,  // 10Hz
+    0x00   // Reserved
+  };
+
   cbyte_t pms = 0x86;
+  cbytes_t pms_payload = { 
+    0x00,  // Version
+    0x00,  // PowerSetupValue: Full power
+    0x00, 0x00, // Period: must be zero unless PowerSetupValue is "interval"
+    0x00, 0x00, // OnTime: must be zero unless PowerSetupValue is "interval"
+    0x00, 0x00  // Reserved
+  };
+
 }  // namespace cfg
 
 cbyte_t cls_mon = 0x0A;
@@ -138,6 +193,9 @@ private:
     };
     add_byte(cls_);
     add_byte(id_);
+    // Little endian so lower byte first
+    add_byte(length_ & 0xFF);
+    add_byte(length_ >> 8);
     std::for_each(payload_.begin(), payload_.end(), add_byte);
     return (chk_b << 8) + chk_a;
   }

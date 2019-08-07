@@ -32,12 +32,12 @@ BOOST_AUTO_TEST_CASE(ublox_parse_acceleration_test) {
   */
 }
 
-cbytes_t empty_packet = { 0xB5, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-cbytes_t cfg_gnss_dummy = {0xb5, 0x62, 0x06, 0x3E, 0x00, 0x00, 0x00, 0x00};
+cbytes_t empty_packet = { 0xB5, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+cbytes_t cfg_gnss_dummy = { 0xB5, 0x62, 0x06, 0x3E, 0x01, 0x00, 0x88, 0xCD, 0xA1 };
 
 BOOST_AUTO_TEST_CASE(ublox_data_packet_test) {
   auto packet = parser::Data_packet();
   BOOST_TEST(packet.get_data() == empty_packet);
-  packet = parser::Data_packet(command::cls_cfg, command::cfg::gnss);
+  packet = parser::Data_packet(command::cls_cfg, command::cfg::gnss, { 0x88 });
   BOOST_TEST(packet.get_data() == cfg_gnss_dummy);
 }
