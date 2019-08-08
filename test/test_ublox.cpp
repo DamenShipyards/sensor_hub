@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_CASE(construction_test) {
   Device_ptr dev = std::make_unique<NEO_M8U<asio::serial_port, Ctx> >();
 }
 
-BOOST_AUTO_TEST_CASE(connection_test, *ut::precondition(xsens_available)) {
+BOOST_AUTO_TEST_CASE(connection_test, *ut::precondition(ublox_available)) {
   asio::io_context& ctx = Ctx::get_context();
   NEO_M8U<asio::serial_port, Ctx> ublox;
   asio::deadline_timer tmr(ctx, posix_time::milliseconds(5000));

@@ -284,7 +284,7 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
     return false;
   }
 
-  for(int i = 0; i < cnt; i++) {
+  for (int i = 0; i < cnt; i++) {
     libusb_device* dev = devs[i];
     libusb_device_descriptor desc;
     int r = libusb_get_device_descriptor(dev, &desc);

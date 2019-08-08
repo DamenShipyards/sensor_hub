@@ -57,15 +57,15 @@ namespace cfg {
     0x00, 0x00,  // txReady (not interested)
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Reserved
     0x01, 0x00,  // InProtoMask: 1 -> UBX only
-    0x01, 0x00   // OutProtoMask: 1 -> UBX only
+    0x01, 0x00,  // OutProtoMask: 1 -> UBX only
   };
 
   cbyte_t msg = 0x01;
 
   cbyte_t rate = 0x08;
   cbytes_t rate_payload = { 
-    0x64, 0x00, // MeasRate: 100ms -> 10Hz
-    0x02, 0x00, // NavRate: 2 (1 solution per 2 measurements) -> 5Hz output
+    0xFA, 0x00, // MeasRate: 250ms -> 4Hz
+    0x02, 0x00, // NavRate: 2 (1 solution per 2 measurements) -> 2Hz output
     0x00, 0x00, // TimeRef: UTC
   };
 
@@ -86,21 +86,71 @@ namespace cfg {
     0x00, 0x00,  // Reserved
     0x00, 0x00,  // StaticHoldMaxDist: 0 -> Disable static navigation
     0x00,  // UtcStandard: 0 -> Auto
-    0x00, 0x00, 0x00, 0x00, 0x00  // Reserved
+    0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
   };
 
   cbyte_t gnss = 0x3E;
-  cbyte_t gnss_payload = {
+  cbytes_t gnss_payload = {
     0x00,  // Version
     0x00,  // Number of tracking channels in device (read only)
     0xFF,  // Number of tracking channels used (all)
     0x07,  // Number of configuration blocks
   };
+  cbytes_t gnss_payload_gps = {
+    0x00,  // GnssId: GPS
+    0x08,  // Min channels
+    0x10,  // Max channels
+    0x00,  // Reserved
+    0x01, 0x00, 0x01, 0x00,  // Flags: enabled + L1
+  };
+  cbytes_t gnss_payload_sbas = {
+    0x01,  // GnssId: SBAS
+    0x01,  // Min channels
+    0x03,  // Max channels
+    0x00,  // Reserved
+    0x01, 0x00, 0x01, 0x00,  // Flags: enabled + L1
+  };
+  cbytes_t gnss_payload_galileo = {
+    0x02,  // GnssId: Galileo
+    0x04,  // Min channels
+    0x08,  // Max channels
+    0x00,  // Reserved
+    0x00, 0x00, 0x01, 0x00,  // Flags: disabled + L1
+  };
+  cbytes_t gnss_payload_beidou = {
+    0x03,  // GnssId: Beidou
+    0x08,  // Min channels
+    0x10,  // Max channels
+    0x00,  // Reserved
+    0x00, 0x00, 0x01, 0x00,  // Flags: disabled + L1
+  };
+  cbytes_t gnss_payload_imes = {
+    0x04,  // GnssId: IMES
+    0x00,  // Min channels
+    0x00,  // Max channels
+    0x00,  // Reserved
+    0x00, 0x00, 0x01, 0x00,  // Flags: disabled + L1
+  };
+  cbytes_t gnss_payload_qzss = {
+    0x05,  // GnssId: QZSS
+    0x00,  // Min channels
+    0x03,  // Max channels
+    0x00,  // Reserved
+    0x01, 0x00, 0x01, 0x00,  // Flags: enabled + L1
+  };
+  cbytes_t gnss_payload_glonass = {
+    0x06,  // GnssId: Glonass
+    0x08,  // Min channels
+    0x0E,  // Max channels
+    0x00,  // Reserved
+    0x01, 0x00, 0x01, 0x00,  // Flags: enabled + L1
+  };
+
 
   cbyte_t hnr = 0x5C;
   cbytes_t hnr_payload = { 
     0x0A,  // 10Hz
-    0x00   // Reserved
+    0x00,  // Reserved
   };
 
   cbyte_t pms = 0x86;
@@ -109,7 +159,7 @@ namespace cfg {
     0x00,  // PowerSetupValue: Full power
     0x00, 0x00, // Period: must be zero unless PowerSetupValue is "interval"
     0x00, 0x00, // OnTime: must be zero unless PowerSetupValue is "interval"
-    0x00, 0x00  // Reserved
+    0x00, 0x00, // Reserved
   };
 
 }  // namespace cfg
