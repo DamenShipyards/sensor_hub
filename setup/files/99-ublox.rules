@@ -1,1 +1,0 @@
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1546", ACTION=="add", GROUP="plugdev", MODE="0660"
