@@ -78,6 +78,10 @@ extern cbytes_t set_string_output_type;
 extern cbytes_t string_output_type_ack;
 
 extern cbytes_t error_resp;
+
+constexpr unsigned size_offset = 3;
+constexpr unsigned data_offset = 4;
+
 }
 
 
@@ -229,13 +233,25 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return this->exec_command(command::init_mt, command::mt_ack, command::error_resp, yield);
   }
 
+  std::string get_string_from_response(cbytes_t response) {
+    std::string result;
+    if (response.size() > command::size_offset) {
+      int size = response[command::size_offset];
+      if (response.size() > (size + command::data_offset)) {
+        auto data_start = response.begin() + command::data_offset;
+        result.insert(result.end(), data_start, data_start + size);
+      }
+    }
+    return result;
+  }
 
   virtual bool request_product_code(asio::yield_context yield) {
     this->wait(50, yield);
     log(level::info, "Xsens GetProductCode");
-    std::string data;
-    bool result = this->exec_command(command::req_product_code, command::product_code_resp, command::error_resp, yield, &data);
+    bytes_t response;
+    bool result = this->exec_command(command::req_product_code, command::product_code_resp, command::error_resp, yield, &response);
     if (result) {
+      std::string data = get_string_from_response(response);
       log(level::info, "Product code: %", data);
     }
     return result;
@@ -244,14 +260,14 @@ struct Xsens: public Port_device<Port, ContextProvider> {
   virtual bool request_identifier(asio::yield_context yield) {
     this->wait(50, yield);
     log(level::info, "Xsens GetIdentifier");
-    std::string data;
-    bool result = this->exec_command(command::req_device_id, command::device_id_resp, command::error_resp, yield, &data);
-    if (result && data.size() == 4) {
+    bytes_t response;
+    bool result = this->exec_command(command::req_device_id, command::device_id_resp, command::error_resp, yield, &response);
+    if (result && response.size() >= (command::data_offset + 4)) {
       std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}",
-          static_cast<uint8_t>(data[0]),
-          static_cast<uint8_t>(data[1]),
-          static_cast<uint8_t>(data[2]),
-          static_cast<uint8_t>(data[3])
+          static_cast<uint8_t>(response[command::data_offset + 0]),
+          static_cast<uint8_t>(response[command::data_offset + 1]),
+          static_cast<uint8_t>(response[command::data_offset + 2]),
+          static_cast<uint8_t>(response[command::data_offset + 3])
       );
       log(level::info, "Device serial#: %", serial_no);
       this->set_id("xsens_" + serial_no);
@@ -263,14 +279,14 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     this->wait(50, yield);
     log(level::info, "Xsens GetFirmwareVersion");
 
-    std::string data;
-    bool result = this->exec_command(command::req_firmware_rev, command::firmware_rev_resp, command::error_resp, yield, &data);
-    if (result && data.size() == 11) {
-      uint8_t maj = data[0];
-      uint8_t min = data[1];
-      uint8_t rev = data[2];
-      uint32_t build = *reinterpret_cast<uint32_t*>(data.data() + 3);
-      uint32_t svnrev = *reinterpret_cast<uint32_t*>(data.data() + 7);
+    bytes_t response;
+    bool result = this->exec_command(command::req_firmware_rev, command::firmware_rev_resp, command::error_resp, yield, &response);
+    if (result && response.size() >= (command::data_offset + 11)) {
+      uint8_t maj = response[command::data_offset + 0];
+      uint8_t min = response[command::data_offset + 1];
+      uint8_t rev = response[command::data_offset + 2];
+      uint32_t build = *reinterpret_cast<uint32_t*>(response.data() + command::data_offset + 3);
+      uint32_t svnrev = *reinterpret_cast<uint32_t*>(response.data() + command::data_offset + 7);
       boost::endian::big_to_native_inplace(build);
       boost::endian::big_to_native_inplace(svnrev);
       log(level::info, fmt::format("Device firmware: {}.{}.{}.{} svn {}", maj, min, rev, build, svnrev));

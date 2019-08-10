@@ -39,6 +39,13 @@
 namespace asio = boost::asio;
 namespace pt = boost::property_tree;
 
+using std::runtime_error;
+
+class Device_exception: public runtime_error {
+  using runtime_error::runtime_error;
+};
+
+
 /**
  * Base class for all sensor devices
  *
@@ -101,7 +108,11 @@ struct Device {
   }
 
   virtual void connect(asio::yield_context yield) {
-    set_connected(true);
+    bool initialized = initialize(yield);
+    if (initialized)
+      set_connected(initialized);
+    else
+      throw Device_exception("Failed to initialize device");
   }
 
   virtual bool initialize(asio::yield_context yield) {
@@ -215,6 +226,11 @@ struct Port_device: public Device {
   typedef Port port_type;
 
   void connect(asio::yield_context yield) override {
+    if (is_connected()) {
+      log(level::warning, "Connecting device % that is already connected", this->get_name());
+      return;
+    }
+
     std::string connection_string = get_connection_string();
     try {
       port_.open(connection_string);
@@ -226,11 +242,10 @@ struct Port_device: public Device {
     }
 
     try {
-      bool initialized = initialize(yield);
-      set_connected(initialized);
+      Device::connect(yield);
     }
     catch (std::exception& e) {
-      log(level::error, "Failed to initialize \"%\"", this->get_name(), e.what());
+      log(level::error, "Failed to connect \"%\"", this->get_name(), e.what());
       port_.close();
     }
   }
@@ -250,7 +265,7 @@ struct Port_device: public Device {
       cbytes_t& expected_response, 
       cbytes_t& error_response, 
       asio::yield_context yield, 
-      std::string* data=nullptr,
+      bytes_t* data=nullptr,
       int timeout=1000) {
     Port& port = this->get_port();
 
@@ -267,12 +282,13 @@ struct Port_device: public Device {
 
     std::stringstream ssc;
     ssc << command;
-    log(level::debug, "Sent to XSens: %", ssc.str());
+    log(level::debug, "Sent to %: %", this->get_name(), ssc.str());
 
     // ... and look for the expected response
     try {
+      // Repeat response reading several times as the response might be cluttered with other data coming in
       int repeats = 4;
-      bytes_t response{};
+      bytes_t response;
       int response_found = -1;
       do {
         asio::streambuf read_buf;
@@ -281,9 +297,9 @@ struct Port_device: public Device {
         auto buf_begin = asio::buffers_begin(read_buf.data());
         auto buf_end = buf_begin + bytes_read;
 
-        cbytes_t data(buf_begin, buf_end);
+        cbytes_t received(buf_begin, buf_end);
         std::stringstream ssr;
-        ssr << data;
+        ssr << received;
         log(level::debug, "Received from %: %", this->get_name(), ssr.str());
 
         response.insert(response.end(), buf_begin, buf_end);
@@ -292,29 +308,31 @@ struct Port_device: public Device {
         response_found = contains_at(response, expected_response);
         int error_found = contains_at(response, error_response);
         if (error_found >= 0) {
-          if (error_found + 4 < static_cast<int>(response.size())) {
-            log(level::error, "Received % error: %", this->get_name(), static_cast<int>(response[error_found + 4]));
-            timeout_timer.cancel();
-            return false;
+          int error_code_offset = error_response.size();
+          if ((error_found + error_code_offset) < static_cast<int>(response.size())) {
+            log(level::error, "Received % error: %", this->get_name(), 
+                static_cast<int>(response[error_found + error_code_offset]));
           }
+          else {
+            log(level::error, "Received % error", this->get_name());
+          }
+          timeout_timer.cancel();
+          return false;
         }
       } while (--repeats > 0 && response_found < 0);
 
       timeout_timer.cancel();
 
-      if (repeats > 0) {
+      if (response_found >= 0) {
         if (data != nullptr) {
-          if (response_found + 3 < static_cast<int>(response.size())) {
-            uint8_t size = response[response_found + 3];
-            if (response_found + 4 + size < static_cast<int>(response.size())) {
-              auto data_start = response.begin() + response_found + 4;
-              data->insert(data->end(), data_start, data_start + size);
-            }
-          }
+          data->insert(data->end(), response.begin() + response_found, response.end());
         }
+        return true;
       }
-      else
+      else {
+        log(level::error, "% didn't receive expected command response", this->get_name());
         return false;
+      }
     }
     catch (std::exception& e) {
       // Probably a timeout i.e. USB cancelled by timer
@@ -323,7 +341,6 @@ struct Port_device: public Device {
       port.cancel();
       return false;
     }
-    return true;
   }
 
   void wait(int milli_seconds, asio::yield_context yield) {

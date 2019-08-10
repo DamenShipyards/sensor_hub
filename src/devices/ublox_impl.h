@@ -51,13 +51,25 @@ namespace ack {
 cbyte_t cls_cfg = 0x06;
 namespace cfg {
   cbyte_t prt = 0x00;
-  cbytes_t prt_payload = {
+  cbytes_t prt_payload_uart = {
+    0x01,  // PortID: 3 -> UART
+    0x00,  // Reserved
+    0x00, 0x00,  // txReady (not interested)
+    0xC0, 0x08, 0x00, 0x00,  // Serial port mode: 8,none,1 
+    0x00, 0xC2, 0x01, 0x00,  // Serial port baudrate: 115200 baud
+    0x00, 0x00,  // InProtoMask: 0 -> Disable all on UART
+    0x00, 0x00,  // OutProtoMask: 0 -> Disbale all on UART
+    0x00, 0x00,  // Flags: some timeout we're not interested in
+    0x00, 0x00,  // Reserved
+  };
+  cbytes_t prt_payload_usb = {
     0x03,  // PortID: 3 -> USB
     0x00,  // Reserved
     0x00, 0x00,  // txReady (not interested)
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Reserved
     0x01, 0x00,  // InProtoMask: 1 -> UBX only
     0x01, 0x00,  // OutProtoMask: 1 -> UBX only
+    0x00, 0x00, 0x00, 0x00,  // Reserved
   };
 
   cbyte_t msg = 0x01;
@@ -179,6 +191,7 @@ namespace esf {
 }  // namespace esf
 
 
+
 }  // namespace command
 
 namespace parser {
@@ -231,13 +244,13 @@ private:
   bytes_t payload_;
 
   uint16_t get_length() {
-    return payload_.size();
+    return static_cast<uint16_t>(payload_.size());
   }
 
   uint16_t get_checksum() {
     byte_t chk_a = 0;
     byte_t chk_b = 0;
-    static auto add_byte = [&](const byte_t byte) {
+    auto add_byte = [&](const byte_t byte) {
       chk_a += byte;
       chk_b += chk_a;
     };
@@ -252,7 +265,22 @@ private:
 };
 
 
-} // parser
+}  // namespace parser
+
+namespace command {
+
+cbytes_t cfg_prt_usb = parser::Data_packet(command::cls_cfg, command::cfg::prt, command::cfg::prt_payload_usb).get_data();
+cbytes_t cfg_prt_uart = parser::Data_packet(command::cls_cfg, command::cfg::prt, command::cfg::prt_payload_uart).get_data();
+
+
+}  // namespace command
+
+namespace response {
+
+cbytes_t ack = { command::sync_1, command::sync_2, command::cls_ack, command::ack::ack, 0x02, 0x00, command::cls_cfg };
+cbytes_t nak = { command::sync_1, command::sync_2, command::cls_ack, command::ack::nak, 0x02, 0x00, command::cls_cfg };
+
+}  // namespace response
 
 }  // namespace ubx
 

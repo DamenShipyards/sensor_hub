@@ -78,7 +78,7 @@ cbytes_t product_code_resp = {packet_start, sys_command, XMID_ProductCode};
 cbytes_t req_firmware_rev = {packet_start, sys_command, XMID_ReqFirmwareRevision, 0x00, 0xEF};
 cbytes_t firmware_rev_resp = {packet_start, sys_command, XMID_FirmwareRevision};
 
-cbytes_t error_resp = {packet_start, sys_command, XMID_Error};
+cbytes_t error_resp = {packet_start, sys_command, XMID_Error, 0x01};
 
 cbytes_t set_string_output_type = {packet_start, sys_command, XMID_SetStringOutputType,
   0x02,

@@ -28,12 +28,20 @@
 
 namespace ubx {
 
+
 namespace command {
 
-extern cbyte_t packet_start;
-extern cbyte_t sys_command;
+extern cbytes_t cfg_prt_usb;
+extern cbytes_t cfg_prt_uart;
 
-}
+}  // namespace command
+
+namespace response {
+
+extern cbytes_t ack;
+extern cbytes_t nak;
+
+}  // namespace response
 
 
 namespace parser {
@@ -57,16 +65,15 @@ struct Ublox: public Port_device<Port, ContextProvider> {
 
 
   bool initialize(asio::yield_context yield) override {
-    bool result = true;
+    bool result =
+        setup_ports(yield)
+        && setup_messages(yield);
 
     if (result) {
       log(level::info, "Successfully initialized Ublox device");
     }
     else {
       log(level::error, "Failed to initialize Ublox device");
-      if (this->reset(yield)) {
-        log(level::info, "Successfully reset device");
-      }
     }
 
     return result;
@@ -79,6 +86,10 @@ struct Ublox: public Port_device<Port, ContextProvider> {
   const parser::Packet_parser& get_parser() const {
     return parser_;
   }
+
+  virtual bool setup_ports(asio::yield_context yield) = 0;
+  virtual bool setup_messages(asio::yield_context yield) = 0;
+
 private:
   parser::Packet_parser parser_;
 };
@@ -95,6 +106,16 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
     log(level::info, "Destroying Ublox_NEO_M8U");
   }
 
+  bool setup_ports(asio::yield_context yield) override {
+    log(level::info, "Ublox NEO M8U setup ports");
+    return this->exec_command(command::cfg_prt_usb, response::ack, response::nak, yield) ;
+      //&& this->exec_command(command::cfg_prt_uart, response::ack, response::nak, yield);
+  }
+
+  bool setup_messages(asio::yield_context yield) override {
+    log(level::info, "Ublox NEO M8U setup messages");
+    return true;
+  }
 };
 
 }  //namespace ubx

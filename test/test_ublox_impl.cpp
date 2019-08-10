@@ -41,3 +41,10 @@ BOOST_AUTO_TEST_CASE(ublox_data_packet_test) {
   packet = parser::Data_packet(command::cls_cfg, command::cfg::gnss, { 0x88 });
   BOOST_TEST(packet.get_data() == cfg_gnss_dummy);
 }
+
+// Test packet received from actual ublox device in reponse to CFG::PRT command
+cbytes_t ack_nak = { 0xb5, 0x62, 0x05, 0x00, 0x02, 0x00, 0x06, 0x00, 0x0d, 0x32 };
+BOOST_AUTO_TEST_CASE(ublox_checksum_test) {
+  auto packet = parser::Data_packet(command::cls_ack, command::ack::nak, {command::cls_cfg, command::cfg::prt});
+  BOOST_TEST(packet.get_data() == ack_nak);
+}
