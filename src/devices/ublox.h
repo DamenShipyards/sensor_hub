@@ -79,8 +79,11 @@ struct Packet_parser {
 
 
 template <typename Port, typename ContextProvider>
-struct Ublox: public Port_device<Port, ContextProvider> {
+struct Ublox: public Port_device<Port, ContextProvider>, public Polling_mixin<Ublox<Port, ContextProvider> > {
 
+  template <typename Iterator>
+  void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
+  }
 
   bool initialize(asio::yield_context yield) override {
     bool result =
@@ -93,6 +96,7 @@ struct Ublox: public Port_device<Port, ContextProvider> {
 
     if (result) {
       log(level::info, "Successfully initialized Ublox device");
+      this->start_polling();
     }
     else {
       log(level::error, "Failed to initialize Ublox device");

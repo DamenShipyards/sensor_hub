@@ -120,44 +120,15 @@ struct Packet_parser {
 
 
 template <typename Port, typename ContextProvider>
-struct Xsens: public Port_device<Port, ContextProvider> {
+struct Xsens: public Port_device<Port, ContextProvider>, public Polling_mixin<Xsens<Port, ContextProvider> > {
 
-  void wait(int milli_seconds, asio::yield_context yield) {
-    asio::deadline_timer waiter(ContextProvider::get_context(), posix_time::milliseconds(milli_seconds));
-    waiter.async_wait(yield);
-  }
-
-  void poll_data(asio::yield_context yield) {
-    log(level::debug, "Polling Xsens");
-    asio::streambuf buf;
-    while (this->is_connected()) {
-      try {
-        auto bytes_read = this->get_port().async_read_some(buf.prepare(512), yield);
-        double stamp = get_time();
-        log(level::debug, "Read % bytes", bytes_read);
-        if (bytes_read > 0) {
-          buf.commit(bytes_read);
-          auto buf_begin = asio::buffers_begin(buf.data());
-          auto buf_end = buf_begin + buf.size();
-#ifdef DEBUG
-          cbytes_t data(buf_begin, buf_end);
-          std::stringstream ss;
-          ss << data;
-          log(level::debug, "XSens received: %", ss.str());
-#endif
-          parser_.parse(buf_begin, buf_end);
-          buf.consume(bytes_read);
-          auto& values = parser_.get_values();
-          while (!values.empty()) {
-            this->insert_value(stamped_quantity(stamp, values.front()));
-            values.pop_front();
-          }
-        }
-      }
-      catch (std::exception& e) {
-        log(level::error, "Error while polling Xsens: %", e.what());
-        this->disconnect();
-      }
+  template <typename Iterator>
+  void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
+    parser_.parse(buf_begin, buf_end);
+    auto& values = parser_.get_values();
+    while (!values.empty()) {
+      this->insert_value(stamped_quantity(stamp, values.front()));
+      values.pop_front();
     }
   }
 
@@ -187,7 +158,7 @@ struct Xsens: public Port_device<Port, ContextProvider> {
         asio::async_write(port, asio::buffer(command::wakeup_ack), yield);
         // This device will spit out its configuration, which we will just swallow
         port.async_read_some(read_buf.prepare(0x1000), yield[ec]);
-        wait(500, yield);
+        this->wait(500, yield);
       }
     }
     // Always return true as we don't really care about how this was handled
@@ -294,16 +265,6 @@ struct Xsens: public Port_device<Port, ContextProvider> {
     return result;
   }
 
-  void start_polling() {
-    auto executor = this->get_port().get_executor();
-    asio::post(
-        executor,
-        [executor, this]() {
-          asio::spawn(executor, boost::bind(&Xsens::poll_data, this, _1));
-        }
-    );
-  }
-
   bool initialize(asio::yield_context yield) override {
     bool result =
         look_for_wakeup(yield)
@@ -320,12 +281,12 @@ struct Xsens: public Port_device<Port, ContextProvider> {
 
     if (result) {
       log(level::info, "Successfully initialized Xsens device");
-      start_polling();
+      this->start_polling();
     }
     else {
       log(level::error, "Failed to initialize Xsens device");
       if (reset(yield)) {
-        log(level::info, "Successfully reset device");
+        log(level::info, "Successfully reset Xsens device");
       }
     }
 
