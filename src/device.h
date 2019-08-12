@@ -290,6 +290,8 @@ struct Port_device: public Device {
       int repeats = 4;
       bytes_t response;
       int response_found = -1;
+      uint16_t len = 0;
+      bool read_all = false;
       do {
         asio::streambuf read_buf;
         size_t bytes_read = port.async_read_some(read_buf.prepare(0x1000), yield);
@@ -319,7 +321,21 @@ struct Port_device: public Device {
           timeout_timer.cancel();
           return false;
         }
-      } while (--repeats > 0 && response_found < 0);
+        if (response_found >= 0) {
+          if (data != nullptr && data->size() > 0) {
+            // Get a length indicator for data in the response
+            size_t len_offset_1 = (*data)[0] + response_found;
+            size_t len_offset_2  = (data->size() > 1) ? (*data)[1] + response_found: -1;
+            len = response.size() > len_offset_1 ? response[len_offset_1] : 0;
+            len += len_offset_2 >= 0 && response.size() > len_offset_2 ? response[len_offset_2] << 8: 0;
+            len += std::max(len_offset_1, len_offset_2);
+            // ... and indicate whether we have read enough data (i.e. equal to or more than len)
+            // starting from the first byte after the offset of the length indicator
+            data->clear();
+          }
+          read_all = response.size() > len;
+        }
+      } while ((--repeats > 0 && response_found < 0) || !read_all);
 
       timeout_timer.cancel();
 

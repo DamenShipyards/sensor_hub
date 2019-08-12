@@ -34,9 +34,12 @@ cbytes_t preamble = { sync_1, sync_2 };
 cbyte_t cls_nav = 0x01;
 namespace nav {
   cbyte_t posllh = 0x02;
+  cbyte_t status = 0x03;
   cbyte_t dop = 0x04;
   cbyte_t att = 0x05;
   cbyte_t sol = 0x06;
+  cbyte_t pvt = 0x07;
+  cbyte_t velned = 0x12;
   cbyte_t clock = 0x22;
   cbyte_t dgps = 0x31;
   cbyte_t sbas = 0x32;
@@ -55,7 +58,7 @@ namespace cfg {
     0x01,  // PortID: 3 -> UART
     0x00,  // Reserved
     0x00, 0x00,  // txReady (not interested)
-    0xC0, 0x08, 0x00, 0x00,  // Serial port mode: 8,none,1 
+    0xC0, 0x08, 0x00, 0x00,  // Serial port mode: 8,none,1
     0x00, 0xC2, 0x01, 0x00,  // Serial port baudrate: 115200 baud
     0x00, 0x00,  // InProtoMask: 0 -> Disable all on UART
     0x00, 0x00,  // OutProtoMask: 0 -> Disbale all on UART
@@ -75,18 +78,18 @@ namespace cfg {
   cbyte_t msg = 0x01;
 
   cbyte_t rate = 0x08;
-  cbytes_t rate_payload = { 
+  cbytes_t rate_payload = {
     0xFA, 0x00, // MeasRate: 250ms -> 4Hz
     0x02, 0x00, // NavRate: 2 (1 solution per 2 measurements) -> 2Hz output
     0x00, 0x00, // TimeRef: UTC
   };
 
   cbyte_t nav5 = 0x24;
-  cbytes_t nav5_payload = { 
+  cbytes_t nav5_payload = {
     0x47, 0x04,   // Parameters flag: dyn,el,fix; static; utc
     0x05,  // DynMode: 5 -> Sea
     0x03,  // FixMode: 3 -> 2D and 3D
-    0x00, 0x00, 0x00, 0x00,  // FixedAlt: 0 -> 2D altitude 
+    0x00, 0x00, 0x00, 0x00,  // FixedAlt: 0 -> 2D altitude
     0xFF, 0xFF, 0x00, 0x00,  // FixedAltVar: 2D altitude variance (quoi?)
     0x0A,  // MinElev: 10 -> 10 degree minimum sat elevation
     0x00,  // Reserved
@@ -129,12 +132,26 @@ namespace cfg {
     0x00,  // Reserved
     0x00, 0x00, 0x01, 0x00,  // Flags: disabled + L1
   };
+  cbytes_t gnss_payload_galileo_on = {
+    0x02,  // GnssId: Galileo
+    0x04,  // Min channels
+    0x08,  // Max channels
+    0x00,  // Reserved
+    0x01, 0x00, 0x01, 0x00,  // Flags: enabled + L1
+  };
   cbytes_t gnss_payload_beidou = {
     0x03,  // GnssId: Beidou
     0x08,  // Min channels
     0x10,  // Max channels
     0x00,  // Reserved
     0x00, 0x00, 0x01, 0x00,  // Flags: disabled + L1
+  };
+  cbytes_t gnss_payload_beidou_on = {
+    0x03,  // GnssId: Beidou
+    0x08,  // Min channels
+    0x10,  // Max channels
+    0x00,  // Reserved
+    0x01, 0x00, 0x01, 0x00,  // Flags: enabled + L1
   };
   cbytes_t gnss_payload_imes = {
     0x04,  // GnssId: IMES
@@ -155,18 +172,25 @@ namespace cfg {
     0x08,  // Min channels
     0x0E,  // Max channels
     0x00,  // Reserved
+    0x00, 0x00, 0x01, 0x00,  // Flags: disabled + L1
+  };
+  cbytes_t gnss_payload_glonass_on = {
+    0x06,  // GnssId: Glonass
+    0x08,  // Min channels
+    0x0E,  // Max channels
+    0x00,  // Reserved
     0x01, 0x00, 0x01, 0x00,  // Flags: enabled + L1
   };
 
 
   cbyte_t hnr = 0x5C;
-  cbytes_t hnr_payload = { 
+  cbytes_t hnr_payload = {
     0x0A,  // 10Hz
-    0x00,  // Reserved
+    0x00, 0x00, 0x00,  // Reserved
   };
 
   cbyte_t pms = 0x86;
-  cbytes_t pms_payload = { 
+  cbytes_t pms_payload = {
     0x00,  // Version
     0x00,  // PowerSetupValue: Full power
     0x00, 0x00, // Period: must be zero unless PowerSetupValue is "interval"
@@ -216,7 +240,13 @@ struct Data_packet {
   Data_packet(const byte_t cls, const byte_t id): cls_(cls), id_(id), length_(), payload_() {
     checksum_ = get_checksum();
   }
-  Data_packet(const byte_t cls, const byte_t id, cbytes_t payload): cls_(cls), id_(id), payload_(payload) {
+  Data_packet(const byte_t cls, const byte_t id, cbytes_t payload): 
+      cls_(cls), id_(id), payload_(payload) {
+    length_ = get_length();
+    checksum_ = get_checksum();
+  }
+  Data_packet(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload): 
+      cls_(cls), id_(id), payload_(payload) {
     length_ = get_length();
     checksum_ = get_checksum();
   }
@@ -233,7 +263,7 @@ struct Data_packet {
     }
     checksum_ = get_checksum();
   }
-  bytes_t get_data() { 
+  bytes_t get_data() {
     return command::preamble << cls_ << id_ << length_ << payload_ << checksum_;
   }
 private:
@@ -269,8 +299,49 @@ private:
 
 namespace command {
 
-cbytes_t cfg_prt_usb = parser::Data_packet(command::cls_cfg, command::cfg::prt, command::cfg::prt_payload_usb).get_data();
-cbytes_t cfg_prt_uart = parser::Data_packet(command::cls_cfg, command::cfg::prt, command::cfg::prt_payload_uart).get_data();
+
+cbytes_t cfg_prt_usb = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_usb).get_data();
+cbytes_t cfg_prt_uart = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_uart).get_data();
+cbytes_t mon_ver = parser::Data_packet(cls_mon, mon::ver, {}).get_data();
+cbytes_t cfg_pms = parser::Data_packet(cls_cfg, cfg::pms, cfg::pms_payload).get_data();
+cbytes_t cfg_hnr = parser::Data_packet(cls_cfg, cfg::hnr, cfg::hnr_payload).get_data();
+cbytes_t cfg_rate = parser::Data_packet(cls_cfg, cfg::rate, cfg::rate_payload).get_data();
+cbytes_t cfg_nav5 = parser::Data_packet(cls_cfg, cfg::nav5, cfg::nav5_payload).get_data();
+
+cbytes_t gnss_glonass_payload = cfg::gnss_payload
+    << cfg::gnss_payload_gps
+    << cfg::gnss_payload_sbas
+    << cfg::gnss_payload_galileo
+    << cfg::gnss_payload_beidou
+    << cfg::gnss_payload_imes
+    << cfg::gnss_payload_qzss
+    << cfg::gnss_payload_glonass_on;
+
+cbytes_t gnss_galileo_payload = cfg::gnss_payload
+    << cfg::gnss_payload_gps
+    << cfg::gnss_payload_sbas
+    << cfg::gnss_payload_galileo_on
+    << cfg::gnss_payload_beidou
+    << cfg::gnss_payload_imes
+    << cfg::gnss_payload_qzss
+    << cfg::gnss_payload_glonass;
+
+cbytes_t gnss_beidou_payload = cfg::gnss_payload
+    << cfg::gnss_payload_gps
+    << cfg::gnss_payload_sbas
+    << cfg::gnss_payload_galileo
+    << cfg::gnss_payload_beidou_on
+    << cfg::gnss_payload_imes
+    << cfg::gnss_payload_qzss
+    << cfg::gnss_payload_glonass;
+cbytes_t cfg_gnss_glonass = parser::Data_packet(cls_cfg, cfg::gnss, gnss_glonass_payload).get_data();
+cbytes_t cfg_gnss_galileo = parser::Data_packet(cls_cfg, cfg::gnss, gnss_galileo_payload).get_data();
+cbytes_t cfg_gnss_beidou = parser::Data_packet(cls_cfg, cfg::gnss, gnss_beidou_payload).get_data();
+
+cbytes_t cfg_msg_nav_pvt = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::pvt, 0x0A }).get_data();
+cbytes_t cfg_msg_nav_att = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::att, 0x0A }).get_data();
+cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x0A }).get_data();
+cbytes_t cfg_msg_esf_raw = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::raw, 0x0A }).get_data();
 
 
 }  // namespace command
@@ -279,6 +350,7 @@ namespace response {
 
 cbytes_t ack = { command::sync_1, command::sync_2, command::cls_ack, command::ack::ack, 0x02, 0x00, command::cls_cfg };
 cbytes_t nak = { command::sync_1, command::sync_2, command::cls_ack, command::ack::nak, 0x02, 0x00, command::cls_cfg };
+cbytes_t mon_ver = { command::sync_1, command::sync_2, command::cls_mon, command::mon::ver };
 
 }  // namespace response
 
