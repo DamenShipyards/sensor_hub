@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(connection_test, *ut::precondition(ublox_available)) {
   );
 
   ublox.set_name("ublox-test");
-  ublox.set_connection_string("/dev/sensor_hub/ublox_neo_m8u-ttyACM0:115200");
+  ublox.set_connection_string("/dev/sensor_hub/ublox_neo_m8u-ttyACM0:921600");
   BOOST_TEST(!ublox.is_connected());
   asio::spawn(ctx, 
       [&](asio::yield_context yield) {

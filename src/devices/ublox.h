@@ -83,6 +83,12 @@ struct Ublox: public Port_device<Port, ContextProvider>, public Polling_mixin<Ub
 
   template <typename Iterator>
   void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
+    parser_.parse(buf_begin, buf_end);
+    auto& values = parser_.get_values();
+    while (!values.empty()) {
+      this->insert_value(stamped_quantity(stamp, values.front()));
+      values.pop_front();
+    }
   }
 
   bool initialize(asio::yield_context yield) override {
