@@ -17,6 +17,7 @@
 #include "../spirit_x3.h"
 #include "../datetime.h"
 #include "../types.h"
+#include "../parser.h"
 
 #include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
@@ -64,14 +65,15 @@ extern cbytes_t mon_ver;
 
 namespace parser {
 
-namespace x3 = boost::spirit::x3;
-
-using Values_type = std::vector<Quantity_value>;
-using Values_queue = std::deque<Quantity_value>;
-
-struct Packet_parser {
-  Packet_parser() {};
-  ~Packet_parser() {};
+struct Ublox_parser: public Packet_parser {
+  Ublox_parser(): values_queue_() {};
+  ~Ublox_parser() {};
+  void parse() override;
+  Values_queue& get_values() override {
+    return values_queue_;
+  };
+private:
+  Values_queue values_queue_;
 };
 
 } //  namespace parser
@@ -83,7 +85,7 @@ struct Ublox: public Port_device<Port, ContextProvider>, public Polling_mixin<Ub
 
   template <typename Iterator>
   void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
-    parser_.parse(buf_begin, buf_end);
+    parser_.add_and_parse(buf_begin, buf_end);
     auto& values = parser_.get_values();
     while (!values.empty()) {
       this->insert_value(stamped_quantity(stamp, values.front()));
@@ -115,7 +117,7 @@ struct Ublox: public Port_device<Port, ContextProvider>, public Polling_mixin<Ub
     Device::use_as_time_source(value);
   }
 
-  const parser::Packet_parser& get_parser() const {
+  const parser::Ublox_parser& get_parser() const {
     return parser_;
   }
 
@@ -127,7 +129,7 @@ struct Ublox: public Port_device<Port, ContextProvider>, public Polling_mixin<Ub
   virtual bool setup_messages(asio::yield_context yield) = 0;
 
 private:
-  parser::Packet_parser parser_;
+  parser::Ublox_parser parser_;
 };
 
 

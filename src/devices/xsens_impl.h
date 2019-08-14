@@ -310,7 +310,7 @@ auto data_parser = *(
     quaternion |
     unknown_data);
 
-struct Packet_parser::Data_packets
+struct Xsens_parser::Data_packets
   : public std::vector<
     boost::variant<
       Data_packet,
@@ -328,7 +328,7 @@ struct Packet_parser::Data_packets
     > > {
 };
 
-struct Packet_parser::Data_visitor {
+struct Xsens_parser::Data_visitor {
   Values_queue values;
   void operator()(const Data_packet& data_packet) {
     for (auto& value: data_packet.get_values()) {
@@ -338,28 +338,27 @@ struct Packet_parser::Data_visitor {
 };
 
 
-Packet_parser::Packet_parser()
-    : queue(), data(),
+Xsens_parser::Xsens_parser()
+    : Packet_parser(),
       data_packets(std::make_unique<Data_packets>()),
-      visitor(std::make_unique<Data_visitor>()),
-      cur(queue.begin()) {
+      visitor(std::make_unique<Data_visitor>()) {
 }
 
-Packet_parser::~Packet_parser() {
+Xsens_parser::~Xsens_parser() {
 }
 
 
-void Packet_parser::parse() {
+void Xsens_parser::parse() {
+  static std::vector<uint8_t> data;
   uint8_t mid = 0;
   int len = 0;
   uint8_t sum = command::sys_command;
-  Packet_parser& self = *this;
 
   static auto set_mid = [&](auto& ctx) { mid = _attr(ctx); sum += mid; };
   static auto set_len = [&](auto& ctx) { len = _attr(ctx); sum += len; };
   static auto add_data = [&](auto& ctx) {
     uint8_t val = _attr(ctx);
-    self.data.push_back(val);
+    data.push_back(val);
     sum += val;
   };
   static auto set_chk = [&](auto& ctx) { sum += _attr(ctx); };
@@ -396,7 +395,7 @@ void Packet_parser::parse() {
 }
 
 
-Values_queue& Packet_parser::get_values() {
+Values_queue& Xsens_parser::get_values() {
   return visitor->values;
 }
 

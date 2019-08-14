@@ -294,6 +294,8 @@ private:
   }
 };
 
+void Ublox_parser::parse() {
+}
 
 }  // namespace parser
 

@@ -58,12 +58,12 @@ BOOST_AUTO_TEST_CASE(data_converter_test) {
 
 BOOST_AUTO_TEST_CASE(xsens_parse_bytes_test) {
   std::string data = "\x40\x20\x0c\xbd\x77\x48\x07\xbc\x0e\xdc\x7b\x41\x1c\xd1\x56\x01\x00\x02\x00\x00\x10\x10\x0c\x14\x70\x3d\x20\x07\xe2\x09\x0a\x08\x39\x38\x37"s;
-  parser::Packet_parser::Data_packets packets;
+  parser::Xsens_parser::Data_packets packets;
   auto cur = data.begin();
   bool result = x3::parse(cur, data.end(), parser::data_parser, packets);
   BOOST_TEST(result);
   BOOST_TEST(packets.size() == 3);
-  parser::Packet_parser::Data_visitor visitor;
+  parser::Xsens_parser::Data_visitor visitor;
   for (auto& packet: packets) {
     boost::apply_visitor(visitor, packet);
   }

@@ -18,6 +18,7 @@
 #include "../usb.h"
 #include "../tools.h"
 #include "../datetime.h"
+#include "../parser.h"
 
 #include <boost/bind.hpp>
 
@@ -87,32 +88,17 @@ constexpr unsigned data_offset = 4;
 
 namespace parser {
 
-namespace x3 = boost::spirit::x3;
 
-using Values_type = std::vector<Quantity_value>;
-using Values_queue = std::deque<Quantity_value>;
-
-struct Packet_parser {
-  Packet_parser();
-  ~Packet_parser();
+struct Xsens_parser: public Packet_parser {
+  Xsens_parser();
+  ~Xsens_parser();
   struct Data_packets;
   struct Data_visitor;
-  std::deque<uint8_t> queue;
-  std::vector<uint8_t> data;
   std::unique_ptr<Data_packets> data_packets;
   std::unique_ptr<Data_visitor> visitor;
-  typename std::deque<uint8_t>::iterator cur;
 
-  template <typename Iterator>
-  void parse(Iterator begin, Iterator end) {
-    if (queue.size() > 0x1000)
-      // Something is wrong. Hose the queue
-      queue.clear();
-    queue.insert(queue.end(), begin, end);
-    parse();
-  }
-  void parse();
-  Values_queue& get_values();
+  void parse() override;
+  Values_queue& get_values() override;
 };
 
 } //parser
@@ -124,7 +110,7 @@ struct Xsens: public Port_device<Port, ContextProvider>, public Polling_mixin<Xs
 
   template <typename Iterator>
   void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
-    parser_.parse(buf_begin, buf_end);
+    parser_.add_and_parse(buf_begin, buf_end);
     auto& values = parser_.get_values();
     while (!values.empty()) {
       this->insert_value(stamped_quantity(stamp, values.front()));
@@ -299,11 +285,11 @@ struct Xsens: public Port_device<Port, ContextProvider>, public Polling_mixin<Xs
     set_clock_adjust_rate(0.0001);
   }
 
-  const parser::Packet_parser& get_parser() const {
+  const parser::Xsens_parser& get_parser() const {
     return parser_;
   }
 private:
-  parser::Packet_parser parser_;
+  parser::Xsens_parser parser_;
 };
 
 
