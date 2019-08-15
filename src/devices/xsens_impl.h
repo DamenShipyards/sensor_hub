@@ -29,9 +29,9 @@ namespace gregorian = boost::gregorian;
 
 namespace command {
 
-cbyte_t packet_start = 0xFA;
-cbyte_t sys_command = 0xFF;
-cbyte_t conf_command = 0x01;
+constexpr cbyte_t packet_start = 0xFA;
+constexpr cbyte_t sys_command = 0xFF;
+constexpr cbyte_t conf_command = 0x01;
 
 // TODO: Should be reworked to avoid duplication and add automatic checksum
 cbytes_t goto_config = {packet_start, sys_command, XMID_GotoConfig, 0x00, 0xD1};
@@ -210,6 +210,10 @@ struct Data_packet {
   Data_packet(const uint16_t did): id(did), len(0) {}
   uint16_t id;
   int len;
+  /**
+   * Return a vector of Quantity_value's contained
+   * in this data packet
+   */
   virtual Values_type get_values() const {
     return Values_type();
   }
@@ -241,9 +245,11 @@ struct Date_time_value: public Data_packet {
           gregorian::date(year, month, day),
           hours(hour) + minutes(minute) + seconds(second) + microseconds(nano/1000)
       );
+      // Return a list with one Unix Time value
       return Values_type{{quantity, 1E-6 * (t - unix_epoch).total_microseconds()}};
     }
     else {
+      // Return an empy list
       return Values_type();
     }
   }
@@ -292,6 +298,8 @@ struct Data_value: public Data_packet {
     int dim = 0;
     Quantity_iter qi(quantity);
     for (auto& value: data) {
+      // When a data packet contains multiple values, the quantities of these
+      // values are always consecutive, so we can just increment the quantity
       result.push_back({*qi++, converter::factor(dim++) * static_cast<double>(value)});
     }
     return result;
@@ -377,6 +385,13 @@ auto data_parser = *(
     quaternion |
     unknown_data);
 
+/**
+ * Vector with parsed results
+ *
+ * Since the type of each packet is not known in advance
+ * the elements have to be of a variant type, which will
+ * require a visitor to access.
+ */
 struct Xsens_parser::Data_packets
   : public std::vector<
     boost::variant<
@@ -395,6 +410,9 @@ struct Xsens_parser::Data_packets
     > > {
 };
 
+/**
+ * Visitor for accessing parsed data packets
+ */
 struct Xsens_parser::Data_visitor {
   Values_queue values;
   void operator()(const Data_packet& data_packet) {
@@ -411,51 +429,52 @@ Xsens_parser::Xsens_parser()
       visitor(std::make_unique<Data_visitor>()) {
 }
 
+
 Xsens_parser::~Xsens_parser() {
 }
 
 
 void Xsens_parser::parse() {
-  static std::vector<uint8_t> data;
   uint8_t mid = 0;
   int len = 0;
+  std::vector<uint8_t> data;
   uint8_t sum = command::sys_command;
 
-  static auto set_mid = [&](auto& ctx) { mid = _attr(ctx); sum += mid; };
-  static auto set_len = [&](auto& ctx) { len = _attr(ctx); sum += len; };
-  static auto add_data = [&](auto& ctx) {
+  auto set_mid = [&](auto& ctx) { mid = _attr(ctx); sum += mid; };
+  auto set_len = [&](auto& ctx) { len = _attr(ctx); sum += len; };
+  auto add_data = [&](auto& ctx) {
     uint8_t val = _attr(ctx);
     data.push_back(val);
     sum += val;
   };
-  static auto set_chk = [&](auto& ctx) { sum += _attr(ctx); };
-  static auto have_data = [&](auto& ctx) { _pass(ctx) = len-- > 0; };
-  static auto have_all = [&](auto& ctx) { _pass(ctx) = len < 0; };
+  auto set_chk = [&](auto& ctx) { sum += _attr(ctx); };
+  auto have_data = [&](auto& ctx) { _pass(ctx) = len-- > 0; };
+  auto have_all = [&](auto& ctx) { _pass(ctx) = len < 0; };
 
   //! Start of a packet
-  static auto preamble = byte_(command::packet_start) >> byte_(command::sys_command);
+  auto preamble = byte_(command::packet_start) >> byte_(command::sys_command);
   //! Anything that is not the start of a packet
-  static auto junk = *(byte_ - preamble);
+  auto junk = *(byte_ - preamble);
   //! The actual data we're looking for
-  static auto content = *(eps[have_data] >> byte_[add_data]) >> eps[have_all];
+  auto content = *(eps[have_data] >> byte_[add_data]) >> eps[have_all];
   //! The complete packet
-  static auto packet = junk >> preamble >> byte_[set_mid] >> byte_[set_len] >> content >> byte_[set_chk];
+  auto packet = junk >> preamble >> byte_[set_mid] >> byte_[set_len] >> content >> byte_[set_chk];
 
   cur = queue.begin();
-  // Look for messages in the queue
+  //! Look for messages in the queue
   while (cur != queue.end() && x3::parse(cur, queue.end(), packet)) {
-    // Consume the message from the queue
+    //! Consume the message from the queue
     queue.erase(queue.begin(), cur);
-    // Verify the checksum is 0
+    //! Verify the checksum is 0
     if (sum == 0) {
-      // The content of the message is now in "data"
+      //! The content of the message is now in "data"
       auto dcur = data.begin();
-      // We're only interested in data messages
+      //! We're only interested in data messages
       if (mid == XMID_MtData2) {
-        // Look for data packets in the message content
+        //! Look for data packets in the message content
         if (x3::parse(dcur, data.end(), data_parser, *data_packets)) {
           for (auto& data_packet: *data_packets) {
-            // Visit each packet. The visitor will extract the data from it
+            //! Visit each packet. The visitor will extract the data from it
             boost::apply_visitor(*visitor, data_packet);
           }
         }
@@ -464,10 +483,9 @@ void Xsens_parser::parse() {
     else {
       log(level::debug, "Xsens checksum error");
     }
-    // Reset message content
-    data.clear();
+    //! Reset message content
     data_packets->clear();
-    // Need to reset cur in case the queue got emptied, which invalidates all iterators
+    //! Need to reset cur in case the queue got emptied, which invalidates all iterators
     cur = queue.begin(); 
   }
 }
@@ -481,7 +499,10 @@ Values_queue& Xsens_parser::get_values() {
 
 }  // namespace xsens
 
-// Magic to move parsed values from the parser to the actual data packet type
+// Magic to move parsed values from the parser to the actual data packet type. The parser
+// produces a sequence of values as specified by the parse rule. This sequence is mapped
+// to the actual fields of the data packets structs by this macro. Macro call is
+// at global scope as stated in the manual. Trivial for anything but the date-time values.
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Date_time, nano, year, month, day, hour, minute, second, flags)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Acceleration, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Free_acceleration, data)
