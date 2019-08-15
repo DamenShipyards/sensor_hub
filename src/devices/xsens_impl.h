@@ -147,7 +147,64 @@ using x3::_attr;
 using x3::_val;
 using x3::_pass;
 
+/**
+ * Provides default convertion value
+ *
+ * All sensors values a converted when arriving from the sensor.
+ * The default multiplier does nothing but flip the signs of Y and
+ * Z axis values to from Z up to Z down axis.
+ *
+ * @tparam DIM number of dimensions in value to convert.
+ */
+template<int DIM>
+struct IdentityConverter {
+  static constexpr double factor(int dim, double f=1.0) {
+    return (DIM == 3) && (dim > 0) ? -f :
+           (DIM == 4) && (dim > 1) ? -f : f;
+  }
+};
 
+
+/**
+ * Deg to rad converter
+ *
+ * Conversion factor for angles provided by the sensor in angular 
+ * degrees to radians.
+ * 
+ * @tparam DIM number of dimensions in value to convert
+ */
+template<int DIM>
+struct RadConverter: IdentityConverter<DIM> {
+  static constexpr double factor(int dim) {
+    return IdentityConverter<DIM>::factor(dim, M_PI / 180.0);
+  }
+};
+
+
+/**
+ * Magnetic field strength converter
+ *
+ * Conversion factor for converting fields strengths 
+ * in Gauss to Tesla.
+ *  
+ * @tparam DIM number of dimensions in value to convert
+ */
+template<int DIM>
+struct TeslaConverter: IdentityConverter<DIM> {
+  static constexpr double factor(int dim) {
+    return IdentityConverter<DIM>::factor(dim, 1E-4);
+  }
+};
+
+
+/**
+ * Base class for data packets received from sensor
+ *
+ * Data packets arrive as part of XMID_MtData2 messages
+ * received from the sensor. Each block of data in this
+ * message is described by a data identifier (DID) and
+ * a length.
+ */
 struct Data_packet {
   Data_packet(): id(0), len(0) {}
   Data_packet(const uint16_t did): id(did), len(0) {}
@@ -158,8 +215,12 @@ struct Data_packet {
   }
 };
 
-
-template <int SIZE>
+/**
+ * Date-time data structure
+ *
+ * @tparam SIZE dummy template parameter, the size of this packet is always 12
+ */
+template <int SIZE=12>
 struct Date_time_value: public Data_packet {
   static constexpr uint8_t valid_utc = 0x04;
   static constexpr uint16_t did = XDI_UtcTime;
@@ -193,39 +254,27 @@ struct Date_time_value: public Data_packet {
 };
 
 
-template<int DIM>
-struct UnitaryConverter {
-  static constexpr double factor(int dim, double f=1.0) {
-    return (DIM == 3) && (dim > 0) ? -f :
-           (DIM == 4) && (dim > 1) ? -f : f;
-  }
-};
-
-
-template<int DIM>
-struct RadConverter: UnitaryConverter<DIM> {
-  static constexpr double factor(int dim) {
-    return UnitaryConverter<DIM>::factor(dim, M_PI / 180.0);
-  }
-};
-
-
-template<int DIM>
-struct TeslaConverter: UnitaryConverter<DIM> {
-  static constexpr double factor(int dim) {
-    return UnitaryConverter<DIM>::factor(dim, 1E-4);
-  }
-};
-
-
+/**
+ * Generic data packet
+ *
+ * Describes all data packets except date-time
+ *
+ * @tparam DID data identifier of this packet
+ * @tparam COORD coordinate system use by sensor when providing this data value
+ * @tparam FORMAT number format used by sensro when providing this data value
+ * @tparam DIM number of values provided for this data type
+ * @tparam QUANT The sensor hub quantity associated with this data
+ * @tparam Converter Converion factor provider for this data packet
+ */
 template<uint16_t DID, uint16_t COORD, uint16_t FORMAT, int DIM, Quantity QUANT,
-         template<int D> typename Converter=UnitaryConverter>
+         template<int D> typename Converter=IdentityConverter>
 struct Data_value: public Data_packet {
   typedef Converter<DIM> converter;
   static constexpr uint16_t did = DID | COORD | FORMAT;
   static constexpr Quantity quantity = QUANT;
   Data_value(): Data_packet(did), data() {}
 
+  // Associate a C++ native type with the format specifier in the data packet
   typedef typename std::conditional<FORMAT == XDI_SubFormatFloat, float,
           typename std::conditional<FORMAT == XDI_SubFormatFp1220, uint32_t,
           typename std::conditional<FORMAT == XDI_SubFormatFp1632, std::vector<uint16_t>,
@@ -234,6 +283,10 @@ struct Data_value: public Data_packet {
 
   std::vector<bytes_type> data;
 
+  /**
+   * Get a list of converted sensor hub Values from the raw data that was
+   * received from the sensor
+   */
   Values_type get_values() const override {
     Values_type result;
     int dim = 0;
@@ -244,18 +297,28 @@ struct Data_value: public Data_packet {
     return result;
   }
 
+  /**
+   * Get parse rule for single precision data
+   */
   template <uint16_t PFORMAT = FORMAT>
   static constexpr auto get_parse_rule(typename std::enable_if<PFORMAT == XDI_SubFormatFloat, int>::type n=0) {
     return big_word(did) >> byte_(DIM * 4) >> repeat(DIM)[big_bin_float];
   }
+
+  /**
+   * Get parse rule for double precision data
+   */
   template <uint16_t PFORMAT = FORMAT>
   static constexpr auto get_parse_rule(typename std::enable_if<PFORMAT == XDI_SubFormatDouble, int>::type n=0) {
     return big_word(did) >> byte_(DIM * 8) >> repeat(DIM)[big_bin_double];
   }
+
+  // Other formats are not currently supported
 };
 
 
-using Date_time = Date_time_value<12>;
+// Define specific data packet type for each data type received from sensor
+using Date_time = Date_time_value<>;
 using Acceleration = Data_value<XDI_Acceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ax>;
 using Free_acceleration = Data_value<XDI_FreeAcceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::fax>;
 using Rate_of_turn = Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::rr, RadConverter>;
@@ -272,7 +335,7 @@ auto set_len = [](auto& ctx) { _val(ctx).len = static_cast<int>(_attr(ctx)); };
 auto more = [](auto& ctx) { _pass(ctx) = _val(ctx).len-- > 0; };
 auto done = [](auto& ctx) { _pass(ctx) = _val(ctx).len < 0; };
 
-
+// Parse rule for data packets other than the ones we're interested in
 x3::rule<struct unknown_data, Data_packet> const unknown_data = "unknown_data";
 auto unknown_data_def = big_word[set_did] >> byte_[set_len] >> *(eps[more] >> omit[byte_]) >> eps[done];
 BOOST_SPIRIT_DEFINE(unknown_data)
@@ -282,6 +345,7 @@ x3::rule<struct name, type> const name = "\"" #name "\""; \
 auto name##_def = type::get_parse_rule(); \
 BOOST_SPIRIT_DEFINE(name)
 
+// Define parse rules for each individual data packet type
 RULE_DEFINE(date_time, Date_time)
 RULE_DEFINE(acceleration, Acceleration)
 RULE_DEFINE(free_acceleration, Free_acceleration)
@@ -296,6 +360,9 @@ RULE_DEFINE(quaternion, Quaternion)
 
 #undef RULE_DEFINE
 
+/**
+ * Parse rule for data packets
+ */
 auto data_parser = *(
     date_time |
     acceleration |
@@ -375,22 +442,33 @@ void Xsens_parser::parse() {
   static auto packet = junk >> preamble >> byte_[set_mid] >> byte_[set_len] >> content >> byte_[set_chk];
 
   cur = queue.begin();
+  // Look for messages in the queue
   while (cur != queue.end() && x3::parse(cur, queue.end(), packet)) {
+    // Consume the message from the queue
     queue.erase(queue.begin(), cur);
-    cur = queue.begin(); // Need to reset cur in case the queue got emptied, which invalidates all iterators
+    // Verify the checksum is 0
     if (sum == 0) {
+      // The content of the message is now in "data"
       auto dcur = data.begin();
-      if (x3::parse(dcur, data.end(), data_parser, *data_packets)) {
-        for (auto& data_packet: *data_packets) {
-          boost::apply_visitor(*visitor, data_packet);
+      // We're only interested in data messages
+      if (mid == XMID_MtData2) {
+        // Look for data packets in the message content
+        if (x3::parse(dcur, data.end(), data_parser, *data_packets)) {
+          for (auto& data_packet: *data_packets) {
+            // Visit each packet. The visitor will extract the data from it
+            boost::apply_visitor(*visitor, data_packet);
+          }
         }
       }
     }
     else {
       log(level::debug, "Xsens checksum error");
     }
+    // Reset message content
     data.clear();
     data_packets->clear();
+    // Need to reset cur in case the queue got emptied, which invalidates all iterators
+    cur = queue.begin(); 
   }
 }
 
@@ -403,6 +481,7 @@ Values_queue& Xsens_parser::get_values() {
 
 }  // namespace xsens
 
+// Magic to move parsed values from the parser to the actual data packet type
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Date_time, nano, year, month, day, hour, minute, second, flags)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Acceleration, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Free_acceleration, data)
