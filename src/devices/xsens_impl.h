@@ -481,7 +481,7 @@ void Xsens_parser::parse() {
       }
     }
     else {
-      log(level::debug, "Xsens checksum error");
+      log(level::error, "Xsens checksum error");
     }
     //! Reset message content
     data_packets->clear();
