@@ -458,13 +458,13 @@ void Xsens_parser::parse() {
   //! The actual data we're looking for
   auto content = *(eps[have_data] >> byte_[add_data]) >> eps[have_all];
   //! The complete packet
-  auto packet = junk >> preamble >> byte_[set_mid] >> byte_[set_len] >> content >> byte_[set_chk];
+  auto packet_rule = junk >> preamble >> byte_[set_mid] >> byte_[set_len] >> content >> byte_[set_chk];
 
   cur = queue.begin();
   //! Look for messages in the queue
-  while (cur != queue.end() && x3::parse(cur, queue.end(), packet)) {
+  while (cur != queue.end() && x3::parse(cur, queue.end(), packet_rule)) {
     //! Consume the message from the queue
-    queue.erase(queue.begin(), cur);
+    cur = queue.erase(queue.begin(), cur);
     //! Verify the checksum is 0
     if (sum == 0) {
       //! The content of the message is now in "data"
@@ -485,8 +485,6 @@ void Xsens_parser::parse() {
     }
     //! Reset message content
     data_packets->clear();
-    //! Need to reset cur in case the queue got emptied, which invalidates all iterators
-    cur = queue.begin(); 
   }
 }
 
