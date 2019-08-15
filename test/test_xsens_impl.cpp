@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(xsens_parse_date_time_test) {
 }
 
 BOOST_AUTO_TEST_CASE(data_converter_test) {
-  BOOST_TEST(parser::UnitaryConverter<3>::factor(0) == 1.0);
-  BOOST_TEST(parser::UnitaryConverter<3>::factor(1) == -1.0);
+  BOOST_TEST(parser::IdentityConverter<3>::factor(0) == 1.0);
+  BOOST_TEST(parser::IdentityConverter<3>::factor(1) == -1.0);
   BOOST_TEST(parser::RadConverter<2>::factor(0) == M_PI / 180.0);
 }
 
