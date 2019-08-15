@@ -225,10 +225,10 @@ using x3::omit;
 using x3::eps;
 
 using x3::byte_;
-using x3::big_word;
-using x3::big_dword;
-using x3::big_bin_float;
-using x3::big_bin_double;
+using x3::little_word;
+using x3::little_dword;
+using x3::little_bin_float;
+using x3::little_bin_double;
 
 using x3::_attr;
 using x3::_val;
@@ -292,9 +292,50 @@ private:
     std::for_each(payload_.begin(), payload_.end(), add_byte);
     return (chk_b << 8) + chk_a;
   }
+
+  friend struct Ublox_parser;
 };
 
 void Ublox_parser::parse() {
+  Data_packet packet;
+  int len = 0;
+  auto set_cls = [&](auto& ctx) { packet.cls_ = _attr(ctx); };
+  auto set_id = [&](auto& ctx) { packet.id_ = _attr(ctx); };
+  auto set_len = [&](auto& ctx) { 
+    packet.length_ = _attr(ctx); 
+    len = packet.length_;
+  };
+
+  auto have_data = [&](auto& ctx) { _pass(ctx) = len-- > 0; };
+  auto have_all = [&](auto& ctx) { _pass(ctx) = len < 0; };
+  auto add_payload = [&](auto& ctx) { 
+    packet.payload_.push_back(_attr(ctx)); 
+  };
+  auto set_chk = [&](auto& ctx) { packet.checksum_ = _attr(ctx); };
+
+  //! Start of a packet
+  auto preamble = byte_(command::sync_1) >> byte_(command::sync_2);
+  //! Anything that is not the start of a packet
+  auto junk = *(byte_ - preamble);
+  //! The actual data we're looking for
+  auto content = *(eps[have_data] >> byte_[add_payload]) >> eps[have_all];
+  //! The complete packet
+  auto packet_rule = junk >> preamble >> byte_[set_cls] >> byte_[set_id]
+                          >>little_word[set_len] >> content >> little_word[set_chk];
+
+  cur = queue.begin();
+  //! Look for messages in the queue
+  while (cur != queue.end() && x3::parse(cur, queue.end(), packet_rule)) {
+    //! Consume the message from the queue
+    cur = queue.erase(queue.begin(), cur);
+    if (packet.checksum_ == packet.get_checksum()) {
+      log(level::debug, "Ublox parsed message with length: %", packet.length_);
+    }
+    else {
+      log(level::error, "Ublox checksum error: %, %", packet.checksum_, packet.get_checksum());
+    }
+  }
+
 }
 
 }  // namespace parser
