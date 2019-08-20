@@ -11,7 +11,6 @@
  * forbidden.
  */
 
-#include "ublox.h"
 
 // Implementation is put in a separate header for inclusion in tests
 #include "ublox_impl.h"

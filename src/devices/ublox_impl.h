@@ -10,16 +10,19 @@
  * permission from the copyright holder is strictly
  * forbidden.
  */
+
 #ifndef XSENS_IMPL_H_
 #define XSENS_IMPL_H_
 
-#include "../datetime.h"
+#include "ublox.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <vector>
 #include <boost/date_time/date.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
+
 
 namespace ubx {
 
@@ -296,6 +299,116 @@ private:
   friend struct Ublox_parser;
 };
 
+
+struct Payload {
+};
+
+
+template<int RESERVED_SIZE=6>
+struct Payload_pvt: public Payload {
+  uint32_t itow;  // scale 10E-3
+  uint16_t year;  
+  uint8_t month;
+  uint8_t day;
+  uint8_t hour;
+  uint8_t min;
+  uint8_t sec;
+  uint8_t valid;  // 0: valid date, 1: valid time, 2: fully resolved, 3: valid mag
+  uint32_t tacc;  // scale 10e-9
+  int32_t nano;  // scale 10e-9
+  uint8_t fixtype;  // 0: nofix, 1: dead reck, 2: 2D fix, 3: 3D fix, 4 GNSS + dead reck, 5: time fix only
+  uint8_t flags;  // 0: gnss fix ok, 1: diff solution, 2-4 pms state, 5: headveh valid, 6-7 carr solution
+  uint8_t flags2;  // Time validity confirmation: oh well....
+  uint8_t numsv;
+  int32_t lon;  // scale 10E-7 degrees
+  int32_t lat;  // scale 10E-7 degrees
+  int32_t height;  // scale 10E-3
+  int32_t hmsl;  // scale 10E-3
+  uint32_t hacc;  // scale 10E-3
+  uint32_t vacc;  // scale 10E-3
+  int32_t veln;  // scale 10E-3
+  int32_t vele;  // scale 10E-3
+  int32_t veld;  // scale 10E-3
+  int32_t gspeed;  // scale 10E-3
+  int32_t hmot;  // scale 10E-5 degrees
+  uint32_t sacc;
+  uint32_t headacc;  // scale 10E-5 degrees
+  uint16_t pdop;  // scale !0E-2
+  uint8_t reserved1[RESERVED_SIZE];
+  int32_t headveh;  // scale 10E-5 degrees
+  int16_t magdec;  // scale 10E-2 degrees
+  uint16_t magacc;  // scale 10E-2 degrees
+
+  static constexpr auto get_parse_rule() {
+    return little_dword >> little_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_  // itow - valid
+        >> little_dword >> little_dword >> byte_ >> byte_ >> byte_ >> byte_  // tacc - numsv
+        >> little_dword >> little_dword >> little_dword >> little_dword  // lon - hmsl
+        >> little_dword >> little_dword >> little_dword >> little_dword >> little_dword // hacc - veld
+        >> little_dword >> little_dword >> little_dword >> little_dword // gspeed - headacc
+        >> little_word >> repeat(RESERVED_SIZE)[byte_] >> little_dword >> little_word >> little_word;  // pdop - magacc
+  }
+};
+
+
+template<int RESERVED_SIZE=3>
+struct Payload_att: public Payload {
+  uint32_t itow;
+  uint8_t version;
+  uint8_t reserved1[RESERVED_SIZE];
+  int32_t roll;  // scale 1e-5
+  int32_t pitch;  // scale 1e-5
+  int32_t heading;  // scale 1e-5
+  uint32_t accroll;  // scale 1e-5
+  uint32_t accpitch;  // scale 1e-5
+  uint32_t accheading;  // scale 1e-5
+
+  static constexpr auto get_parse_rule() {
+    return little_dword >> byte_ >> repeat(RESERVED_SIZE)[byte_]  // itow - reserved1
+        >> little_dword >> little_dword >> little_dword  // roll - heading
+        >> little_dword >> little_dword >> little_dword;  // accroll - accheading
+  }
+};
+
+
+template<int RESERVED_SIZE=4>
+struct Payload_ins: public Payload {
+  uint32_t bitfield0;
+  uint8_t reserved1[RESERVED_SIZE];
+  uint32_t itow;
+  int32_t xangrate;  // scale 1E-3
+  int32_t yangrate;  // scale 1E-3
+  int32_t zangrate;  // scale 1E-3
+  int32_t xaccel;  // scale 1E-2, free acceleration: no gravity  
+  int32_t yaccel;  // scale 1E-2, free acceleration: no gravity
+  int32_t zaccel;  // scale 1E-2, free acceleration: no gravity
+
+  static constexpr auto get_parse_rule() {
+    return little_dword >> repeat(RESERVED_SIZE)[byte_]  // itow - reserved1
+        >> little_dword  // itow
+        >> little_dword >> little_dword >> little_dword  // xangrate - zangrate
+        >> little_dword >> little_dword >> little_dword;  // xaccel - zaccel
+        
+  }
+};
+
+
+template<int RESERVED_SIZE=4>
+struct Payload_raw: public Payload {
+  uint8_t reserved1[RESERVED_SIZE];
+  struct Sensor_data {
+    uint32_t data;  // 8 bit datatype + 24 bit data
+    uint32_t stag;  // time tag
+    static constexpr auto get_parse_rule() {
+      return little_dword >> little_dword;
+    }
+  };
+  std::vector<Sensor_data> sensor_datas;
+  static constexpr auto get_parse_rule() {
+    return little_dword >> *(Sensor_data::get_parse_rule());
+  }
+};
+
+
 void Ublox_parser::parse() {
   Data_packet packet;
   int len = 0;
@@ -321,7 +434,7 @@ void Ublox_parser::parse() {
   auto content = *(eps[have_data] >> byte_[add_payload]) >> eps[have_all];
   //! The complete packet
   auto packet_rule = junk >> preamble >> byte_[set_cls] >> byte_[set_id]
-                          >>little_word[set_len] >> content >> little_word[set_chk];
+                          >> little_word[set_len] >> content >> little_word[set_chk];
 
   cur = queue.begin();
   //! Look for messages in the queue
@@ -330,10 +443,36 @@ void Ublox_parser::parse() {
     cur = queue.erase(queue.begin(), cur);
     if (packet.checksum_ == packet.get_checksum()) {
       log(level::debug, "Ublox parsed message with length: %", packet.length_);
+      switch (packet.cls_) {
+        case command::cls_nav: 
+          switch (packet.id_) {
+            case command::nav::pvt:
+              x3::parse(packet.payload_.begin(), packet.payload_.end(), Payload_pvt<>::get_parse_rule());
+              break;
+            case command::nav::att:
+              break;
+            default:
+              log(level::debug, "Received unrequested ubx nav message");
+          }
+          break;
+        case command::cls_esf: 
+          switch (packet.id_) {
+            case command::esf::ins:
+              break;
+            case command::esf::raw:
+              break;
+            default:
+              log(level::debug, "Received unrequested ubx esf message");
+          }
+          break;
+        default:
+          log(level::debug, "Received unrequested ubx message");
+      }
     }
     else {
       log(level::error, "Ublox checksum error: %, %", packet.checksum_, packet.get_checksum());
     }
+    packet.payload_.clear();
   }
 
 }
