@@ -22,8 +22,6 @@
 
 #include "driver/install.h"
 
-#include <fmt/core.h>
-
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio/signal_set.hpp>

@@ -22,8 +22,6 @@
 #include <string>
 #include <set>
 
-#include <fmt/core.h>
-
 struct Header {
   std::string name;
   std::string value;

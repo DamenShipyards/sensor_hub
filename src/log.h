@@ -26,6 +26,8 @@
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 
+#include <fmt/format.h>
+
 // We define our own severity levels
 enum class level {
   debug,

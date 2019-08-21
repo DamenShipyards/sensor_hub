@@ -19,8 +19,6 @@
 #include <exception>
 #include <iomanip>
 
-#include <fmt/core.h>
-
 // asio uses "old" boost::coroutine instead of boost::coroutine2
 #ifndef BOOST_COROUTINES_NO_DEPRECATION_WARNING
 #define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1

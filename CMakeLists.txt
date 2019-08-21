@@ -28,16 +28,18 @@ set (CMAKE_CXX_STANDARD 17)
 
 set(BUILD_MANUAL 1)
 set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(FMTLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/src")
 set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")
 set(SENSORHUB_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
 set(XSENS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/xsens/include")
 set(MODBUS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/modbus/include")
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rapidjson/include")
 
-enable_testing()
+add_definitions(
+  -DBOOST_LOG_DYN_LINK
+  -DFMT_HEADER_ONLY
+)
 
-add_definitions(-DBOOST_LOG_DYN_LINK)
+enable_testing()
 
 set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/loop.cpp
@@ -54,10 +56,6 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/devices/ublox.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/statistics.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/acceleration_history.cpp
-)
-
-file(GLOB FMTLIB_SOURCES
-  ${FMTLIB_SOURCE_DIR}/*.cc
 )
 
 
@@ -92,7 +90,6 @@ link_libraries(
 add_executable(sensor_hub
   ${SENSORHUB_SOURCE_DIR}/daemon.cpp
   ${CPP_SOURCES}
-  ${FMTLIB_SOURCES}
 )
 
 set_target_properties(sensor_hub PROPERTIES
@@ -106,7 +103,6 @@ macro(new_test NEW_TEST)
   add_executable(${NEW_TEST} 
     ${SENSORHUB_TEST_DIR}/${NEW_TEST}.cpp
     ${TEST_SOURCES}
-    ${FMTLIB_SOURCES}
   )
   set_target_properties(${NEW_TEST} PROPERTIES 
     LINK_FLAGS "-Wl,--no-as-needed"

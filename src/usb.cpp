@@ -19,8 +19,6 @@
 #include <cstdlib>
 #include <functional>
 
-#include <fmt/core.h>
-
 #include <boost/thread/thread.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
