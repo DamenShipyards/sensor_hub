@@ -11,6 +11,9 @@
  * forbidden.
  */
 
+#ifndef PARSER_H_
+#define PARSER_H_
+
 #include "spirit_x3.h"
 #include "types.h"
 #include "tools.h"
@@ -48,5 +51,7 @@ struct Packet_parser {
   virtual void parse() = 0;
   virtual Values_queue& get_values() = 0;
 };
+
+#endif  // ifndef PARSER_H_
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

@@ -11,6 +11,9 @@
  * forbidden.
  */
 
+#ifndef UBLOX_H_
+#define UBLOX_H_
+
 #include "../device.h"
 #include "../log.h"
 #include "../tools.h"
@@ -231,5 +234,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
 };
 
 }  //namespace ubx
+
+#endif  // ifndef UBLOX_H_
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
