@@ -243,12 +243,12 @@ struct Data_packet {
   Data_packet(const byte_t cls, const byte_t id): cls_(cls), id_(id), length_(), payload_() {
     checksum_ = get_checksum();
   }
-  Data_packet(const byte_t cls, const byte_t id, cbytes_t payload): 
+  Data_packet(const byte_t cls, const byte_t id, cbytes_t payload):
       cls_(cls), id_(id), payload_(payload) {
     length_ = get_length();
     checksum_ = get_checksum();
   }
-  Data_packet(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload): 
+  Data_packet(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload):
       cls_(cls), id_(id), payload_(payload) {
     length_ = get_length();
     checksum_ = get_checksum();
@@ -304,10 +304,10 @@ struct Payload {
 };
 
 
-template<int RESERVED_SIZE=6>
 struct Payload_pvt: public Payload {
+  static constexpr int reserved_size = 6;
   uint32_t itow;  // scale 10E-3
-  uint16_t year;  
+  uint16_t year;
   uint8_t month;
   uint8_t day;
   uint8_t hour;
@@ -316,8 +316,10 @@ struct Payload_pvt: public Payload {
   uint8_t valid;  // 0: valid date, 1: valid time, 2: fully resolved, 3: valid mag
   uint32_t tacc;  // scale 10e-9
   int32_t nano;  // scale 10e-9
-  uint8_t fixtype;  // 0: nofix, 1: dead reck, 2: 2D fix, 3: 3D fix, 4 GNSS + dead reck, 5: time fix only
-  uint8_t flags;  // 0: gnss fix ok, 1: diff solution, 2-4 pms state, 5: headveh valid, 6-7 carr solution
+  uint8_t fixtype;  // 0: nofix, 1: dead reck, 2: 2D fix, 3: 3D fix,
+                    // 4 GNSS + dead reck, 5: time fix only
+  uint8_t flags;  // 0: gnss fix ok, 1: diff solution, 2-4 pms state,
+                  // 5: headveh valid, 6-7 carr solution
   uint8_t flags2;  // Time validity confirmation: oh well....
   uint8_t numsv;
   int32_t lon;  // scale 10E-7 degrees
@@ -334,27 +336,27 @@ struct Payload_pvt: public Payload {
   uint32_t sacc;
   uint32_t headacc;  // scale 10E-5 degrees
   uint16_t pdop;  // scale !0E-2
-  uint8_t reserved1[RESERVED_SIZE];
+  uint8_t reserved1[reserved_size];
   int32_t headveh;  // scale 10E-5 degrees
   int16_t magdec;  // scale 10E-2 degrees
   uint16_t magacc;  // scale 10E-2 degrees
 
-  static constexpr auto get_parse_rule() {
+  static const auto get_parse_rule() {
     return little_dword >> little_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_  // itow - valid
         >> little_dword >> little_dword >> byte_ >> byte_ >> byte_ >> byte_  // tacc - numsv
         >> little_dword >> little_dword >> little_dword >> little_dword  // lon - hmsl
         >> little_dword >> little_dword >> little_dword >> little_dword >> little_dword // hacc - veld
         >> little_dword >> little_dword >> little_dword >> little_dword // gspeed - headacc
-        >> little_word >> repeat(RESERVED_SIZE)[byte_] >> little_dword >> little_word >> little_word;  // pdop - magacc
+        >> little_word >> repeat(reserved_size)[byte_] >> little_dword >> little_word >> little_word;  // pdop - magacc
   }
 };
 
 
-template<int RESERVED_SIZE=3>
 struct Payload_att: public Payload {
+  static constexpr int reserved_size = 3;
   uint32_t itow;
   uint8_t version;
-  uint8_t reserved1[RESERVED_SIZE];
+  uint8_t reserved1[reserved_size];
   int32_t roll;  // scale 1e-5
   int32_t pitch;  // scale 1e-5
   int32_t heading;  // scale 1e-5
@@ -362,48 +364,47 @@ struct Payload_att: public Payload {
   uint32_t accpitch;  // scale 1e-5
   uint32_t accheading;  // scale 1e-5
 
-  static constexpr auto get_parse_rule() {
-    return little_dword >> byte_ >> repeat(RESERVED_SIZE)[byte_]  // itow - reserved1
+  static const auto get_parse_rule() {
+    return little_dword >> byte_ >> repeat(reserved_size)[byte_]  // itow - reserved1
         >> little_dword >> little_dword >> little_dword  // roll - heading
         >> little_dword >> little_dword >> little_dword;  // accroll - accheading
   }
 };
 
 
-template<int RESERVED_SIZE=4>
 struct Payload_ins: public Payload {
+  static constexpr int reserved_size = 4;
   uint32_t bitfield0;
-  uint8_t reserved1[RESERVED_SIZE];
+  uint8_t reserved1[reserved_size];
   uint32_t itow;
   int32_t xangrate;  // scale 1E-3
   int32_t yangrate;  // scale 1E-3
   int32_t zangrate;  // scale 1E-3
-  int32_t xaccel;  // scale 1E-2, free acceleration: no gravity  
+  int32_t xaccel;  // scale 1E-2, free acceleration: no gravity
   int32_t yaccel;  // scale 1E-2, free acceleration: no gravity
   int32_t zaccel;  // scale 1E-2, free acceleration: no gravity
 
-  static constexpr auto get_parse_rule() {
-    return little_dword >> repeat(RESERVED_SIZE)[byte_]  // itow - reserved1
+  static const auto get_parse_rule() {
+    return little_dword >> repeat(reserved_size)[byte_]  // itow - reserved1
         >> little_dword  // itow
         >> little_dword >> little_dword >> little_dword  // xangrate - zangrate
         >> little_dword >> little_dword >> little_dword;  // xaccel - zaccel
-        
   }
 };
 
 
-template<int RESERVED_SIZE=4>
 struct Payload_raw: public Payload {
-  uint8_t reserved1[RESERVED_SIZE];
+  static constexpr int reserved_size = 4;
+  uint8_t reserved1[reserved_size];
   struct Sensor_data {
     uint32_t data;  // 8 bit datatype + 24 bit data
     uint32_t stag;  // time tag
-    static constexpr auto get_parse_rule() {
+    static const auto get_parse_rule() {
       return little_dword >> little_dword;
     }
   };
   std::vector<Sensor_data> sensor_datas;
-  static constexpr auto get_parse_rule() {
+  static const auto get_parse_rule() {
     return little_dword >> *(Sensor_data::get_parse_rule());
   }
 };
@@ -414,15 +415,15 @@ void Ublox_parser::parse() {
   int len = 0;
   auto set_cls = [&](auto& ctx) { packet.cls_ = _attr(ctx); };
   auto set_id = [&](auto& ctx) { packet.id_ = _attr(ctx); };
-  auto set_len = [&](auto& ctx) { 
-    packet.length_ = _attr(ctx); 
+  auto set_len = [&](auto& ctx) {
+    packet.length_ = _attr(ctx);
     len = packet.length_;
   };
 
   auto have_data = [&](auto& ctx) { _pass(ctx) = len-- > 0; };
   auto have_all = [&](auto& ctx) { _pass(ctx) = len < 0; };
-  auto add_payload = [&](auto& ctx) { 
-    packet.payload_.push_back(_attr(ctx)); 
+  auto add_payload = [&](auto& ctx) {
+    packet.payload_.push_back(_attr(ctx));
   };
   auto set_chk = [&](auto& ctx) { packet.checksum_ = _attr(ctx); };
 
@@ -444,10 +445,11 @@ void Ublox_parser::parse() {
     if (packet.checksum_ == packet.get_checksum()) {
       log(level::debug, "Ublox parsed message with length: %", packet.length_);
       switch (packet.cls_) {
-        case command::cls_nav: 
+        case command::cls_nav:
           switch (packet.id_) {
             case command::nav::pvt:
-              x3::parse(packet.payload_.begin(), packet.payload_.end(), Payload_pvt<>::get_parse_rule());
+              x3::parse(packet.payload_.begin(), packet.payload_.end(),
+                        Payload_pvt::get_parse_rule());
               break;
             case command::nav::att:
               break;
@@ -455,7 +457,7 @@ void Ublox_parser::parse() {
               log(level::debug, "Received unrequested ubx nav message");
           }
           break;
-        case command::cls_esf: 
+        case command::cls_esf:
           switch (packet.id_) {
             case command::esf::ins:
               break;
