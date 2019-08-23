@@ -305,7 +305,6 @@ struct Payload {
 
 
 struct Payload_pvt: public Payload {
-  static constexpr int reserved_size = 6;
   uint32_t itow;  // scale 10E-3
   uint16_t year;
   uint8_t month;
@@ -336,7 +335,8 @@ struct Payload_pvt: public Payload {
   uint32_t sacc;
   uint32_t headacc;  // scale 10E-5 degrees
   uint16_t pdop;  // scale !0E-2
-  uint8_t reserved1[reserved_size];
+  uint32_t reserved1_32;
+  uint16_t reserved1_16;
   int32_t headveh;  // scale 10E-5 degrees
   int16_t magdec;  // scale 10E-2 degrees
   uint16_t magacc;  // scale 10E-2 degrees
@@ -347,16 +347,17 @@ struct Payload_pvt: public Payload {
         >> little_dword >> little_dword >> little_dword >> little_dword  // lon - hmsl
         >> little_dword >> little_dword >> little_dword >> little_dword >> little_dword // hacc - veld
         >> little_dword >> little_dword >> little_dword >> little_dword // gspeed - headacc
-        >> little_word >> repeat(reserved_size)[byte_] >> little_dword >> little_word >> little_word;  // pdop - magacc
+        >> little_word >> little_dword >> little_word >> little_dword // pdop - headveh
+        >> little_word >> little_word;  // magdec - magacc
   }
 };
 
 
 struct Payload_att: public Payload {
-  static constexpr int reserved_size = 3;
   uint32_t itow;
   uint8_t version;
-  uint8_t reserved1[reserved_size];
+  uint16_t reserved1_16;
+  uint8_t reserved1_8;
   int32_t roll;  // scale 1e-5
   int32_t pitch;  // scale 1e-5
   int32_t heading;  // scale 1e-5
@@ -365,7 +366,7 @@ struct Payload_att: public Payload {
   uint32_t accheading;  // scale 1e-5
 
   static const auto get_parse_rule() {
-    return little_dword >> byte_ >> repeat(reserved_size)[byte_]  // itow - reserved1
+    return little_dword >> byte_ >> little_word >> byte_  // itow - reserved1
         >> little_dword >> little_dword >> little_dword  // roll - heading
         >> little_dword >> little_dword >> little_dword;  // accroll - accheading
   }
@@ -373,9 +374,8 @@ struct Payload_att: public Payload {
 
 
 struct Payload_ins: public Payload {
-  static constexpr int reserved_size = 4;
   uint32_t bitfield0;
-  uint8_t reserved1[reserved_size];
+  uint32_t reserved1;
   uint32_t itow;
   int32_t xangrate;  // scale 1E-3
   int32_t yangrate;  // scale 1E-3
@@ -385,7 +385,7 @@ struct Payload_ins: public Payload {
   int32_t zaccel;  // scale 1E-2, free acceleration: no gravity
 
   static const auto get_parse_rule() {
-    return little_dword >> repeat(reserved_size)[byte_]  // itow - reserved1
+    return little_dword >> little_dword  // bitfield0 - reserved1
         >> little_dword  // itow
         >> little_dword >> little_dword >> little_dword  // xangrate - zangrate
         >> little_dword >> little_dword >> little_dword;  // xaccel - zaccel
@@ -394,8 +394,7 @@ struct Payload_ins: public Payload {
 
 
 struct Payload_raw: public Payload {
-  static constexpr int reserved_size = 4;
-  uint8_t reserved1[reserved_size];
+  uint32_t reserved1;
   struct Sensor_data {
     uint32_t data;  // 8 bit datatype + 24 bit data
     uint32_t stag;  // time tag
@@ -403,12 +402,24 @@ struct Payload_raw: public Payload {
       return little_dword >> little_dword;
     }
   };
-  std::vector<Sensor_data> sensor_datas;
+  std::vector<Sensor_data> sensor_data;
   static const auto get_parse_rule() {
     return little_dword >> *(Sensor_data::get_parse_rule());
   }
 };
 
+#define RULE_DEFINE(name, type) \
+x3::rule<struct name, type> const name = "\"" #name "\""; \
+auto name##_def = type::get_parse_rule(); \
+BOOST_SPIRIT_DEFINE(name)
+
+RULE_DEFINE(nav_pvt, Payload_pvt)
+RULE_DEFINE(nav_att, Payload_att)
+RULE_DEFINE(esf_ins, Payload_ins)
+RULE_DEFINE(esf_raw, Payload_raw)
+RULE_DEFINE(esf_raw_data, Payload_raw::Sensor_data)
+
+#undef RULE_DEFINE
 
 void Ublox_parser::parse() {
   Data_packet packet;
@@ -443,13 +454,15 @@ void Ublox_parser::parse() {
     //! Consume the message from the queue
     cur = queue.erase(queue.begin(), cur);
     if (packet.checksum_ == packet.get_checksum()) {
+      auto payload = std::make_unique<Payload>();
       log(level::debug, "Ublox parsed message with length: %", packet.length_);
       switch (packet.cls_) {
         case command::cls_nav:
           switch (packet.id_) {
             case command::nav::pvt:
+              payload = std::make_unique<Payload_pvt>();
               x3::parse(packet.payload_.begin(), packet.payload_.end(),
-                        Payload_pvt::get_parse_rule());
+                        Payload_pvt::get_parse_rule(), *payload);
               break;
             case command::nav::att:
               break;
@@ -539,6 +552,31 @@ cbytes_t mon_ver = { command::sync_1, command::sync_2, command::cls_mon, command
 }  // namespace response
 
 }  // namespace ubx
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_pvt, 
+  itow, year, month, day, hour, min, sec, valid,
+  tacc, nano, fixtype, flags, flags2, numsv,
+  lon,  lat, height, hmsl,  
+  hacc, vacc, veln, vele, veld,
+  gspeed, hmot, sacc, headacc,
+  pdop,  reserved1_32, reserved1_16, headveh,
+  magdec, magacc
+)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_att, 
+  itow, version, reserved1_16, reserved1_8,
+  roll, pitch, heading,
+  accroll, accpitch, accheading
+)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_ins,
+  bitfield0, reserved1,
+  itow,
+  xangrate, yangrate, zangrate,
+  xaccel, yaccel, zaccel)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw, reserved1, sensor_data)
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw::Sensor_data, data, stag)
 
 #endif
 

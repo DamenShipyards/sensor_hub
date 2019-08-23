@@ -221,11 +221,8 @@ struct Data_packet {
 
 /**
  * Date-time data structure
- *
- * @tparam SIZE dummy template parameter, the size of this packet is always 12
  */
-template <int SIZE=12>
-struct Date_time_value: public Data_packet {
+struct Date_time: public Data_packet {
   static constexpr uint8_t valid_utc = 0x04;
   static constexpr uint16_t did = XDI_UtcTime;
   static constexpr Quantity quantity = Quantity::ut;
@@ -254,7 +251,7 @@ struct Date_time_value: public Data_packet {
     }
   }
 
-  static constexpr auto get_parse_rule() {
+  static const auto get_parse_rule() {
     return big_word(did) >> byte_(SIZE) >> big_dword >> big_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_;
   }
 };
@@ -309,7 +306,7 @@ struct Data_value: public Data_packet {
    * Get parse rule for single precision data
    */
   template <uint16_t PFORMAT = FORMAT>
-  static constexpr auto get_parse_rule(typename std::enable_if<PFORMAT == XDI_SubFormatFloat, int>::type n=0) {
+  static const auto get_parse_rule(typename std::enable_if<PFORMAT == XDI_SubFormatFloat, int>::type n=0) {
     return big_word(did) >> byte_(DIM * 4) >> repeat(DIM)[big_bin_float];
   }
 
@@ -317,7 +314,7 @@ struct Data_value: public Data_packet {
    * Get parse rule for double precision data
    */
   template <uint16_t PFORMAT = FORMAT>
-  static constexpr auto get_parse_rule(typename std::enable_if<PFORMAT == XDI_SubFormatDouble, int>::type n=0) {
+  static const auto get_parse_rule(typename std::enable_if<PFORMAT == XDI_SubFormatDouble, int>::type n=0) {
     return big_word(did) >> byte_(DIM * 8) >> repeat(DIM)[big_bin_double];
   }
 
@@ -326,7 +323,6 @@ struct Data_value: public Data_packet {
 
 
 // Define specific data packet type for each data type received from sensor
-using Date_time = Date_time_value<>;
 using Acceleration = Data_value<XDI_Acceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ax>;
 using Free_acceleration = Data_value<XDI_FreeAcceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::fax>;
 using Rate_of_turn = Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::rr, RadConverter>;
