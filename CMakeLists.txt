@@ -23,10 +23,10 @@ find_package(libusb-1.0 1.0.22 REQUIRED)
 
 find_package(Threads REQUIRED)
 find_package(Doxygen)
+find_program(BUILD_MANUAL texi2dvi)
 
 set (CMAKE_CXX_STANDARD 17)
 
-set(BUILD_MANUAL 1)
 set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")
 set(SENSORHUB_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
