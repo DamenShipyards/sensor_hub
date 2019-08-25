@@ -239,64 +239,72 @@ using x3::_pass;
 
 
 struct Data_packet {
-  Data_packet(): cls_(), id_(), length_(), checksum_(), payload_() {}
-  Data_packet(const byte_t cls, const byte_t id): cls_(cls), id_(id), length_(), payload_() {
-    checksum_ = get_checksum();
+  Data_packet(): data_(), checksum_() {}
+
+  Data_packet(const Data_packet& packet): data_(packet.data_), checksum_(packet.checksum_) {}
+
+  Data_packet(const byte_t cls, const byte_t id): data_(), checksum_() {
+    setup_payload(cls, id, {});
   }
-  Data_packet(const byte_t cls, const byte_t id, cbytes_t payload):
-      cls_(cls), id_(id), payload_(payload) {
-    length_ = get_length();
-    checksum_ = get_checksum();
+
+  Data_packet(const byte_t cls, const byte_t id, cbytes_t& payload): data_(), checksum_ {
+    setup_payload(cls, id, payload)
   }
-  Data_packet(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload):
-      cls_(cls), id_(id), payload_(payload) {
-    length_ = get_length();
-    checksum_ = get_checksum();
+
+  Data_packet(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload_init):
+      data_(), checksum_() {
+    setup_payload(cls, id, payload_init)
   }
-  Data_packet(cbytes_t data): cls_(), id_(), length_(), payload_() {
-    auto l = data.size();
-    if (l > 0)
-      cls_ = data[0];
-    if (l > 1)
-      id_ = data[1];
-    if (l > 3)
-      length_ = data[2] + (data[3] << 8);
-    for (auto i = 0; i < length_; ++i) {
-      payload_.push_back(data.at(i + 4));
-    }
-    checksum_ = get_checksum();
-  }
+
   bytes_t get_data() {
-    return command::preamble << cls_ << id_ << length_ << payload_ << checksum_;
+    return data_;
+  }
+
+  bytes_t get_packet() {
+    return command::preamble << data_ << checksum_;
+  }
+
+  bool check() {
+    return (get_length() == calc_length()) && (get_checksum() == calc_checksum());
   }
 private:
-  byte_t cls_;
-  byte_t id_;
-  uint16_t length_;
+  bytes_t data_;
   uint16_t checksum_;
-  bytes_t payload_;
 
-  uint16_t get_length() {
-    return static_cast<uint16_t>(payload_.size());
+  void setup_payload(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload_init) {
+    cbytes_t payload{payload_init};
+    setup_payload(cls, id, payload);
   }
 
-  uint16_t get_checksum() {
+  void setup_payload(const byte_t cls, const byte_t id, cbytes_t& payload) {
+    uint16_t length = payload.size();
+    data_.push_back(cls);
+    data_.push_back(id);
+    data_.push_back(length && 0xFF);
+    data_.push_back(length >> 8);
+    data_.insert(data.end(), payload.begin(), payload.end());
+    checksum_ = calc_checksum();
+  }
+
+  uint16_t calc_length() {
+    if (data_.size() > 3) {
+      return static_cast<uint16_t>(data.size() - 4);
+    }
+    else {
+      return 0;
+    }
+  }
+
+  uint16_t calc_checksum() {
     byte_t chk_a = 0;
     byte_t chk_b = 0;
     auto add_byte = [&](const byte_t byte) {
       chk_a += byte;
       chk_b += chk_a;
     };
-    add_byte(cls_);
-    add_byte(id_);
-    // Little endian so lower byte first
-    add_byte(length_ & 0xFF);
-    add_byte(length_ >> 8);
-    std::for_each(payload_.begin(), payload_.end(), add_byte);
+    std::for_each(data_.begin(), data_.end(), add_byte);
     return (chk_b << 8) + chk_a;
   }
-
-  friend struct Ublox_parser;
 };
 
 
@@ -454,15 +462,14 @@ void Ublox_parser::parse() {
     //! Consume the message from the queue
     cur = queue.erase(queue.begin(), cur);
     if (packet.checksum_ == packet.get_checksum()) {
-      auto payload = std::make_unique<Payload>();
       log(level::debug, "Ublox parsed message with length: %", packet.length_);
       switch (packet.cls_) {
         case command::cls_nav:
           switch (packet.id_) {
             case command::nav::pvt:
-              payload = std::make_unique<Payload_pvt>();
+              Payload_pvt payload;
               x3::parse(packet.payload_.begin(), packet.payload_.end(),
-                        Payload_pvt::get_parse_rule(), *payload);
+                        Payload_pvt::get_parse_rule(), payload);
               break;
             case command::nav::att:
               break;

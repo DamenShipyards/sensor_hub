@@ -223,6 +223,7 @@ struct Data_packet {
  * Date-time data structure
  */
 struct Date_time: public Data_packet {
+  static constexpr uint8_t len = 12;
   static constexpr uint8_t valid_utc = 0x04;
   static constexpr uint16_t did = XDI_UtcTime;
   static constexpr Quantity quantity = Quantity::ut;
@@ -252,7 +253,7 @@ struct Date_time: public Data_packet {
   }
 
   static const auto get_parse_rule() {
-    return big_word(did) >> byte_(SIZE) >> big_dword >> big_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_;
+    return big_word(did) >> byte_(len) >> big_dword >> big_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_;
   }
 };
 
@@ -493,10 +494,8 @@ Values_queue& Xsens_parser::get_values() {
 
 }  // namespace xsens
 
-// Magic to move parsed values from the parser to the actual data packet type. The parser
-// produces a sequence of values as specified by the parse rule. This sequence is mapped
-// to the actual fields of the data packets structs by this macro. Macro call is
-// at global scope as stated in the manual. Trivial for anything but the date-time values.
+// Magic to map parsed values which are stored in fusion::vector to the actual data packet type. 
+// Macro call is at global scope as stated in the manual. Trivial for anything but the date-time values.
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Date_time, nano, year, month, day, hour, minute, second, flags)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Acceleration, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Free_acceleration, data)
