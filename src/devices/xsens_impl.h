@@ -411,7 +411,9 @@ struct Xsens_parser::Data_packets
  * Visitor for accessing parsed data packets
  */
 struct Xsens_parser::Data_visitor {
+
   Values_queue values;
+
   void operator()(const Data_packet& data_packet) {
     for (auto& value: data_packet.get_values()) {
       values.push_back(value);

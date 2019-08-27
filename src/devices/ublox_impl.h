@@ -247,13 +247,31 @@ struct Data_packet {
     setup_payload(cls, id, {});
   }
 
-  Data_packet(const byte_t cls, const byte_t id, cbytes_t& payload): data_(), checksum_ {
-    setup_payload(cls, id, payload)
+  Data_packet(const byte_t cls, const byte_t id, cbytes_t& payload): data_(), checksum_() {
+    setup_payload(cls, id, payload);
   }
 
   Data_packet(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload_init):
       data_(), checksum_() {
-    setup_payload(cls, id, payload_init)
+    setup_payload(cls, id, payload_init);
+  }
+  
+  uint8_t get_cls() const {
+    if (data_.size() > 0) {
+      return data_[0];
+    }
+    else {
+      return 0;
+    }
+  }
+
+  uint8_t get_id() const {
+    if (data_.size() > 1) {
+      return data_[1];
+    }
+    else {
+      return 0;
+    }
   }
 
   bytes_t get_data() {
@@ -267,6 +285,75 @@ struct Data_packet {
   bool check() {
     return (get_length() == calc_length()) && (get_checksum() == calc_checksum());
   }
+
+  uint16_t get_length() const {
+    if (data_.size() > 3) {
+      return data_[2] + (data_[3] << 8);
+    }
+    else {
+      return 0;
+    }
+  }
+
+  uint16_t get_checksum() const {
+    return checksum_;
+  }
+
+  Data_packet& set_cls(cbyte_t cls) {
+    if (data_.size() < 1) {
+      data_.push_back(cls);
+    }
+    else {
+      data_[0] = cls;
+    }
+    return *this;
+  }
+
+  Data_packet& set_id(cbyte_t id) {
+    if (data_.size() < 2) {
+      set_cls(get_cls());
+      data_.push_back(id);
+    }
+    else {
+      data_[1] = id;
+    }
+    return *this;
+  }
+
+  Data_packet& set_length(const uint16_t length) {
+    if (data_.size() < 3) {
+      set_cls(get_cls());
+      set_id(get_id());
+      data_.push_back(length & 0xFF);
+    }
+    else {
+      data_[3] = length && 0xFF;
+    }
+    if (data_.size() < 4) {
+      data_.push_back(length << 8);
+    }
+    else {
+      data_[4] = length << 8;
+    }
+    return *this;
+  }
+
+  Data_packet& add_data(const uint8_t value) {
+    data_.push_back(value);
+    return *this;
+  }
+
+  Data_packet& set_checksum(const uint16_t checksum) {
+    checksum_ = checksum;
+    return *this;
+  }
+
+  Data_packet& clear() {
+    data_.clear();
+    checksum_ = 0;
+    return *this;
+  }
+
 private:
   bytes_t data_;
   uint16_t checksum_;
@@ -282,13 +369,13 @@ private:
     data_.push_back(id);
     data_.push_back(length && 0xFF);
     data_.push_back(length >> 8);
-    data_.insert(data.end(), payload.begin(), payload.end());
+    data_.insert(data_.end(), payload.begin(), payload.end());
     checksum_ = calc_checksum();
   }
 
   uint16_t calc_length() {
     if (data_.size() > 3) {
-      return static_cast<uint16_t>(data.size() - 4);
+      return static_cast<uint16_t>(data_.size() - 4);
     }
     else {
       return 0;
@@ -416,6 +503,18 @@ struct Payload_raw: public Payload {
   }
 };
 
+struct Ublox_parser::Payload: 
+    public boost::variant<Payload_pvt, Payload_att, Payload_ins, Payload_raw> {
+};
+
+const auto payload_parse_rule =
+  Payload_pvt::get_parse_rule() \
+  | Payload_att::get_parse_rule() \
+  | Payload_ins::get_parse_rule() \
+  | Payload_raw::get_parse_rule();
+
+
+
 #define RULE_DEFINE(name, type) \
 x3::rule<struct name, type> const name = "\"" #name "\""; \
 auto name##_def = type::get_parse_rule(); \
@@ -432,19 +531,19 @@ RULE_DEFINE(esf_raw_data, Payload_raw::Sensor_data)
 void Ublox_parser::parse() {
   Data_packet packet;
   int len = 0;
-  auto set_cls = [&](auto& ctx) { packet.cls_ = _attr(ctx); };
-  auto set_id = [&](auto& ctx) { packet.id_ = _attr(ctx); };
+  auto set_cls = [&](auto& ctx) { packet.set_cls(_attr(ctx)); };
+  auto set_id = [&](auto& ctx) { packet.set_id(_attr(ctx)); };
   auto set_len = [&](auto& ctx) {
-    packet.length_ = _attr(ctx);
-    len = packet.length_;
+    len = _attr(ctx);
+    packet.set_length(len);
   };
 
   auto have_data = [&](auto& ctx) { _pass(ctx) = len-- > 0; };
   auto have_all = [&](auto& ctx) { _pass(ctx) = len < 0; };
   auto add_payload = [&](auto& ctx) {
-    packet.payload_.push_back(_attr(ctx));
+    packet.add_data(_attr(ctx));
   };
-  auto set_chk = [&](auto& ctx) { packet.checksum_ = _attr(ctx); };
+  auto set_chk = [&](auto& ctx) { packet.set_checksum(_attr(ctx)); };
 
   //! Start of a packet
   auto preamble = byte_(command::sync_1) >> byte_(command::sync_2);
@@ -461,42 +560,16 @@ void Ublox_parser::parse() {
   while (cur != queue.end() && x3::parse(cur, queue.end(), packet_rule)) {
     //! Consume the message from the queue
     cur = queue.erase(queue.begin(), cur);
-    if (packet.checksum_ == packet.get_checksum()) {
-      log(level::debug, "Ublox parsed message with length: %", packet.length_);
-      switch (packet.cls_) {
-        case command::cls_nav:
-          switch (packet.id_) {
-            case command::nav::pvt:
-              Payload_pvt payload;
-              x3::parse(packet.payload_.begin(), packet.payload_.end(),
-                        Payload_pvt::get_parse_rule(), payload);
-              break;
-            case command::nav::att:
-              break;
-            default:
-              log(level::debug, "Received unrequested ubx nav message");
-          }
-          break;
-        case command::cls_esf:
-          switch (packet.id_) {
-            case command::esf::ins:
-              break;
-            case command::esf::raw:
-              break;
-            default:
-              log(level::debug, "Received unrequested ubx esf message");
-          }
-          break;
-        default:
-          log(level::debug, "Received unrequested ubx message");
-      }
+    if (packet.check()) {
+      Ublox_parser::Payload payload;
+      x3::parse(packet.get_data().begin(), packet.get_data().end(),
+                payload_parse_rule, payload);
     }
     else {
-      log(level::error, "Ublox checksum error: %, %", packet.checksum_, packet.get_checksum());
+      log(level::error, "Ublox packet check error: lenght %, checksum %", packet.get_length(), packet.get_checksum());
     }
-    packet.payload_.clear();
+    packet.clear();
   }
-
 }
 
 }  // namespace parser

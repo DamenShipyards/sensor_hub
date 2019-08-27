@@ -71,6 +71,7 @@ namespace parser {
 struct Ublox_parser: public Packet_parser {
   Ublox_parser(): values_queue_() {};
   ~Ublox_parser() {};
+  struct Payload;
   void parse() override;
   Values_queue& get_values() override {
     return values_queue_;
