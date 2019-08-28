@@ -69,15 +69,13 @@ extern cbytes_t mon_ver;
 namespace parser {
 
 struct Ublox_parser: public Packet_parser {
-  Ublox_parser(): values_queue_() {};
-  ~Ublox_parser() {};
-  struct Payload;
+  Ublox_parser();
+  ~Ublox_parser();
+  struct Payload_visitor;
+  std::unique_ptr<Payload_visitor> visitor;
+
   void parse() override;
-  Values_queue& get_values() override {
-    return values_queue_;
-  };
-private:
-  Values_queue values_queue_;
+  Values_queue& get_values() override; 
 };
 
 } //  namespace parser

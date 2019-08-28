@@ -423,9 +423,9 @@ struct Xsens_parser::Data_visitor {
 
 
 Xsens_parser::Xsens_parser()
-    : Packet_parser(),
-      data_packets(std::make_unique<Data_packets>()),
-      visitor(std::make_unique<Data_visitor>()) {
+  : Packet_parser(),
+    data_packets(std::make_unique<Data_packets>()),
+    visitor(std::make_unique<Data_visitor>()) {
 }
 
 

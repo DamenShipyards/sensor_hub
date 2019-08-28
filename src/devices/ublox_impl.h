@@ -22,6 +22,7 @@
 #include <boost/date_time/date.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/variant.hpp>
 
 
 namespace ubx {
@@ -239,7 +240,9 @@ using x3::_pass;
 
 
 struct Data_packet {
-  Data_packet(): data_(), checksum_() {}
+  Data_packet(): data_(), checksum_() {
+    set_length(0);
+  }
 
   Data_packet(const Data_packet& packet): data_(packet.data_), checksum_(packet.checksum_) {}
 
@@ -257,21 +260,11 @@ struct Data_packet {
   }
   
   uint8_t get_cls() const {
-    if (data_.size() > 0) {
-      return data_[0];
-    }
-    else {
-      return 0;
-    }
+    return get_data_byte(0);
   }
 
   uint8_t get_id() const {
-    if (data_.size() > 1) {
-      return data_[1];
-    }
-    else {
-      return 0;
-    }
+    return get_data_byte(1);
   }
 
   bytes_t get_data() {
@@ -287,54 +280,27 @@ struct Data_packet {
   }
 
   uint16_t get_length() const {
-    if (data_.size() > 3) {
-      return data_[2] + (data_[3] << 8);
-    }
-    else {
-      return 0;
-    }
+    return get_data_byte(2) + (get_data_byte(3) << 8);
   }
 
   uint16_t get_checksum() const {
     return checksum_;
   }
 
+
   Data_packet& set_cls(cbyte_t cls) {
-    if (data_.size() < 1) {
-      data_.push_back(cls);
-    }
-    else {
-      data_[0] = cls;
-    }
+    set_data_byte(0, cls);
     return *this;
   }
 
   Data_packet& set_id(cbyte_t id) {
-    if (data_.size() < 2) {
-      set_cls(get_cls());
-      data_.push_back(id);
-    }
-    else {
-      data_[1] = id;
-    }
+    set_data_byte(1, id);
     return *this;
   }
 
   Data_packet& set_length(const uint16_t length) {
-    if (data_.size() < 3) {
-      set_cls(get_cls());
-      set_id(get_id());
-      data_.push_back(length & 0xFF);
-    }
-    else {
-      data_[3] = length && 0xFF;
-    }
-    if (data_.size() < 4) {
-      data_.push_back(length << 8);
-    }
-    else {
-      data_[4] = length << 8;
-    }
+    set_data_byte(2, length & 0xFF);
+    set_data_byte(3, length >> 8);
     return *this;
   }
 
@@ -351,26 +317,8 @@ struct Data_packet {
   Data_packet& clear() {
     data_.clear();
     checksum_ = 0;
+    set_length(0);
     return *this;
-  }
-
-private:
-  bytes_t data_;
-  uint16_t checksum_;
-
-  void setup_payload(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload_init) {
-    cbytes_t payload{payload_init};
-    setup_payload(cls, id, payload);
-  }
-
-  void setup_payload(const byte_t cls, const byte_t id, cbytes_t& payload) {
-    uint16_t length = payload.size();
-    data_.push_back(cls);
-    data_.push_back(id);
-    data_.push_back(length && 0xFF);
-    data_.push_back(length >> 8);
-    data_.insert(data_.end(), payload.begin(), payload.end());
-    checksum_ = calc_checksum();
   }
 
   uint16_t calc_length() {
@@ -392,10 +340,41 @@ private:
     std::for_each(data_.begin(), data_.end(), add_byte);
     return (chk_b << 8) + chk_a;
   }
+private:
+  bytes_t data_;
+  uint16_t checksum_;
+
+  void setup_payload(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload_init) {
+    cbytes_t payload{payload_init};
+    setup_payload(cls, id, payload);
+  }
+
+  void setup_payload(const byte_t cls, const byte_t id, cbytes_t& payload) {
+    data_.push_back(cls);
+    data_.push_back(id);
+    set_length(payload.size());
+    data_.insert(data_.end(), payload.begin(), payload.end());
+    checksum_ = calc_checksum();
+  }
+
+  uint8_t get_data_byte(const size_t index) const {
+    return index < data_.size() ? data_[index] : 0;
+  }
+
+  void set_data_byte(const size_t index, cbyte_t value) {
+    while (data_.size() <= index) {
+      data_.push_back(0);
+    }
+    data_[index] = value;
+  }
+
 };
 
 
 struct Payload {
+  virtual Values_type get_values() const {
+    return Values_type();
+  }
 };
 
 
@@ -437,13 +416,19 @@ struct Payload_pvt: public Payload {
   uint16_t magacc;  // scale 10E-2 degrees
 
   static const auto get_parse_rule() {
-    return little_dword >> little_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_  // itow - valid
+    return byte_(command::cls_nav) >> byte_(command::nav::pvt) >> little_word(92)
+        >> little_dword >> little_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_  // itow - valid
         >> little_dword >> little_dword >> byte_ >> byte_ >> byte_ >> byte_  // tacc - numsv
         >> little_dword >> little_dword >> little_dword >> little_dword  // lon - hmsl
         >> little_dword >> little_dword >> little_dword >> little_dword >> little_dword // hacc - veld
         >> little_dword >> little_dword >> little_dword >> little_dword // gspeed - headacc
         >> little_word >> little_dword >> little_word >> little_dword // pdop - headveh
         >> little_word >> little_word;  // magdec - magacc
+  }
+
+  Values_type get_values() const override {
+    Values_type values;
+    return values;
   }
 };
 
@@ -461,9 +446,15 @@ struct Payload_att: public Payload {
   uint32_t accheading;  // scale 1e-5
 
   static const auto get_parse_rule() {
-    return little_dword >> byte_ >> little_word >> byte_  // itow - reserved1
+    return byte_(command::cls_nav) >> byte_(command::nav::att) >> little_word(32)
+        >> little_dword >> byte_ >> little_word >> byte_  // itow - reserved1
         >> little_dword >> little_dword >> little_dword  // roll - heading
         >> little_dword >> little_dword >> little_dword;  // accroll - accheading
+  }
+
+  Values_type get_values() const override {
+    Values_type values;
+    return values;
   }
 };
 
@@ -480,15 +471,22 @@ struct Payload_ins: public Payload {
   int32_t zaccel;  // scale 1E-2, free acceleration: no gravity
 
   static const auto get_parse_rule() {
-    return little_dword >> little_dword  // bitfield0 - reserved1
+    return byte_(command::cls_esf) >> byte_(command::esf::ins) >> little_word(36)
+        >> little_dword >> little_dword  // bitfield0 - reserved1
         >> little_dword  // itow
         >> little_dword >> little_dword >> little_dword  // xangrate - zangrate
         >> little_dword >> little_dword >> little_dword;  // xaccel - zaccel
+  }
+
+  Values_type get_values() const override {
+    Values_type values;
+    return values;
   }
 };
 
 
 struct Payload_raw: public Payload {
+  uint16_t length;
   uint32_t reserved1;
   struct Sensor_data {
     uint32_t data;  // 8 bit datatype + 24 bit data
@@ -499,21 +497,16 @@ struct Payload_raw: public Payload {
   };
   std::vector<Sensor_data> sensor_data;
   static const auto get_parse_rule() {
-    return little_dword >> *(Sensor_data::get_parse_rule());
+    return byte_(command::cls_esf) >> byte_(command::esf::raw) >> little_word
+      >> little_dword >> *(Sensor_data::get_parse_rule());
+  }
+
+  Values_type get_values() const override {
+    log(level::debug, "Getting values for raw packet"); 
+    Values_type values;
+    return values;
   }
 };
-
-struct Ublox_parser::Payload: 
-    public boost::variant<Payload_pvt, Payload_att, Payload_ins, Payload_raw> {
-};
-
-const auto payload_parse_rule =
-  Payload_pvt::get_parse_rule() \
-  | Payload_att::get_parse_rule() \
-  | Payload_ins::get_parse_rule() \
-  | Payload_raw::get_parse_rule();
-
-
 
 #define RULE_DEFINE(name, type) \
 x3::rule<struct name, type> const name = "\"" #name "\""; \
@@ -527,6 +520,64 @@ RULE_DEFINE(esf_raw, Payload_raw)
 RULE_DEFINE(esf_raw_data, Payload_raw::Sensor_data)
 
 #undef RULE_DEFINE
+
+Ublox_parser::Ublox_parser()
+  : Packet_parser(),
+    visitor(std::make_unique<Payload_visitor>()) {
+}
+
+
+Ublox_parser::~Ublox_parser() {
+}
+
+
+struct Ublox_parser::Payload_visitor {
+  Values_queue values;
+
+  void operator()(const Payload& payload) {
+    for (auto& value: payload.get_values()) {
+      values.push_back(value);
+    }
+  }
+};
+
+
+Values_queue& Ublox_parser::get_values() {
+  return visitor->values;
+}
+
+using Payload_variant = boost::variant<Payload_pvt, Payload_att, Payload_ins, Payload_raw>;
+
+auto payload_parse_rule = nav_pvt | nav_att | esf_ins | esf_raw;
+
+} }  // namespace ubx::parser
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_pvt, 
+  itow, year, month, day, hour, min, sec, valid,
+  tacc, nano, fixtype, flags, flags2, numsv,
+  lon,  lat, height, hmsl,  
+  hacc, vacc, veln, vele, veld,
+  gspeed, hmot, sacc, headacc,
+  pdop,  reserved1_32, reserved1_16, headveh,
+  magdec, magacc
+)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_att, 
+  itow, version, reserved1_16, reserved1_8,
+  roll, pitch, heading,
+  accroll, accpitch, accheading
+)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_ins,
+  bitfield0, reserved1,
+  itow,
+  xangrate, yangrate, zangrate,
+  xaccel, yaccel, zaccel)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw, length, reserved1, sensor_data)
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw::Sensor_data, data, stag)
+
+namespace ubx { namespace parser {
 
 void Ublox_parser::parse() {
   Data_packet packet;
@@ -561,12 +612,15 @@ void Ublox_parser::parse() {
     //! Consume the message from the queue
     cur = queue.erase(queue.begin(), cur);
     if (packet.check()) {
-      Ublox_parser::Payload payload;
-      x3::parse(packet.get_data().begin(), packet.get_data().end(),
-                payload_parse_rule, payload);
+      Payload_variant payload;
+      if (x3::parse(packet.get_data().begin(), packet.get_data().end(),
+          payload_parse_rule, payload)) {
+        boost::apply_visitor(*visitor, payload);
+      }
     }
     else {
-      log(level::error, "Ublox packet check error: lenght %, checksum %", packet.get_length(), packet.get_checksum());
+      log(level::error, "Ublox packet check error: lenght %, %, checksum %, %", 
+          packet.get_length(), packet.calc_length(), packet.get_checksum(), packet.calc_checksum());
     }
     packet.clear();
   }
@@ -576,14 +630,13 @@ void Ublox_parser::parse() {
 
 namespace command {
 
-
-cbytes_t cfg_prt_usb = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_usb).get_data();
-cbytes_t cfg_prt_uart = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_uart).get_data();
-cbytes_t mon_ver = parser::Data_packet(cls_mon, mon::ver, {}).get_data();
-cbytes_t cfg_pms = parser::Data_packet(cls_cfg, cfg::pms, cfg::pms_payload).get_data();
-cbytes_t cfg_hnr = parser::Data_packet(cls_cfg, cfg::hnr, cfg::hnr_payload).get_data();
-cbytes_t cfg_rate = parser::Data_packet(cls_cfg, cfg::rate, cfg::rate_payload).get_data();
-cbytes_t cfg_nav5 = parser::Data_packet(cls_cfg, cfg::nav5, cfg::nav5_payload).get_data();
+cbytes_t cfg_prt_usb = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_usb).get_packet();
+cbytes_t cfg_prt_uart = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_uart).get_packet();
+cbytes_t mon_ver = parser::Data_packet(cls_mon, mon::ver, {}).get_packet();
+cbytes_t cfg_pms = parser::Data_packet(cls_cfg, cfg::pms, cfg::pms_payload).get_packet();
+cbytes_t cfg_hnr = parser::Data_packet(cls_cfg, cfg::hnr, cfg::hnr_payload).get_packet();
+cbytes_t cfg_rate = parser::Data_packet(cls_cfg, cfg::rate, cfg::rate_payload).get_packet();
+cbytes_t cfg_nav5 = parser::Data_packet(cls_cfg, cfg::nav5, cfg::nav5_payload).get_packet();
 
 cbytes_t gnss_glonass_payload = cfg::gnss_payload
     << cfg::gnss_payload_gps
@@ -611,14 +664,14 @@ cbytes_t gnss_beidou_payload = cfg::gnss_payload
     << cfg::gnss_payload_imes
     << cfg::gnss_payload_qzss
     << cfg::gnss_payload_glonass;
-cbytes_t cfg_gnss_glonass = parser::Data_packet(cls_cfg, cfg::gnss, gnss_glonass_payload).get_data();
-cbytes_t cfg_gnss_galileo = parser::Data_packet(cls_cfg, cfg::gnss, gnss_galileo_payload).get_data();
-cbytes_t cfg_gnss_beidou = parser::Data_packet(cls_cfg, cfg::gnss, gnss_beidou_payload).get_data();
+cbytes_t cfg_gnss_glonass = parser::Data_packet(cls_cfg, cfg::gnss, gnss_glonass_payload).get_packet();
+cbytes_t cfg_gnss_galileo = parser::Data_packet(cls_cfg, cfg::gnss, gnss_galileo_payload).get_packet();
+cbytes_t cfg_gnss_beidou = parser::Data_packet(cls_cfg, cfg::gnss, gnss_beidou_payload).get_packet();
 
-cbytes_t cfg_msg_nav_pvt = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::pvt, 0x0A }).get_data();
-cbytes_t cfg_msg_nav_att = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::att, 0x0A }).get_data();
-cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x64 }).get_data();
-cbytes_t cfg_msg_esf_raw = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::raw, 0x64 }).get_data();
+cbytes_t cfg_msg_nav_pvt = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::pvt, 0x0A }).get_packet();
+cbytes_t cfg_msg_nav_att = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::att, 0x0A }).get_packet();
+cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x64 }).get_packet();
+cbytes_t cfg_msg_esf_raw = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::raw, 0x64 }).get_packet();
 
 
 }  // namespace command
@@ -633,30 +686,6 @@ cbytes_t mon_ver = { command::sync_1, command::sync_2, command::cls_mon, command
 
 }  // namespace ubx
 
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_pvt, 
-  itow, year, month, day, hour, min, sec, valid,
-  tacc, nano, fixtype, flags, flags2, numsv,
-  lon,  lat, height, hmsl,  
-  hacc, vacc, veln, vele, veld,
-  gspeed, hmot, sacc, headacc,
-  pdop,  reserved1_32, reserved1_16, headveh,
-  magdec, magacc
-)
-
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_att, 
-  itow, version, reserved1_16, reserved1_8,
-  roll, pitch, heading,
-  accroll, accpitch, accheading
-)
-
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_ins,
-  bitfield0, reserved1,
-  itow,
-  xangrate, yangrate, zangrate,
-  xaccel, yaccel, zaccel)
-
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw, reserved1, sensor_data)
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw::Sensor_data, data, stag)
 
 #endif
 
