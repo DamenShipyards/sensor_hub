@@ -486,6 +486,7 @@ struct Payload_ins: public Payload {
 
 
 struct Payload_raw: public Payload {
+  Payload_raw(): Payload(), length(), reserved1(), sensor_data(512) {}
   uint16_t length;
   uint32_t reserved1;
   struct Sensor_data {
@@ -496,10 +497,8 @@ struct Payload_raw: public Payload {
     }
   };
   std::vector<Sensor_data> sensor_data;
-  static const auto get_parse_rule() {
-    return byte_(command::cls_esf) >> byte_(command::esf::raw) >> little_word
-      >> little_dword >> *(Sensor_data::get_parse_rule());
-  }
+
+  static const auto get_parse_rule();
 
   Values_type get_values() const override {
     log(level::debug, "Getting values for raw packet"); 
@@ -516,8 +515,14 @@ BOOST_SPIRIT_DEFINE(name)
 RULE_DEFINE(nav_pvt, Payload_pvt)
 RULE_DEFINE(nav_att, Payload_att)
 RULE_DEFINE(esf_ins, Payload_ins)
-RULE_DEFINE(esf_raw, Payload_raw)
 RULE_DEFINE(esf_raw_data, Payload_raw::Sensor_data)
+
+const auto Payload_raw::get_parse_rule() {
+  return byte_(command::cls_esf) >> byte_(command::esf::raw) >> little_word
+    >> little_dword >> *(esf_raw_data);
+}
+
+RULE_DEFINE(esf_raw, Payload_raw)
 
 #undef RULE_DEFINE
 
@@ -614,7 +619,7 @@ void Ublox_parser::parse() {
     if (packet.check()) {
       Payload_variant payload;
       if (x3::parse(packet.get_data().begin(), packet.get_data().end(),
-          payload_parse_rule, payload)) {
+                    payload_parse_rule, payload)) {
         boost::apply_visitor(*visitor, payload);
       }
     }

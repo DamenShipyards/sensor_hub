@@ -130,7 +130,7 @@ new_test(test_log log.cpp)
 new_test(test_serial)
 new_test(test_quantities)
 new_test(test_tools)
-new_test(test_parse)
+new_test(test_spirit)
 new_test(test_usb log.cpp usb.cpp)
 new_test(test_device log.cpp device.cpp datetime.cpp)
 new_test(test_processor 
