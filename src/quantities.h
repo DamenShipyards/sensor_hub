@@ -81,6 +81,24 @@ enum class Quantity {
   fay, ///< 33: Y component of free acceleration, acceleration with respect to earth surface
   faz, ///< 34: Z component of free acceleration, acceleration with respect to earth surface
   du,  ///< 35: Duration, time interval
+  hacc,///< 36: Horizontal position accuracy
+  vacc,///< 37: Vertical position accuracy
+  sacc,///< 38: Speed accuracy
+  cacc,///< 39: Course accuracy
+  racc,///< 40: Roll accuracy
+  pacc,///< 41: Pitch accuraty
+  yacc,///< 42: Yaw accuraty
+  hdac,///< 43: Heading accuracy
+  rax, ///< 44: Raw measurement of X component of acceleration
+  ray, ///< 45: Raw measurement of Y component of acceleration
+  raz, ///< 46: Raw measurement of Z component of acceleration
+  rrr, ///< 47: Raw measurement of Roll rate, angular velocity about X axis
+  rpr, ///< 48: Raw measurement of Pitch rate, angular velocity about Y axis
+  ryr, ///< 49: Raw measurement of Yaw rate, angular velocity about Z axis
+  rmx, ///< 50: Raw measurement of X component of magnetic flux vector
+  rmy, ///< 51: Raw measurement of Y component of magnetic flux vector
+  rmz, ///< 52: Raw measurement of Z component of magnetic flux vector
+  gtmp,///< 53: Gyroscope temperature
   end, ///< Enumeration end marker. Do not use
 };
 
@@ -127,6 +145,24 @@ QUANTITY_NAME(yr);
 QUANTITY_NAME(fax);
 QUANTITY_NAME(fay);
 QUANTITY_NAME(faz);
+QUANTITY_NAME(hacc);
+QUANTITY_NAME(vacc);
+QUANTITY_NAME(sacc);
+QUANTITY_NAME(cacc);
+QUANTITY_NAME(racc);
+QUANTITY_NAME(pacc);
+QUANTITY_NAME(yacc);
+QUANTITY_NAME(hdac);
+QUANTITY_NAME(rax);
+QUANTITY_NAME(ray);
+QUANTITY_NAME(raz);
+QUANTITY_NAME(rrr);
+QUANTITY_NAME(rpr);
+QUANTITY_NAME(ryr);
+QUANTITY_NAME(rmx);
+QUANTITY_NAME(rmy);
+QUANTITY_NAME(rmz);
+QUANTITY_NAME(gtmp);
 QUANTITY_NAME(du);
 
 template <Quantity quantity>

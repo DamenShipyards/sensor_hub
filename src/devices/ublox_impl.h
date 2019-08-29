@@ -15,13 +15,11 @@
 #define XSENS_IMPL_H_
 
 #include "ublox.h"
+#include "../functions.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <vector>
-#include <boost/date_time/date.hpp>
-#include <boost/date_time/posix_time/posix_time_duration.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/variant.hpp>
 
 
@@ -267,7 +265,7 @@ struct Data_packet {
     return get_data_byte(1);
   }
 
-  bytes_t get_data() {
+  bytes_t& get_data() {
     return data_;
   }
 
@@ -387,12 +385,15 @@ struct Payload_pvt: public Payload {
   uint8_t min;
   uint8_t sec;
   uint8_t valid;  // 0: valid date, 1: valid time, 2: fully resolved, 3: valid mag
+  enum { valid_date = 0x01, valid_time=0x02, valid_full=0x04, valid_mag=0x08 };
   uint32_t tacc;  // scale 10e-9
   int32_t nano;  // scale 10e-9
   uint8_t fixtype;  // 0: nofix, 1: dead reck, 2: 2D fix, 3: 3D fix,
                     // 4 GNSS + dead reck, 5: time fix only
+  enum { fixtype_nofix, fixtype_deadreck, fixtype_2d, fixtype_3d, fixtype_3d_deadreck, fixtype_time };
   uint8_t flags;  // 0: gnss fix ok, 1: diff solution, 2-4 pms state,
                   // 5: headveh valid, 6-7 carr solution
+  enum { flags_gnss=0x01, flags_differential=0x02, flags_headveh_valid=0x20 };
   uint8_t flags2;  // Time validity confirmation: oh well....
   uint8_t numsv;
   int32_t lon;  // scale 10E-7 degrees
@@ -406,7 +407,7 @@ struct Payload_pvt: public Payload {
   int32_t veld;  // scale 10E-3
   int32_t gspeed;  // scale 10E-3
   int32_t hmot;  // scale 10E-5 degrees
-  uint32_t sacc;
+  uint32_t sacc; // scale 10E-3 m/s
   uint32_t headacc;  // scale 10E-5 degrees
   uint16_t pdop;  // scale !0E-2
   uint32_t reserved1_32;
@@ -417,7 +418,8 @@ struct Payload_pvt: public Payload {
 
   static const auto get_parse_rule() {
     return byte_(command::cls_nav) >> byte_(command::nav::pvt) >> little_word(92)
-        >> little_dword >> little_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_  // itow - valid
+        >> little_dword >> little_word >> byte_ >> byte_  // itow - day
+        >> byte_ >> byte_ >> byte_ >> byte_  // hour - valid
         >> little_dword >> little_dword >> byte_ >> byte_ >> byte_ >> byte_  // tacc - numsv
         >> little_dword >> little_dword >> little_dword >> little_dword  // lon - hmsl
         >> little_dword >> little_dword >> little_dword >> little_dword >> little_dword // hacc - veld
@@ -427,7 +429,31 @@ struct Payload_pvt: public Payload {
   }
 
   Values_type get_values() const override {
+    log(level::debug, "Getting values from pvt packet"); 
     Values_type values;
+    if (valid & valid_full) {
+      values.push_back(
+          compose_time(year, month, day, hour, min, sec, nano)
+      );
+    }
+    if (fixtype == fixtype_2d || fixtype == fixtype_3d || fixtype == fixtype_3d_deadreck) {
+      values.push_back({Quantity::la, lat * 10E-7});
+      values.push_back({Quantity::lo, lon * 10E-7});
+      values.push_back({Quantity::vog, gspeed * 10E-3});
+      values.push_back({Quantity::crs, hmot * 10E-5 * M_PI / 180.0});
+      values.push_back({Quantity::hacc, hacc * 10E-3});
+      values.push_back({Quantity::sacc, sacc * 10E-3});
+      values.push_back({Quantity::cacc, headacc * 10E-5 * M_PI / 180.0});
+    }
+    if (fixtype == fixtype_3d || fixtype == fixtype_3d_deadreck) {
+      values.push_back({Quantity::h1, height * 10E-3});
+      values.push_back({Quantity::h2, hmsl * 10E-3});
+      values.push_back({Quantity::vacc, vacc * 10E-3});
+    }
+    if (flags & flags_headveh_valid) {
+      values.push_back({Quantity::hdg, headveh * 10E-5 * M_PI / 180.0}); 
+      values.push_back({Quantity::hdac, headacc * 10E-5 * M_PI / 180.0});
+    }
     return values;
   }
 };
@@ -453,7 +479,20 @@ struct Payload_att: public Payload {
   }
 
   Values_type get_values() const override {
+    log(level::debug, "Getting values from att packet"); 
     Values_type values;
+    if (accroll != 0) {
+      values.push_back({Quantity::ro, roll * 10E-5 * M_PI / 180.0});
+      values.push_back({Quantity::racc, accroll * 10E-5 * M_PI / 180.0});
+    }
+    if (accpitch != 0) {
+      values.push_back({Quantity::pi, pitch * 10E-5 * M_PI / 180.0});
+      values.push_back({Quantity::pacc, accpitch * 10E-5 * M_PI / 180.0});
+    }
+    if (accheading != 0) {
+      values.push_back({Quantity::ya, accheading * 10E-5 * M_PI / 180.0});
+      values.push_back({Quantity::yacc, accheading * 10E-5 * M_PI / 180.0});
+    }
     return values;
   }
 };
@@ -479,29 +518,48 @@ struct Payload_ins: public Payload {
   }
 
   Values_type get_values() const override {
+    log(level::debug, "Getting values from ins packet"); 
     Values_type values;
+    values.push_back({Quantity::rr, xangrate * 10E-3 * M_PI / 180.0});
+    values.push_back({Quantity::pr, yangrate * 10E-3 * M_PI / 180.0});
+    values.push_back({Quantity::yr, zangrate * 10E-3 * M_PI / 180.0});
+    values.push_back({Quantity::ax, xaccel * 10E-2});
+    values.push_back({Quantity::ay, yaccel * 10E-2});
+    values.push_back({Quantity::az, zaccel * 10E-2});
     return values;
   }
 };
 
 
+struct Sensor_data {
+  uint32_t data;  // 8 bit datatype + 24 bit data
+  uint32_t stag;  // time tag
+  static const auto get_parse_rule() {
+    return little_dword >> little_dword;
+  }
+  uint8_t data_type() {
+    return data >> 24;
+  }
+  int data_value() {
+    uint32_t result = data & 0xFFF;
+    return *reinterpret_cast<int*>(&result);
+  }
+};
+
+
 struct Payload_raw: public Payload {
-  Payload_raw(): Payload(), length(), reserved1(), sensor_data(512) {}
   uint16_t length;
   uint32_t reserved1;
-  struct Sensor_data {
-    uint32_t data;  // 8 bit datatype + 24 bit data
-    uint32_t stag;  // time tag
-    static const auto get_parse_rule() {
-      return little_dword >> little_dword;
-    }
-  };
   std::vector<Sensor_data> sensor_data;
 
-  static const auto get_parse_rule();
+  static const auto get_parse_rule() {
+    return byte_(command::cls_esf) >> byte_(command::esf::raw) 
+           >> little_word  // length
+           >> little_dword >> *(Sensor_data::get_parse_rule());  // reserved1 - sensor_data
+  }
 
   Values_type get_values() const override {
-    log(level::debug, "Getting values for raw packet"); 
+    log(level::debug, "Getting values from raw packet"); 
     Values_type values;
     return values;
   }
@@ -515,13 +573,7 @@ BOOST_SPIRIT_DEFINE(name)
 RULE_DEFINE(nav_pvt, Payload_pvt)
 RULE_DEFINE(nav_att, Payload_att)
 RULE_DEFINE(esf_ins, Payload_ins)
-RULE_DEFINE(esf_raw_data, Payload_raw::Sensor_data)
-
-const auto Payload_raw::get_parse_rule() {
-  return byte_(command::cls_esf) >> byte_(command::esf::raw) >> little_word
-    >> little_dword >> *(esf_raw_data);
-}
-
+RULE_DEFINE(sensor_data, Sensor_data)
 RULE_DEFINE(esf_raw, Payload_raw)
 
 #undef RULE_DEFINE
@@ -579,8 +631,11 @@ BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_ins,
   xangrate, yangrate, zangrate,
   xaccel, yaccel, zaccel)
 
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw, length, reserved1, sensor_data)
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw::Sensor_data, data, stag)
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw, 
+    length, reserved1, sensor_data)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Sensor_data, 
+    data, stag)
 
 namespace ubx { namespace parser {
 
@@ -621,6 +676,9 @@ void Ublox_parser::parse() {
       if (x3::parse(packet.get_data().begin(), packet.get_data().end(),
                     payload_parse_rule, payload)) {
         boost::apply_visitor(*visitor, payload);
+      }
+      else {
+        log(level::debug, "Received an unsollicited ubx message");
       }
     }
     else {

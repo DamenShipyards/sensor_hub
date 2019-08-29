@@ -16,16 +16,12 @@
 #include "../datetime.h"
 #include "../types.h"
 #include "../spirit_x3.h"
+#include "../functions.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <boost/date_time/date.hpp>
-#include <boost/date_time/posix_time/posix_time_duration.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
 
 namespace xsens {
-
-namespace gregorian = boost::gregorian;
 
 namespace command {
 
@@ -239,12 +235,8 @@ struct Date_time: public Data_packet {
   Values_type get_values() const override {
     using namespace posix_time;
     if (flags & valid_utc) {
-      ptime t(
-          gregorian::date(year, month, day),
-          hours(hour) + minutes(minute) + seconds(second) + microseconds(nano/1000)
-      );
       // Return a list with one Unix Time value
-      return Values_type{{quantity, 1E-6 * (t - unix_epoch).total_microseconds()}};
+      return Values_type{compose_time(year, month, day, hour, minute, second, nano)};
     }
     else {
       // Return an empy list

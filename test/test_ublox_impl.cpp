@@ -48,3 +48,10 @@ BOOST_AUTO_TEST_CASE(ublox_checksum_test) {
   auto packet = parser::Data_packet(command::cls_ack, command::ack::nak, {command::cls_cfg, command::cfg::prt});
   BOOST_TEST(packet.get_packet() == ack_nak);
 }
+
+BOOST_AUTO_TEST_CASE(sensor_data_test) {
+  ubx::parser::Sensor_data sd;
+  sd.data = 0x1FFFFFF;
+  sd.stag = 1;
+  BOOST_TEST(sd.data_value() == -1);
+}
