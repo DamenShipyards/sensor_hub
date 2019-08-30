@@ -156,12 +156,19 @@ private:
     set_default("modbus.yr_min", -M_PI);
     set_default("modbus.yr_max", M_PI);
 
-    set_default("devices.count", 1);
+    set_default("devices.count", 2);
+
     set_default("device0.type", "xsens_mti_g_710_usb");
     set_default("device0.name", "Xsens-MTi-G-710");
     set_default("device0.connection_string", "2639:0017,0");
     set_default("device0.enable_logging", false);
     set_default("device0.use_as_time_source", false);
+
+    set_default("device1.type", "ublox_neo_m8u_serial");
+    set_default("device1.name", "Ublox-NEO-M8U");
+    set_default("device1.connection_string", "auto");
+    set_default("device1.enable_logging", false);
+    set_default("device1.use_as_time_source", false);
 
     set_default("processors.count", 5);
 

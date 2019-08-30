@@ -24,8 +24,7 @@
 
 namespace gregorian = boost::gregorian;
 
-
-inline Quantity_value compose_time(
+inline double compose_time_value(
     const int year, const int month, const int day,
     const int hour, const int minute, const int second,
     const int nanosecond) {
@@ -35,7 +34,16 @@ inline Quantity_value compose_time(
       hours(hour) + minutes(minute) + seconds(second) + microseconds(nanosecond/1000)
   );
   // Return a Unix Time value
-  return Quantity_value{Quantity::ut, 1E-6 * (t - unix_epoch).total_microseconds()};
+  return 1E-6 * (t - unix_epoch).total_microseconds();
+}
+
+inline Quantity_value compose_time_quantity(
+    const int year, const int month, const int day,
+    const int hour, const int minute, const int second,
+    const int nanosecond) {
+  // Return a Unix Time quantity value
+  return Quantity_value{compose_time_value(year, month, day, hour, minute, second, nanosecond), 
+                        Quantity::ut};
 }
 
 #endif

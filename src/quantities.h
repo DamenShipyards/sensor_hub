@@ -24,6 +24,7 @@
 #include <math.h>
 
 #include "tools.h"
+#include "datetime.h"
 
 //! Storage type for quantity values
 using Value_type = double;
@@ -208,37 +209,83 @@ inline Quantity get_quantity(std::string& quantity_name) {
   return Quantity::end;
 }
 
-struct Data_quantity {
-  Quantity quantity;
+
+
+struct Data_value {
+  Value_type value;
+  bool operator==(const Value_type& other) const {
+    return other == this->value;
+  }
+  bool operator==(const Data_value& other) const {
+    return other.value == this->value;
+  }
 };
 
 struct Data_stamp {
   Value_type stamp;
-};
-
-struct Data_value {
-  Value_type value;
-};
-
-struct Quantity_value: public Data_quantity, public Data_value {};
-struct Stamped_value: public Data_stamp, public Data_value {
-  const double& operator[](const int index) {
-    return index == 0 ? stamp : value;
+  bool operator==(const Data_stamp& other) const {
+    return other.stamp == this->stamp;
+  }
+  bool simultaneous_with(const Value_type& stamp) const {
+    return stamp == this->stamp;
+  }
+  bool simultaneous_with(const Data_stamp& stamp) const {
+    return stamp == *this;
   }
 };
-struct Stamped_quantity: public Data_quantity, public Stamped_value {};
+
+struct Data_quantity {
+  Quantity quantity;
+  bool operator==(const Quantity& other) const {
+    return other == this->quantity;
+  }
+  bool operator==(const Data_quantity& other) const {
+    return other.quantity == this->quantity;
+  }
+};
+
+struct Quantity_value: public Data_value, public Data_quantity {
+  using Data_value::operator==;
+  using Data_quantity::operator==;
+  bool operator==(const Quantity_value& other) const {
+    return Data_quantity::operator==(other)
+           && Data_value::operator==(other);
+  }
+};
+
+struct Stamped_value: public Data_value, public Data_stamp {
+  using Data_value::operator==;
+  using Data_stamp::operator==;
+  const double operator[](const int index) {
+    return index == 0 ? value : stamp;
+  }
+  bool operator==(const Stamped_value& other) const {
+    return Data_value::operator==(other) 
+           && Data_stamp::operator==(other);
+  }
+};
+
+struct Stamped_quantity: public Stamped_value, Data_quantity {
+  using Stamped_value::operator==;
+  using Data_quantity::operator==;
+  const double operator[](const int index) {
+    return index == 0 ? value : index == 1 ? stamp : static_cast<double>(quantity);
+  }
+  bool operator==(const Stamped_quantity& other) const {
+    return Data_quantity::operator==(other) 
+           && Stamped_value::operator==(other);
+  }
+};
+
 
 inline Stamped_quantity stamped_quantity(double stamp, Quantity_value&& qv) {
-  return {qv.quantity, stamp, qv.value};
-}
-inline Stamped_quantity stamped_quantity(double stamp, const Quantity_value& qv) {
-  return {qv.quantity, stamp, qv.value};
+  return {qv.value, stamp, qv.quantity};
 }
 
-inline std::ostream& operator<<(std::ostream& os, Quantity quantity) {
-  os << get_quantity_name(quantity);
-  return os;
+inline Stamped_quantity stamped_quantity(double stamp, const Quantity_value& qv) {
+  return {qv.value, stamp, qv.quantity};
 }
+
 
 using Data_queue = std::deque<Stamped_value>;
 using Data_map = std::map<Quantity, Data_queue>;
@@ -289,6 +336,35 @@ inline double value_diff(Quantity quantity, const double& value1, const double& 
 
 inline double value_diff(const Stamped_quantity& qvalue, const double& value) {
   return value_diff(qvalue.quantity, qvalue.value, value);
+}
+
+
+inline std::ostream& operator<<(std::ostream& os, const Quantity quantity) {
+  return os << get_quantity_name(quantity);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Data_value& value) {
+  return os << value.value;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Data_stamp& stamp) {
+  return os << timestamp_to_string(stamp.stamp);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Data_quantity& quantity) {
+  return os << quantity.quantity;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Quantity_value& value) {
+  return os << static_cast<const Data_value&>(value) << ":" << static_cast<const Data_quantity&>(value);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Stamped_value& value) {
+  return os << static_cast<const Data_value&>(value) << "@" << static_cast<const Data_stamp&>(value);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Stamped_quantity& value) {
+  return os << static_cast<const Stamped_value&>(value) << ":" << static_cast<const Data_quantity&>(value);
 }
 
 #endif

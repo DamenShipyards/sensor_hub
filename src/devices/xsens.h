@@ -97,8 +97,8 @@ struct Xsens_parser: public Packet_parser {
   std::unique_ptr<Data_packets> data_packets;
   std::unique_ptr<Data_visitor> visitor;
 
-  void parse() override;
-  Values_queue& get_values() override;
+  void parse(const double& stamp) override;
+  Stamped_queue& get_values() override;
 };
 
 } //parser
@@ -110,10 +110,10 @@ struct Xsens: public Port_device<Port, ContextProvider>, public Polling_mixin<Xs
 
   template <typename Iterator>
   void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
-    parser_.add_and_parse(buf_begin, buf_end);
+    parser_.add_and_parse(stamp, buf_begin, buf_end);
     auto& values = parser_.get_values();
     while (!values.empty()) {
-      this->insert_value(stamped_quantity(stamp, values.front()));
+      this->insert_value(values.front());
       values.pop_front();
     }
   }

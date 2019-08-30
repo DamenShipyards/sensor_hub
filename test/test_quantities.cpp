@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(iteration_test)
     ++count;
   }
 
-  BOOST_TEST(count == 36);
+  BOOST_TEST(count == 54);
   BOOST_TEST(qs[34] == "faz");
   constexpr const char* const qn = Quantity_name<Quantity::yr>::value;
   std::string s(qn);
@@ -58,10 +58,10 @@ BOOST_AUTO_TEST_CASE(iteration_test)
 }
 
 BOOST_AUTO_TEST_CASE(data_assignment_test) {
-  Quantity_value qv = {Quantity::ut, 88.0};
+  Quantity_value qv = {88.0, Quantity::ut};
   Data_value dv;
-  Stamped_value sv = {100.0, 99.0};
-  Stamped_quantity sq = {Quantity::lo, 50.0, 1.0};
+  Stamped_value sv = {99.0,  100.0};
+  Stamped_quantity sq = {1.0, 50.0, Quantity::lo};
   sv = sq;
   dv = sv;
   BOOST_TEST(sv.stamp == sq.stamp);
@@ -69,6 +69,16 @@ BOOST_AUTO_TEST_CASE(data_assignment_test) {
   BOOST_TEST(dv.value == sv.value);
   dv = qv;
   BOOST_TEST(dv.value == qv.value);
-  sq = {Quantity::ut, sv};
   sq = stamped_quantity(150.0, qv);
+  sq = {sv, Quantity::ut};
+}
+
+BOOST_AUTO_TEST_CASE(comparison_test) {
+  Quantity_value qv = {88.0, Quantity::ut};
+  Stamped_quantity sq = {1.0, 50.0, Quantity::lo};
+  BOOST_TEST(qv == 88.0);
+  BOOST_TEST(qv == Quantity::ut);
+  BOOST_TEST(sq == 1.0);
+  BOOST_TEST(sq == Quantity::lo);
+  BOOST_TEST(sq.simultaneous_with(50.0));
 }

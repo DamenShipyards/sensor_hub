@@ -32,8 +32,9 @@ namespace posix_time = boost::posix_time;
 
 namespace x3 = boost::spirit::x3;
 
-using Values_type = std::vector<Quantity_value>;
-using Values_queue = std::deque<Quantity_value>;
+using Quantity_values = std::vector<Quantity_value>;
+using Stamped_quantities = std::vector<Stamped_quantity>;
+using Stamped_queue = std::deque<Stamped_quantity>;
 
 struct Packet_parser {
   Packet_parser(): queue(), cur(queue.begin()) {}
@@ -41,15 +42,15 @@ struct Packet_parser {
   typename std::deque<uint8_t>::iterator cur;
 
   template <typename Iterator>
-  void add_and_parse(Iterator begin, Iterator end) {
+  void add_and_parse(const double& stamp, Iterator begin, Iterator end) {
     if (queue.size() > 0x1000)
       // Something is wrong. Hose the queue
       queue.clear();
     queue.insert(queue.end(), begin, end);
-    parse();
+    parse(stamp);
   }
-  virtual void parse() = 0;
-  virtual Values_queue& get_values() = 0;
+  virtual void parse(const double& stamp) = 0;
+  virtual Stamped_queue& get_values() = 0;
 };
 
 #endif  // ifndef PARSER_H_

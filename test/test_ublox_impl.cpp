@@ -51,7 +51,9 @@ BOOST_AUTO_TEST_CASE(ublox_checksum_test) {
 
 BOOST_AUTO_TEST_CASE(sensor_data_test) {
   ubx::parser::Sensor_data sd;
-  sd.data = 0x1FFFFFF;
-  sd.stag = 1;
-  BOOST_TEST(sd.data_value() == -1);
+  sd.data = 0x5FFFFFF;
+  sd.stag = 0;
+  BOOST_TEST(sd.get_value(25600) == Quantity::ryr);
+  BOOST_TEST(sd.get_value(25600) == (M_PI * -1.0 / (4096.0 * 180.0)));
+  BOOST_TEST(sd.get_value(25600) == Data_stamp{-1.0});
 }

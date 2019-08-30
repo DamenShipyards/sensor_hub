@@ -370,8 +370,8 @@ private:
 
 
 struct Payload {
-  virtual Values_type get_values() const {
-    return Values_type();
+  virtual Stamped_quantities get_values() const {
+    return Stamped_quantities();
   }
 };
 
@@ -428,31 +428,28 @@ struct Payload_pvt: public Payload {
         >> little_word >> little_word;  // magdec - magacc
   }
 
-  Values_type get_values() const override {
-    log(level::debug, "Getting values from pvt packet"); 
-    Values_type values;
+  Stamped_quantities get_values() const override {
+    Stamped_quantities values;
     if (valid & valid_full) {
-      values.push_back(
-          compose_time(year, month, day, hour, min, sec, nano)
-      );
+      values.push_back({compose_time_value(year, month, day, hour, min, sec, nano), 0.0, Quantity::ut});
     }
     if (fixtype == fixtype_2d || fixtype == fixtype_3d || fixtype == fixtype_3d_deadreck) {
-      values.push_back({Quantity::la, lat * 10E-7});
-      values.push_back({Quantity::lo, lon * 10E-7});
-      values.push_back({Quantity::vog, gspeed * 10E-3});
-      values.push_back({Quantity::crs, hmot * 10E-5 * M_PI / 180.0});
-      values.push_back({Quantity::hacc, hacc * 10E-3});
-      values.push_back({Quantity::sacc, sacc * 10E-3});
-      values.push_back({Quantity::cacc, headacc * 10E-5 * M_PI / 180.0});
+      values.push_back({lat * 10E-7, 0.0, Quantity::la});
+      values.push_back({lon * 10E-7, 0.0, Quantity::lo});
+      values.push_back({gspeed * 10E-3, 0.0, Quantity::vog});
+      values.push_back({hmot * 10E-5 * M_PI / 180.0, 0.0, Quantity::crs});
+      values.push_back({hacc * 10E-3, 0.0, Quantity::hacc});
+      values.push_back({sacc * 10E-3, 0.0, Quantity::sacc});
+      values.push_back({headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::cacc});
     }
     if (fixtype == fixtype_3d || fixtype == fixtype_3d_deadreck) {
-      values.push_back({Quantity::h1, height * 10E-3});
-      values.push_back({Quantity::h2, hmsl * 10E-3});
-      values.push_back({Quantity::vacc, vacc * 10E-3});
+      values.push_back({height * 10E-3, 0.0, Quantity::h1});
+      values.push_back({hmsl * 10E-3, 0.0, Quantity::h2});
+      values.push_back({vacc * 10E-3, 0.0, Quantity::vacc});
     }
     if (flags & flags_headveh_valid) {
-      values.push_back({Quantity::hdg, headveh * 10E-5 * M_PI / 180.0}); 
-      values.push_back({Quantity::hdac, headacc * 10E-5 * M_PI / 180.0});
+      values.push_back({headveh * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdg}); 
+      values.push_back({headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdac});
     }
     return values;
   }
@@ -478,20 +475,19 @@ struct Payload_att: public Payload {
         >> little_dword >> little_dword >> little_dword;  // accroll - accheading
   }
 
-  Values_type get_values() const override {
-    log(level::debug, "Getting values from att packet"); 
-    Values_type values;
+  Stamped_quantities get_values() const override {
+    Stamped_quantities values;
     if (accroll != 0) {
-      values.push_back({Quantity::ro, roll * 10E-5 * M_PI / 180.0});
-      values.push_back({Quantity::racc, accroll * 10E-5 * M_PI / 180.0});
+      values.push_back({roll * 10E-5 * M_PI / 180.0, 0.0, Quantity::ro});
+      values.push_back({accroll * 10E-5 * M_PI / 180.0, 0.0, Quantity::racc});
     }
     if (accpitch != 0) {
-      values.push_back({Quantity::pi, pitch * 10E-5 * M_PI / 180.0});
-      values.push_back({Quantity::pacc, accpitch * 10E-5 * M_PI / 180.0});
+      values.push_back({pitch * 10E-5 * M_PI / 180.0, 0.0, Quantity::pi});
+      values.push_back({accpitch * 10E-5 * M_PI / 180.0, 0.0, Quantity::pacc});
     }
     if (accheading != 0) {
-      values.push_back({Quantity::ya, accheading * 10E-5 * M_PI / 180.0});
-      values.push_back({Quantity::yacc, accheading * 10E-5 * M_PI / 180.0});
+      values.push_back({heading * 10E-5 * M_PI / 180.0, 0.0, Quantity::ya});
+      values.push_back({accheading * 10E-5 * M_PI / 180.0, 0.0, Quantity::yacc});
     }
     return values;
   }
@@ -517,15 +513,14 @@ struct Payload_ins: public Payload {
         >> little_dword >> little_dword >> little_dword;  // xaccel - zaccel
   }
 
-  Values_type get_values() const override {
-    log(level::debug, "Getting values from ins packet"); 
-    Values_type values;
-    values.push_back({Quantity::rr, xangrate * 10E-3 * M_PI / 180.0});
-    values.push_back({Quantity::pr, yangrate * 10E-3 * M_PI / 180.0});
-    values.push_back({Quantity::yr, zangrate * 10E-3 * M_PI / 180.0});
-    values.push_back({Quantity::ax, xaccel * 10E-2});
-    values.push_back({Quantity::ay, yaccel * 10E-2});
-    values.push_back({Quantity::az, zaccel * 10E-2});
+  Stamped_quantities get_values() const override {
+    Stamped_quantities values;
+    values.push_back({xangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::rr});
+    values.push_back({yangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::pr});
+    values.push_back({zangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::yr});
+    values.push_back({xaccel * 10E-2, 0.0, Quantity::ax});
+    values.push_back({yaccel * 10E-2, 0.0, Quantity::ay});
+    values.push_back({zaccel * 10E-2, 0.0, Quantity::az});
     return values;
   }
 };
@@ -537,12 +532,40 @@ struct Sensor_data {
   static const auto get_parse_rule() {
     return little_dword >> little_dword;
   }
-  uint8_t data_type() {
+
+  enum { data_type_none=0, data_type_ryr=5, data_type_gtmp=12, data_type_rpr= 13, data_type_rrr=14,
+         data_type_rax=16, data_type_ray=17, data_type_raz=18 };
+
+  uint8_t get_data_type() const {
     return data >> 24;
   }
-  int data_value() {
-    uint32_t result = data & 0xFFF;
-    return *reinterpret_cast<int*>(&result);
+
+  Stamped_quantity get_value(uint32_t reftag) const {
+    uint32_t shifted = (data & 0xFFFFFF) << 8;
+    int signed_shifted = *reinterpret_cast<int*>(&shifted);
+    Value_type value = static_cast<Value_type>(signed_shifted);
+    if (reftag < stag) 
+        return {0.0, 0.0, Quantity::end};
+    double offset = (reftag - stag) * 0.01 / -256.0;
+
+    switch (get_data_type()) {
+      case data_type_ryr:
+        return {value / (4096.0 * 256.0 * 180.0) * M_PI, offset, Quantity::ryr};
+      case data_type_rpr:
+        return {value / (4096.0 * 256.0 * 180.0) * M_PI, offset, Quantity::rpr};
+      case data_type_rrr:
+        return {value / (4096.0 * 256.0 * 180.0) * M_PI, offset, Quantity::rrr};
+      case data_type_rax:
+        return {value / (1024.0 * 256.0), offset, Quantity::rax};
+      case data_type_ray:
+        return {value / (1024.0 * 256.0), offset, Quantity::ray};
+      case data_type_raz:
+        return {value / (1024.0 * 256.0), offset, Quantity::raz};
+      case data_type_gtmp:
+        return {value / (100 * 256.0), offset, Quantity::gtmp};
+      default:
+        return {0.0, 0.0, Quantity::end};
+    }
   }
 };
 
@@ -558,9 +581,17 @@ struct Payload_raw: public Payload {
            >> little_dword >> *(Sensor_data::get_parse_rule());  // reserved1 - sensor_data
   }
 
-  Values_type get_values() const override {
-    log(level::debug, "Getting values from raw packet"); 
-    Values_type values;
+  Stamped_quantities get_values() const override {
+    Stamped_quantities values;
+    if (!sensor_data.empty()) {
+      auto reftag = sensor_data.back().stag;
+      for (auto& data: sensor_data) {
+        auto value = data.get_value(reftag);
+        if (value.quantity != Quantity::end) {
+          values.push_back(value);
+        }
+      }
+    }
     return values;
   }
 };
@@ -589,17 +620,19 @@ Ublox_parser::~Ublox_parser() {
 
 
 struct Ublox_parser::Payload_visitor {
-  Values_queue values;
+  Stamped_queue values;
+  double stamp;
 
   void operator()(const Payload& payload) {
     for (auto& value: payload.get_values()) {
+      value.stamp += stamp;
       values.push_back(value);
     }
   }
 };
 
 
-Values_queue& Ublox_parser::get_values() {
+Stamped_queue& Ublox_parser::get_values() {
   return visitor->values;
 }
 
@@ -639,7 +672,7 @@ BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Sensor_data,
 
 namespace ubx { namespace parser {
 
-void Ublox_parser::parse() {
+void Ublox_parser::parse(const double& stamp) {
   Data_packet packet;
   int len = 0;
   auto set_cls = [&](auto& ctx) { packet.set_cls(_attr(ctx)); };
@@ -666,6 +699,7 @@ void Ublox_parser::parse() {
   auto packet_rule = junk >> preamble >> byte_[set_cls] >> byte_[set_id]
                           >> little_word[set_len] >> content >> little_word[set_chk];
 
+  visitor->stamp = stamp;
   cur = queue.begin();
   //! Look for messages in the queue
   while (cur != queue.end() && x3::parse(cur, queue.end(), packet_rule)) {
@@ -733,8 +767,8 @@ cbytes_t cfg_gnss_beidou = parser::Data_packet(cls_cfg, cfg::gnss, gnss_beidou_p
 
 cbytes_t cfg_msg_nav_pvt = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::pvt, 0x0A }).get_packet();
 cbytes_t cfg_msg_nav_att = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::att, 0x0A }).get_packet();
-cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x64 }).get_packet();
-cbytes_t cfg_msg_esf_raw = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::raw, 0x64 }).get_packet();
+cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x0A }).get_packet();
+cbytes_t cfg_msg_esf_raw = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::raw, 0x0A }).get_packet();
 
 
 }  // namespace command

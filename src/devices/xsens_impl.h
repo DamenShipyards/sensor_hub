@@ -210,8 +210,8 @@ struct Data_packet {
    * Return a vector of Quantity_value's contained
    * in this data packet
    */
-  virtual Values_type get_values() const {
-    return Values_type();
+  virtual Quantity_values get_values() const {
+    return Quantity_values();
   }
 };
 
@@ -232,15 +232,15 @@ struct Date_time: public Data_packet {
   uint8_t second;
   uint8_t flags;
 
-  Values_type get_values() const override {
+  Quantity_values get_values() const override {
     using namespace posix_time;
     if (flags & valid_utc) {
       // Return a list with one Unix Time value
-      return Values_type{compose_time(year, month, day, hour, minute, second, nano)};
+      return Quantity_values{compose_time_quantity(year, month, day, hour, minute, second, nano)};
     }
     else {
       // Return an empy list
-      return Values_type();
+      return Quantity_values();
     }
   }
 
@@ -283,14 +283,14 @@ struct Data_value: public Data_packet {
    * Get a list of converted sensor hub Values from the raw data that was
    * received from the sensor
    */
-  Values_type get_values() const override {
-    Values_type result;
+  Quantity_values get_values() const override {
+    Quantity_values result;
     int dim = 0;
     Quantity_iter qi(quantity);
     for (auto& value: data) {
       // When a data packet contains multiple values, the quantities of these
       // values are always consecutive, so we can just increment the quantity
-      result.push_back({*qi++, converter::factor(dim++) * static_cast<double>(value)});
+      result.push_back({converter::factor(dim++) * static_cast<double>(value), *qi++});
     }
     return result;
   }
@@ -404,11 +404,12 @@ struct Xsens_parser::Data_packets
  */
 struct Xsens_parser::Data_visitor {
 
-  Values_queue values;
+  Stamped_queue values;
+  double stamp;
 
   void operator()(const Data_packet& data_packet) {
     for (auto& value: data_packet.get_values()) {
-      values.push_back(value);
+      values.push_back(stamped_quantity(stamp, value));
     }
   }
 };
@@ -425,7 +426,7 @@ Xsens_parser::~Xsens_parser() {
 }
 
 
-void Xsens_parser::parse() {
+void Xsens_parser::parse(const double& stamp) {
   uint8_t mid = 0;
   int len = 0;
   std::vector<uint8_t> data;
@@ -450,6 +451,8 @@ void Xsens_parser::parse() {
   auto content = *(eps[have_data] >> byte_[add_data]) >> eps[have_all];
   //! The complete packet
   auto packet_rule = junk >> preamble >> byte_[set_mid] >> byte_[set_len] >> content >> byte_[set_chk];
+
+  visitor->stamp = stamp;
 
   cur = queue.begin();
   //! Look for messages in the queue
@@ -480,7 +483,7 @@ void Xsens_parser::parse() {
 }
 
 
-Values_queue& Xsens_parser::get_values() {
+Stamped_queue& Xsens_parser::get_values() {
   return visitor->values;
 }
 
