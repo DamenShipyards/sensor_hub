@@ -52,8 +52,8 @@ extern cbytes_t cfg_msg_nav_att;
 extern cbytes_t cfg_msg_esf_ins;
 extern cbytes_t cfg_msg_esf_raw;
 
-constexpr unsigned size_offset = 4;
-constexpr unsigned data_offset = 6;
+constexpr uint8_t size_offset = 4;
+constexpr uint8_t data_offset = 6;
 
 }  // namespace command
 

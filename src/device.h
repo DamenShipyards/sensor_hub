@@ -314,7 +314,7 @@ struct Port_device: public Device {
         response_found = contains_at(response, expected_response);
         int error_found = contains_at(response, error_response);
         if (error_found >= 0) {
-          int error_code_offset = error_response.size();
+          int error_code_offset = static_cast<int>(error_response.size());
           if ((error_found + error_code_offset) < static_cast<int>(response.size())) {
             log(level::error, "Received % error: %", this->get_name(), 
                 static_cast<int>(response[error_found + error_code_offset]));
@@ -332,7 +332,7 @@ struct Port_device: public Device {
             size_t len_offset_2  = (data->size() > 1) ? (*data)[1] + response_found: -1;
             len = response.size() > len_offset_1 ? response[len_offset_1] : 0;
             len += len_offset_2 >= 0 && response.size() > len_offset_2 ? response[len_offset_2] << 8: 0;
-            len += std::max(len_offset_1, len_offset_2);
+            len += static_cast<uint16_t>(std::max(len_offset_1, len_offset_2));
             // ... and indicate whether we have read enough data (i.e. equal to or more than len)
             // starting from the first byte after the offset of the length indicator
             data->clear();

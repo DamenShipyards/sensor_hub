@@ -37,9 +37,9 @@ namespace posix_time = boost::posix_time;
 
 namespace command {
 
-extern cbyte_t packet_start;
-extern cbyte_t sys_command;
-extern cbyte_t conf_command;
+constexpr byte_t packet_start = 0xFA;
+constexpr byte_t sys_command = 0xFF;
+constexpr byte_t conf_command = 0x01;
 
 extern cbytes_t goto_config;
 extern cbytes_t config_ack;

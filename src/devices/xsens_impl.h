@@ -25,10 +25,6 @@ namespace xsens {
 
 namespace command {
 
-constexpr cbyte_t packet_start = 0xFA;
-constexpr cbyte_t sys_command = 0xFF;
-constexpr cbyte_t conf_command = 0x01;
-
 // TODO: Should be reworked to avoid duplication and add automatic checksum
 cbytes_t goto_config = {packet_start, sys_command, XMID_GotoConfig, 0x00, 0xD1};
 cbytes_t config_ack = {packet_start, sys_command, XMID_GotoConfigAck};
