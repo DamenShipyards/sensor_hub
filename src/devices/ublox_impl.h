@@ -496,6 +496,15 @@ struct Payload_att: public Payload {
 
 struct Payload_ins: public Payload {
   uint32_t bitfield0;
+  enum { 
+    bitfield0_rr_valid=1 << 8,
+    bitfield0_pr_valid=1 << 9,
+    bitfield0_yr_valid=1 << 10,
+    bitfield0_fax_valid=1 << 11,
+    bitfield0_fay_valid=1 << 12,
+    bitfield0_faz_valid=1 << 13
+  }
+
   uint32_t reserved1;
   uint32_t itow;
   int32_t xangrate;  // scale 1E-3
@@ -515,12 +524,18 @@ struct Payload_ins: public Payload {
 
   Stamped_quantities get_values() const override {
     Stamped_quantities values;
-    values.push_back({xangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::rr});
-    values.push_back({yangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::pr});
-    values.push_back({zangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::yr});
-    values.push_back({xaccel * 10E-2, 0.0, Quantity::ax});
-    values.push_back({yaccel * 10E-2, 0.0, Quantity::ay});
-    values.push_back({zaccel * 10E-2, 0.0, Quantity::az});
+    if (bitfield0 & bitfield0_rr_valid) 
+      values.push_back({xangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::rr});
+    if (bitfield0 & bitfield0_pr_valid) 
+      values.push_back({yangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::pr});
+    if (bitfield0 & bitfield0_yr_valid) 
+      values.push_back({zangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::yr});
+    if (bitfield0 & bitfield0_fax_valid) 
+      values.push_back({xaccel * 10E-2, 0.0, Quantity::fax});
+    if (bitfield0 & bitfield0_fay_valid) 
+      values.push_back({yaccel * 10E-2, 0.0, Quantity::fay});
+    if (bitfield0 & bitfield0_faz_valid) 
+      values.push_back({zaccel * 10E-2, 0.0, Quantity::faz});
     return values;
   }
 };
