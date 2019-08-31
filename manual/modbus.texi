@@ -9,8 +9,13 @@ The register layout for modus is as follows:
 @item 5 @tab 2 @tab Longitude
 @item 6 @tab 1 @tab Quantity 3, @xref{Quantities}
 @item 7.. @tab 1 @tab Quantity 4..
-@item 10000 @tab 4 @tab Sensor Quantity 0, @xref{Quantities}, in double format
-@item 10004.. @tab 4 @tab Sensor Quantity 1.. in double format
+@item 2000 @tab 32 @tab Sensor type string, utf16 values
+@item 2032 @tab 32 @tab Sensor name string, utf16 values
+@item 10000 @tab 4 @tab Sensor Quantity 0 value, @xref{Quantities}, in LE double format
+@item 10004 @tab 4 @tab Sensor Quantity 0 time in LE double format
+@item 10008 @tab 4 @tab Sensor Quantity 1 value in LE double format
+@item 10012 @tab 4 @tab Sensor Quantity 1 time in LE double format
+@item 10016.. @tab 4 @tab Sensor Quantity 2 value in LE double format..
 @item 20000 @tab n @tab Processor output, @xref{Processors}
 
 @end multitable

@@ -14,9 +14,10 @@
 #ifndef DATETIME_H_
 #define DATETIME_H_
 
+#include <string>
+#include <cmath>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/chrono.hpp>
-
 
 /**
  * Adjust the clock by 2.5% of clock difference with each call to "Clock::adjust"
@@ -62,6 +63,15 @@ extern void adjust_clock_diff(const double& diff);
  * \param rate Rate with which to adjust the clock with each call to adjust_clock(_diff)
  */
 extern void set_clock_adjust_rate(const double& rate);
+
+
+inline std::string timestamp_to_string(const double& stamp) {
+  double secs = 0;
+  double micros = std::modf(stamp, &secs) * 1E6;
+  auto t = unix_epoch + posix_time::seconds(static_cast<long>(secs)) 
+                      + posix_time::microseconds(static_cast<long>(micros));
+  return posix_time::to_iso_extended_string(t);
+}
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

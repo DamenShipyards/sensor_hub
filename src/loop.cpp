@@ -18,7 +18,6 @@
 #include "modbus.h"
 #include "device.h"
 #include "processor.h"
-#include "devices/xsens.h"
 
 #include "driver/install.h"
 

@@ -69,14 +69,13 @@ extern cbytes_t mon_ver;
 namespace parser {
 
 struct Ublox_parser: public Packet_parser {
-  Ublox_parser(): values_queue_() {};
-  ~Ublox_parser() {};
-  void parse() override;
-  Values_queue& get_values() override {
-    return values_queue_;
-  };
-private:
-  Values_queue values_queue_;
+  Ublox_parser();
+  ~Ublox_parser();
+  struct Payload_visitor;
+  std::unique_ptr<Payload_visitor> visitor;
+
+  void parse(const double& stamp) override;
+  Stamped_queue& get_values() override; 
 };
 
 } //  namespace parser
@@ -88,10 +87,10 @@ struct Ublox: public Port_device<Port, ContextProvider>, public Polling_mixin<Ub
 
   template <typename Iterator>
   void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
-    parser_.add_and_parse(buf_begin, buf_end);
+    parser_.add_and_parse(stamp, buf_begin, buf_end);
     auto& values = parser_.get_values();
     while (!values.empty()) {
-      this->insert_value(stamped_quantity(stamp, values.front()));
+      this->insert_value(values.front());
       values.pop_front();
     }
   }

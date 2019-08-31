@@ -15,13 +15,12 @@
 #define XSENS_IMPL_H_
 
 #include "ublox.h"
+#include "../functions.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <vector>
-#include <boost/date_time/date.hpp>
-#include <boost/date_time/posix_time/posix_time_duration.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/variant.hpp>
 
 
 namespace ubx {
@@ -239,68 +238,141 @@ using x3::_pass;
 
 
 struct Data_packet {
-  Data_packet(): cls_(), id_(), length_(), checksum_(), payload_() {}
-  Data_packet(const byte_t cls, const byte_t id): cls_(cls), id_(id), length_(), payload_() {
-    checksum_ = get_checksum();
+  Data_packet(): data_(), checksum_() {
+    set_length(0);
   }
-  Data_packet(const byte_t cls, const byte_t id, cbytes_t payload):
-      cls_(cls), id_(id), payload_(payload) {
-    length_ = get_length();
-    checksum_ = get_checksum();
+
+  Data_packet(const Data_packet& packet): data_(packet.data_), checksum_(packet.checksum_) {}
+
+  Data_packet(const byte_t cls, const byte_t id): data_(), checksum_() {
+    setup_payload(cls, id, {});
   }
-  Data_packet(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload):
-      cls_(cls), id_(id), payload_(payload) {
-    length_ = get_length();
-    checksum_ = get_checksum();
+
+  Data_packet(const byte_t cls, const byte_t id, cbytes_t& payload): data_(), checksum_() {
+    setup_payload(cls, id, payload);
   }
-  Data_packet(cbytes_t data): cls_(), id_(), length_(), payload_() {
-    auto l = data.size();
-    if (l > 0)
-      cls_ = data[0];
-    if (l > 1)
-      id_ = data[1];
-    if (l > 3)
-      length_ = data[2] + (data[3] << 8);
-    for (auto i = 0; i < length_; ++i) {
-      payload_.push_back(data.at(i + 4));
+
+  Data_packet(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload_init):
+      data_(), checksum_() {
+    setup_payload(cls, id, payload_init);
+  }
+  
+  uint8_t get_cls() const {
+    return get_data_byte(0);
+  }
+
+  uint8_t get_id() const {
+    return get_data_byte(1);
+  }
+
+  bytes_t& get_data() {
+    return data_;
+  }
+
+  bytes_t get_packet() {
+    return command::preamble << data_ << checksum_;
+  }
+
+  bool check() {
+    return (get_length() == calc_length()) && (get_checksum() == calc_checksum());
+  }
+
+  uint16_t get_length() const {
+    return get_data_byte(2) + (get_data_byte(3) << 8);
+  }
+
+  uint16_t get_checksum() const {
+    return checksum_;
+  }
+
+
+  Data_packet& set_cls(cbyte_t cls) {
+    set_data_byte(0, cls);
+    return *this;
+  }
+
+  Data_packet& set_id(cbyte_t id) {
+    set_data_byte(1, id);
+    return *this;
+  }
+
+  Data_packet& set_length(const uint16_t length) {
+    set_data_byte(2, length & 0xFF);
+    set_data_byte(3, length >> 8);
+    return *this;
+  }
+
+  Data_packet& add_data(const uint8_t value) {
+    data_.push_back(value);
+    return *this;
+  }
+
+  Data_packet& set_checksum(const uint16_t checksum) {
+    checksum_ = checksum;
+    return *this;
+  }
+
+  Data_packet& clear() {
+    data_.clear();
+    checksum_ = 0;
+    set_length(0);
+    return *this;
+  }
+
+  uint16_t calc_length() {
+    if (data_.size() > 3) {
+      return static_cast<uint16_t>(data_.size() - 4);
     }
-    checksum_ = get_checksum();
-  }
-  bytes_t get_data() {
-    return command::preamble << cls_ << id_ << length_ << payload_ << checksum_;
-  }
-private:
-  byte_t cls_;
-  byte_t id_;
-  uint16_t length_;
-  uint16_t checksum_;
-  bytes_t payload_;
-
-  uint16_t get_length() {
-    return static_cast<uint16_t>(payload_.size());
+    else {
+      return 0;
+    }
   }
 
-  uint16_t get_checksum() {
+  uint16_t calc_checksum() {
     byte_t chk_a = 0;
     byte_t chk_b = 0;
     auto add_byte = [&](const byte_t byte) {
       chk_a += byte;
       chk_b += chk_a;
     };
-    add_byte(cls_);
-    add_byte(id_);
-    // Little endian so lower byte first
-    add_byte(length_ & 0xFF);
-    add_byte(length_ >> 8);
-    std::for_each(payload_.begin(), payload_.end(), add_byte);
+    std::for_each(data_.begin(), data_.end(), add_byte);
     return (chk_b << 8) + chk_a;
   }
+private:
+  bytes_t data_;
+  uint16_t checksum_;
 
-  friend struct Ublox_parser;
+  void setup_payload(const byte_t cls, const byte_t id, const std::initializer_list<byte_t> payload_init) {
+    cbytes_t payload{payload_init};
+    setup_payload(cls, id, payload);
+  }
+
+  void setup_payload(const byte_t cls, const byte_t id, cbytes_t& payload) {
+    data_.push_back(cls);
+    data_.push_back(id);
+    set_length(payload.size());
+    data_.insert(data_.end(), payload.begin(), payload.end());
+    checksum_ = calc_checksum();
+  }
+
+  uint8_t get_data_byte(const size_t index) const {
+    return index < data_.size() ? data_[index] : 0;
+  }
+
+  void set_data_byte(const size_t index, cbyte_t value) {
+    while (data_.size() <= index) {
+      data_.push_back(0);
+    }
+    data_[index] = value;
+  }
+
 };
 
 
 struct Payload {
+  virtual Stamped_quantities get_values() const {
+    return Stamped_quantities();
+  }
 };
 
 
@@ -313,12 +385,15 @@ struct Payload_pvt: public Payload {
   uint8_t min;
   uint8_t sec;
   uint8_t valid;  // 0: valid date, 1: valid time, 2: fully resolved, 3: valid mag
+  enum { valid_date = 0x01, valid_time=0x02, valid_full=0x04, valid_mag=0x08 };
   uint32_t tacc;  // scale 10e-9
   int32_t nano;  // scale 10e-9
   uint8_t fixtype;  // 0: nofix, 1: dead reck, 2: 2D fix, 3: 3D fix,
                     // 4 GNSS + dead reck, 5: time fix only
+  enum { fixtype_nofix, fixtype_deadreck, fixtype_2d, fixtype_3d, fixtype_3d_deadreck, fixtype_time };
   uint8_t flags;  // 0: gnss fix ok, 1: diff solution, 2-4 pms state,
                   // 5: headveh valid, 6-7 carr solution
+  enum { flags_gnss=0x01, flags_differential=0x02, flags_headveh_valid=0x20 };
   uint8_t flags2;  // Time validity confirmation: oh well....
   uint8_t numsv;
   int32_t lon;  // scale 10E-7 degrees
@@ -332,7 +407,7 @@ struct Payload_pvt: public Payload {
   int32_t veld;  // scale 10E-3
   int32_t gspeed;  // scale 10E-3
   int32_t hmot;  // scale 10E-5 degrees
-  uint32_t sacc;
+  uint32_t sacc; // scale 10E-3 m/s
   uint32_t headacc;  // scale 10E-5 degrees
   uint16_t pdop;  // scale !0E-2
   uint32_t reserved1_32;
@@ -342,13 +417,41 @@ struct Payload_pvt: public Payload {
   uint16_t magacc;  // scale 10E-2 degrees
 
   static const auto get_parse_rule() {
-    return little_dword >> little_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_  // itow - valid
+    return byte_(command::cls_nav) >> byte_(command::nav::pvt) >> little_word(92)
+        >> little_dword >> little_word >> byte_ >> byte_  // itow - day
+        >> byte_ >> byte_ >> byte_ >> byte_  // hour - valid
         >> little_dword >> little_dword >> byte_ >> byte_ >> byte_ >> byte_  // tacc - numsv
         >> little_dword >> little_dword >> little_dword >> little_dword  // lon - hmsl
         >> little_dword >> little_dword >> little_dword >> little_dword >> little_dword // hacc - veld
         >> little_dword >> little_dword >> little_dword >> little_dword // gspeed - headacc
         >> little_word >> little_dword >> little_word >> little_dword // pdop - headveh
         >> little_word >> little_word;  // magdec - magacc
+  }
+
+  Stamped_quantities get_values() const override {
+    Stamped_quantities values;
+    if (valid & valid_full) {
+      values.push_back({compose_time_value(year, month, day, hour, min, sec, nano), 0.0, Quantity::ut});
+    }
+    if (fixtype == fixtype_2d || fixtype == fixtype_3d || fixtype == fixtype_3d_deadreck) {
+      values.push_back({lat * 10E-7, 0.0, Quantity::la});
+      values.push_back({lon * 10E-7, 0.0, Quantity::lo});
+      values.push_back({gspeed * 10E-3, 0.0, Quantity::vog});
+      values.push_back({hmot * 10E-5 * M_PI / 180.0, 0.0, Quantity::crs});
+      values.push_back({hacc * 10E-3, 0.0, Quantity::hacc});
+      values.push_back({sacc * 10E-3, 0.0, Quantity::sacc});
+      values.push_back({headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::cacc});
+    }
+    if (fixtype == fixtype_3d || fixtype == fixtype_3d_deadreck) {
+      values.push_back({height * 10E-3, 0.0, Quantity::h1});
+      values.push_back({hmsl * 10E-3, 0.0, Quantity::h2});
+      values.push_back({vacc * 10E-3, 0.0, Quantity::vacc});
+    }
+    if (flags & flags_headveh_valid) {
+      values.push_back({headveh * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdg}); 
+      values.push_back({headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdac});
+    }
+    return values;
   }
 };
 
@@ -366,15 +469,42 @@ struct Payload_att: public Payload {
   uint32_t accheading;  // scale 1e-5
 
   static const auto get_parse_rule() {
-    return little_dword >> byte_ >> little_word >> byte_  // itow - reserved1
+    return byte_(command::cls_nav) >> byte_(command::nav::att) >> little_word(32)
+        >> little_dword >> byte_ >> little_word >> byte_  // itow - reserved1
         >> little_dword >> little_dword >> little_dword  // roll - heading
         >> little_dword >> little_dword >> little_dword;  // accroll - accheading
+  }
+
+  Stamped_quantities get_values() const override {
+    Stamped_quantities values;
+    if (accroll != 0) {
+      values.push_back({roll * 10E-5 * M_PI / 180.0, 0.0, Quantity::ro});
+      values.push_back({accroll * 10E-5 * M_PI / 180.0, 0.0, Quantity::racc});
+    }
+    if (accpitch != 0) {
+      values.push_back({pitch * 10E-5 * M_PI / 180.0, 0.0, Quantity::pi});
+      values.push_back({accpitch * 10E-5 * M_PI / 180.0, 0.0, Quantity::pacc});
+    }
+    if (accheading != 0) {
+      values.push_back({heading * 10E-5 * M_PI / 180.0, 0.0, Quantity::ya});
+      values.push_back({accheading * 10E-5 * M_PI / 180.0, 0.0, Quantity::yacc});
+    }
+    return values;
   }
 };
 
 
 struct Payload_ins: public Payload {
   uint32_t bitfield0;
+  enum { 
+    bitfield0_rr_valid=1 << 8,
+    bitfield0_pr_valid=1 << 9,
+    bitfield0_yr_valid=1 << 10,
+    bitfield0_fax_valid=1 << 11,
+    bitfield0_fay_valid=1 << 12,
+    bitfield0_faz_valid=1 << 13
+  }
+
   uint32_t reserved1;
   uint32_t itow;
   int32_t xangrate;  // scale 1E-3
@@ -385,26 +515,99 @@ struct Payload_ins: public Payload {
   int32_t zaccel;  // scale 1E-2, free acceleration: no gravity
 
   static const auto get_parse_rule() {
-    return little_dword >> little_dword  // bitfield0 - reserved1
+    return byte_(command::cls_esf) >> byte_(command::esf::ins) >> little_word(36)
+        >> little_dword >> little_dword  // bitfield0 - reserved1
         >> little_dword  // itow
         >> little_dword >> little_dword >> little_dword  // xangrate - zangrate
         >> little_dword >> little_dword >> little_dword;  // xaccel - zaccel
+  }
+
+  Stamped_quantities get_values() const override {
+    Stamped_quantities values;
+    if (bitfield0 & bitfield0_rr_valid) 
+      values.push_back({xangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::rr});
+    if (bitfield0 & bitfield0_pr_valid) 
+      values.push_back({yangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::pr});
+    if (bitfield0 & bitfield0_yr_valid) 
+      values.push_back({zangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::yr});
+    if (bitfield0 & bitfield0_fax_valid) 
+      values.push_back({xaccel * 10E-2, 0.0, Quantity::fax});
+    if (bitfield0 & bitfield0_fay_valid) 
+      values.push_back({yaccel * 10E-2, 0.0, Quantity::fay});
+    if (bitfield0 & bitfield0_faz_valid) 
+      values.push_back({zaccel * 10E-2, 0.0, Quantity::faz});
+    return values;
+  }
+};
+
+
+struct Sensor_data {
+  uint32_t data;  // 8 bit datatype + 24 bit data
+  uint32_t stag;  // time tag
+  static const auto get_parse_rule() {
+    return little_dword >> little_dword;
+  }
+
+  enum { data_type_none=0, data_type_ryr=5, data_type_gtmp=12, data_type_rpr= 13, data_type_rrr=14,
+         data_type_rax=16, data_type_ray=17, data_type_raz=18 };
+
+  uint8_t get_data_type() const {
+    return data >> 24;
+  }
+
+  Stamped_quantity get_value(uint32_t reftag) const {
+    uint32_t shifted = (data & 0xFFFFFF) << 8;
+    int signed_shifted = *reinterpret_cast<int*>(&shifted);
+    Value_type value = static_cast<Value_type>(signed_shifted);
+    if (reftag < stag) 
+        return {0.0, 0.0, Quantity::end};
+    double offset = (reftag - stag) * 0.01 / -256.0;
+
+    switch (get_data_type()) {
+      case data_type_ryr:
+        return {value / (4096.0 * 256.0 * 180.0) * M_PI, offset, Quantity::ryr};
+      case data_type_rpr:
+        return {value / (4096.0 * 256.0 * 180.0) * M_PI, offset, Quantity::rpr};
+      case data_type_rrr:
+        return {value / (4096.0 * 256.0 * 180.0) * M_PI, offset, Quantity::rrr};
+      case data_type_rax:
+        return {value / (1024.0 * 256.0), offset, Quantity::rax};
+      case data_type_ray:
+        return {value / (1024.0 * 256.0), offset, Quantity::ray};
+      case data_type_raz:
+        return {value / (1024.0 * 256.0), offset, Quantity::raz};
+      case data_type_gtmp:
+        return {value / (100 * 256.0), offset, Quantity::gtmp};
+      default:
+        return {0.0, 0.0, Quantity::end};
+    }
   }
 };
 
 
 struct Payload_raw: public Payload {
+  uint16_t length;
   uint32_t reserved1;
-  struct Sensor_data {
-    uint32_t data;  // 8 bit datatype + 24 bit data
-    uint32_t stag;  // time tag
-    static const auto get_parse_rule() {
-      return little_dword >> little_dword;
-    }
-  };
   std::vector<Sensor_data> sensor_data;
+
   static const auto get_parse_rule() {
-    return little_dword >> *(Sensor_data::get_parse_rule());
+    return byte_(command::cls_esf) >> byte_(command::esf::raw) 
+           >> little_word  // length
+           >> little_dword >> *(Sensor_data::get_parse_rule());  // reserved1 - sensor_data
+  }
+
+  Stamped_quantities get_values() const override {
+    Stamped_quantities values;
+    if (!sensor_data.empty()) {
+      auto reftag = sensor_data.back().stag;
+      for (auto& data: sensor_data) {
+        auto value = data.get_value(reftag);
+        if (value.quantity != Quantity::end) {
+          values.push_back(value);
+        }
+      }
+    }
+    return values;
   }
 };
 
@@ -416,27 +619,90 @@ BOOST_SPIRIT_DEFINE(name)
 RULE_DEFINE(nav_pvt, Payload_pvt)
 RULE_DEFINE(nav_att, Payload_att)
 RULE_DEFINE(esf_ins, Payload_ins)
+RULE_DEFINE(sensor_data, Sensor_data)
 RULE_DEFINE(esf_raw, Payload_raw)
-RULE_DEFINE(esf_raw_data, Payload_raw::Sensor_data)
 
 #undef RULE_DEFINE
 
-void Ublox_parser::parse() {
+Ublox_parser::Ublox_parser()
+  : Packet_parser(),
+    visitor(std::make_unique<Payload_visitor>()) {
+}
+
+
+Ublox_parser::~Ublox_parser() {
+}
+
+
+struct Ublox_parser::Payload_visitor {
+  Stamped_queue values;
+  double stamp;
+
+  void operator()(const Payload& payload) {
+    for (auto& value: payload.get_values()) {
+      value.stamp += stamp;
+      values.push_back(value);
+    }
+  }
+};
+
+
+Stamped_queue& Ublox_parser::get_values() {
+  return visitor->values;
+}
+
+using Payload_variant = boost::variant<Payload_pvt, Payload_att, Payload_ins, Payload_raw>;
+
+auto payload_parse_rule = nav_pvt | nav_att | esf_ins | esf_raw;
+
+} }  // namespace ubx::parser
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_pvt, 
+  itow, year, month, day, hour, min, sec, valid,
+  tacc, nano, fixtype, flags, flags2, numsv,
+  lon,  lat, height, hmsl,  
+  hacc, vacc, veln, vele, veld,
+  gspeed, hmot, sacc, headacc,
+  pdop,  reserved1_32, reserved1_16, headveh,
+  magdec, magacc
+)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_att, 
+  itow, version, reserved1_16, reserved1_8,
+  roll, pitch, heading,
+  accroll, accpitch, accheading
+)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_ins,
+  bitfield0, reserved1,
+  itow,
+  xangrate, yangrate, zangrate,
+  xaccel, yaccel, zaccel)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw, 
+    length, reserved1, sensor_data)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Sensor_data, 
+    data, stag)
+
+namespace ubx { namespace parser {
+
+void Ublox_parser::parse(const double& stamp) {
   Data_packet packet;
   int len = 0;
-  auto set_cls = [&](auto& ctx) { packet.cls_ = _attr(ctx); };
-  auto set_id = [&](auto& ctx) { packet.id_ = _attr(ctx); };
+  auto set_cls = [&](auto& ctx) { packet.set_cls(_attr(ctx)); };
+  auto set_id = [&](auto& ctx) { packet.set_id(_attr(ctx)); };
   auto set_len = [&](auto& ctx) {
-    packet.length_ = _attr(ctx);
-    len = packet.length_;
+    len = _attr(ctx);
+    packet.set_length(len);
   };
 
   auto have_data = [&](auto& ctx) { _pass(ctx) = len-- > 0; };
   auto have_all = [&](auto& ctx) { _pass(ctx) = len < 0; };
   auto add_payload = [&](auto& ctx) {
-    packet.payload_.push_back(_attr(ctx));
+    packet.add_data(_attr(ctx));
   };
-  auto set_chk = [&](auto& ctx) { packet.checksum_ = _attr(ctx); };
+  auto set_chk = [&](auto& ctx) { packet.set_checksum(_attr(ctx)); };
 
   //! Start of a packet
   auto preamble = byte_(command::sync_1) >> byte_(command::sync_2);
@@ -448,62 +714,41 @@ void Ublox_parser::parse() {
   auto packet_rule = junk >> preamble >> byte_[set_cls] >> byte_[set_id]
                           >> little_word[set_len] >> content >> little_word[set_chk];
 
+  visitor->stamp = stamp;
   cur = queue.begin();
   //! Look for messages in the queue
   while (cur != queue.end() && x3::parse(cur, queue.end(), packet_rule)) {
     //! Consume the message from the queue
     cur = queue.erase(queue.begin(), cur);
-    if (packet.checksum_ == packet.get_checksum()) {
-      auto payload = std::make_unique<Payload>();
-      log(level::debug, "Ublox parsed message with length: %", packet.length_);
-      switch (packet.cls_) {
-        case command::cls_nav:
-          switch (packet.id_) {
-            case command::nav::pvt:
-              payload = std::make_unique<Payload_pvt>();
-              x3::parse(packet.payload_.begin(), packet.payload_.end(),
-                        Payload_pvt::get_parse_rule(), *payload);
-              break;
-            case command::nav::att:
-              break;
-            default:
-              log(level::debug, "Received unrequested ubx nav message");
-          }
-          break;
-        case command::cls_esf:
-          switch (packet.id_) {
-            case command::esf::ins:
-              break;
-            case command::esf::raw:
-              break;
-            default:
-              log(level::debug, "Received unrequested ubx esf message");
-          }
-          break;
-        default:
-          log(level::debug, "Received unrequested ubx message");
+    if (packet.check()) {
+      Payload_variant payload;
+      if (x3::parse(packet.get_data().begin(), packet.get_data().end(),
+                    payload_parse_rule, payload)) {
+        boost::apply_visitor(*visitor, payload);
+      }
+      else {
+        log(level::debug, "Received an unsollicited ubx message");
       }
     }
     else {
-      log(level::error, "Ublox checksum error: %, %", packet.checksum_, packet.get_checksum());
+      log(level::error, "Ublox packet check error: lenght %, %, checksum %, %", 
+          packet.get_length(), packet.calc_length(), packet.get_checksum(), packet.calc_checksum());
     }
-    packet.payload_.clear();
+    packet.clear();
   }
-
 }
 
 }  // namespace parser
 
 namespace command {
 
-
-cbytes_t cfg_prt_usb = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_usb).get_data();
-cbytes_t cfg_prt_uart = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_uart).get_data();
-cbytes_t mon_ver = parser::Data_packet(cls_mon, mon::ver, {}).get_data();
-cbytes_t cfg_pms = parser::Data_packet(cls_cfg, cfg::pms, cfg::pms_payload).get_data();
-cbytes_t cfg_hnr = parser::Data_packet(cls_cfg, cfg::hnr, cfg::hnr_payload).get_data();
-cbytes_t cfg_rate = parser::Data_packet(cls_cfg, cfg::rate, cfg::rate_payload).get_data();
-cbytes_t cfg_nav5 = parser::Data_packet(cls_cfg, cfg::nav5, cfg::nav5_payload).get_data();
+cbytes_t cfg_prt_usb = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_usb).get_packet();
+cbytes_t cfg_prt_uart = parser::Data_packet(cls_cfg, cfg::prt, cfg::prt_payload_uart).get_packet();
+cbytes_t mon_ver = parser::Data_packet(cls_mon, mon::ver, {}).get_packet();
+cbytes_t cfg_pms = parser::Data_packet(cls_cfg, cfg::pms, cfg::pms_payload).get_packet();
+cbytes_t cfg_hnr = parser::Data_packet(cls_cfg, cfg::hnr, cfg::hnr_payload).get_packet();
+cbytes_t cfg_rate = parser::Data_packet(cls_cfg, cfg::rate, cfg::rate_payload).get_packet();
+cbytes_t cfg_nav5 = parser::Data_packet(cls_cfg, cfg::nav5, cfg::nav5_payload).get_packet();
 
 cbytes_t gnss_glonass_payload = cfg::gnss_payload
     << cfg::gnss_payload_gps
@@ -531,14 +776,14 @@ cbytes_t gnss_beidou_payload = cfg::gnss_payload
     << cfg::gnss_payload_imes
     << cfg::gnss_payload_qzss
     << cfg::gnss_payload_glonass;
-cbytes_t cfg_gnss_glonass = parser::Data_packet(cls_cfg, cfg::gnss, gnss_glonass_payload).get_data();
-cbytes_t cfg_gnss_galileo = parser::Data_packet(cls_cfg, cfg::gnss, gnss_galileo_payload).get_data();
-cbytes_t cfg_gnss_beidou = parser::Data_packet(cls_cfg, cfg::gnss, gnss_beidou_payload).get_data();
+cbytes_t cfg_gnss_glonass = parser::Data_packet(cls_cfg, cfg::gnss, gnss_glonass_payload).get_packet();
+cbytes_t cfg_gnss_galileo = parser::Data_packet(cls_cfg, cfg::gnss, gnss_galileo_payload).get_packet();
+cbytes_t cfg_gnss_beidou = parser::Data_packet(cls_cfg, cfg::gnss, gnss_beidou_payload).get_packet();
 
-cbytes_t cfg_msg_nav_pvt = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::pvt, 0x0A }).get_data();
-cbytes_t cfg_msg_nav_att = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::att, 0x0A }).get_data();
-cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x64 }).get_data();
-cbytes_t cfg_msg_esf_raw = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::raw, 0x64 }).get_data();
+cbytes_t cfg_msg_nav_pvt = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::pvt, 0x0A }).get_packet();
+cbytes_t cfg_msg_nav_att = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::att, 0x0A }).get_packet();
+cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x0A }).get_packet();
+cbytes_t cfg_msg_esf_raw = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::raw, 0x0A }).get_packet();
 
 
 }  // namespace command
@@ -553,30 +798,6 @@ cbytes_t mon_ver = { command::sync_1, command::sync_2, command::cls_mon, command
 
 }  // namespace ubx
 
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_pvt, 
-  itow, year, month, day, hour, min, sec, valid,
-  tacc, nano, fixtype, flags, flags2, numsv,
-  lon,  lat, height, hmsl,  
-  hacc, vacc, veln, vele, veld,
-  gspeed, hmot, sacc, headacc,
-  pdop,  reserved1_32, reserved1_16, headveh,
-  magdec, magacc
-)
-
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_att, 
-  itow, version, reserved1_16, reserved1_8,
-  roll, pitch, heading,
-  accroll, accpitch, accheading
-)
-
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_ins,
-  bitfield0, reserved1,
-  itow,
-  xangrate, yangrate, zangrate,
-  xaccel, yaccel, zaccel)
-
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw, reserved1, sensor_data)
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw::Sensor_data, data, stag)
 
 #endif
 

@@ -53,7 +53,9 @@ void Modbus_handler::plain_map(const Device& device,
     int off = reg_index % 8;
     int shft = (3 - off % 4) * 16;
     int i = off / 4;
-    resp.values[index] = (*reinterpret_cast<const uint64_t*>(&sample[i]) >> shft) & 0xFFFF;
+    double value = sample[i];
+    // Cram the selected part of the 64 bit double value in a 16 bit register
+    resp.values[index] = (*reinterpret_cast<const uint64_t*>(&value) >> shft) & 0xFFFF;
     ++reg_index;
   }
 }

@@ -175,7 +175,7 @@ protected:
     }
     auto item = data_.try_emplace(value.quantity);
     auto& queue = item.first->second;
-    queue.push_back(value);
+    queue.push_back({value.stamp, value.value});
     for (auto&& processor: processors_) {
       processor->insert_value(value);
     }

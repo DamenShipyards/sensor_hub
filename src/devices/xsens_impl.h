@@ -16,16 +16,12 @@
 #include "../datetime.h"
 #include "../types.h"
 #include "../spirit_x3.h"
+#include "../functions.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <boost/date_time/date.hpp>
-#include <boost/date_time/posix_time/posix_time_duration.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
 
 namespace xsens {
-
-namespace gregorian = boost::gregorian;
 
 namespace command {
 
@@ -214,8 +210,8 @@ struct Data_packet {
    * Return a vector of Quantity_value's contained
    * in this data packet
    */
-  virtual Values_type get_values() const {
-    return Values_type();
+  virtual Quantity_values get_values() const {
+    return Quantity_values();
   }
 };
 
@@ -223,6 +219,7 @@ struct Data_packet {
  * Date-time data structure
  */
 struct Date_time: public Data_packet {
+  static constexpr uint8_t len = 12;
   static constexpr uint8_t valid_utc = 0x04;
   static constexpr uint16_t did = XDI_UtcTime;
   static constexpr Quantity quantity = Quantity::ut;
@@ -235,24 +232,20 @@ struct Date_time: public Data_packet {
   uint8_t second;
   uint8_t flags;
 
-  Values_type get_values() const override {
+  Quantity_values get_values() const override {
     using namespace posix_time;
     if (flags & valid_utc) {
-      ptime t(
-          gregorian::date(year, month, day),
-          hours(hour) + minutes(minute) + seconds(second) + microseconds(nano/1000)
-      );
       // Return a list with one Unix Time value
-      return Values_type{{quantity, 1E-6 * (t - unix_epoch).total_microseconds()}};
+      return Quantity_values{compose_time_quantity(year, month, day, hour, minute, second, nano)};
     }
     else {
       // Return an empy list
-      return Values_type();
+      return Quantity_values();
     }
   }
 
   static const auto get_parse_rule() {
-    return big_word(did) >> byte_(SIZE) >> big_dword >> big_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_;
+    return big_word(did) >> byte_(len) >> big_dword >> big_word >> byte_ >> byte_ >> byte_ >> byte_ >> byte_ >> byte_;
   }
 };
 
@@ -290,14 +283,14 @@ struct Data_value: public Data_packet {
    * Get a list of converted sensor hub Values from the raw data that was
    * received from the sensor
    */
-  Values_type get_values() const override {
-    Values_type result;
+  Quantity_values get_values() const override {
+    Quantity_values result;
     int dim = 0;
     Quantity_iter qi(quantity);
     for (auto& value: data) {
       // When a data packet contains multiple values, the quantities of these
       // values are always consecutive, so we can just increment the quantity
-      result.push_back({*qi++, converter::factor(dim++) * static_cast<double>(value)});
+      result.push_back({converter::factor(dim++) * static_cast<double>(value), *qi++});
     }
     return result;
   }
@@ -410,19 +403,22 @@ struct Xsens_parser::Data_packets
  * Visitor for accessing parsed data packets
  */
 struct Xsens_parser::Data_visitor {
-  Values_queue values;
+
+  Stamped_queue values;
+  double stamp;
+
   void operator()(const Data_packet& data_packet) {
     for (auto& value: data_packet.get_values()) {
-      values.push_back(value);
+      values.push_back(stamped_quantity(stamp, value));
     }
   }
 };
 
 
 Xsens_parser::Xsens_parser()
-    : Packet_parser(),
-      data_packets(std::make_unique<Data_packets>()),
-      visitor(std::make_unique<Data_visitor>()) {
+  : Packet_parser(),
+    data_packets(std::make_unique<Data_packets>()),
+    visitor(std::make_unique<Data_visitor>()) {
 }
 
 
@@ -430,7 +426,7 @@ Xsens_parser::~Xsens_parser() {
 }
 
 
-void Xsens_parser::parse() {
+void Xsens_parser::parse(const double& stamp) {
   uint8_t mid = 0;
   int len = 0;
   std::vector<uint8_t> data;
@@ -455,6 +451,8 @@ void Xsens_parser::parse() {
   auto content = *(eps[have_data] >> byte_[add_data]) >> eps[have_all];
   //! The complete packet
   auto packet_rule = junk >> preamble >> byte_[set_mid] >> byte_[set_len] >> content >> byte_[set_chk];
+
+  visitor->stamp = stamp;
 
   cur = queue.begin();
   //! Look for messages in the queue
@@ -485,7 +483,7 @@ void Xsens_parser::parse() {
 }
 
 
-Values_queue& Xsens_parser::get_values() {
+Stamped_queue& Xsens_parser::get_values() {
   return visitor->values;
 }
 
@@ -493,10 +491,8 @@ Values_queue& Xsens_parser::get_values() {
 
 }  // namespace xsens
 
-// Magic to move parsed values from the parser to the actual data packet type. The parser
-// produces a sequence of values as specified by the parse rule. This sequence is mapped
-// to the actual fields of the data packets structs by this macro. Macro call is
-// at global scope as stated in the manual. Trivial for anything but the date-time values.
+// Magic to map parsed values which are stored in fusion::vector to the actual data packet type. 
+// Macro call is at global scope as stated in the manual. Trivial for anything but the date-time values.
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Date_time, nano, year, month, day, hour, minute, second, flags)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Acceleration, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Free_acceleration, data)

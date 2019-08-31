@@ -1,8 +1,10 @@
-#define BOOST_TEST_MODULE parse_test
+#define BOOST_TEST_MODULE spirit_test
 #include <boost/test/unit_test.hpp>
 
-#include "../src/spirit_x3.h"
+#include "../src/types.h" 
+#include "../src/spirit_x3.h" 
 
+#include <vector>
 #include <iostream>
 #include <ostream>
 #include <iomanip>
@@ -10,9 +12,10 @@
 #include <cstdint>
 #include <algorithm>
 
-
 namespace x3 = boost::spirit::x3;
 using namespace std::string_literals;
+using x3::byte_;
+using x3::little_word;
 
 BOOST_AUTO_TEST_CASE(spirit_basic_test) {
 
@@ -178,4 +181,45 @@ BOOST_AUTO_TEST_CASE(spirit_def_test) {
   BOOST_TEST(v.values[3] == 4);
 }
 
+
+struct Parent {
+  uint16_t m;
+  struct Child {
+    uint8_t m1;
+    uint8_t m2;
+  };
+  std::vector<Child> children;
+};
+
+x3::rule<struct chld, Parent::Child> const chld = "child";
+auto chld_def = byte_ >> byte_;
+BOOST_SPIRIT_DEFINE(chld)
+
+x3::rule<struct prnt, Parent> const prnt = "parent";
+auto prnt_def = byte_(0xFF) >> little_word >> *chld_def;
+BOOST_SPIRIT_DEFINE(prnt)
+
+BOOST_FUSION_ADAPT_STRUCT(Parent::Child, m1, m2)
+BOOST_FUSION_ADAPT_STRUCT(Parent, m, children)
+
+
+BOOST_AUTO_TEST_CASE(parse_nested_test) {
+  Parent p;
+  cbytes_t data = { 0x01, 0xFF, 0x88, 0x08, 0x01, 0x03, 0x02, 0x04 };
+  auto cur = data.begin();
+  bool skip_is_successful = x3::parse(cur, data.end(), byte_ - byte_(0xFF));
+  BOOST_TEST(skip_is_successful);
+  if (!skip_is_successful)
+    return;
+  bool parse_is_successful = x3::parse(cur, data.end(), prnt_def, p);
+  BOOST_TEST(parse_is_successful);
+  if (!parse_is_successful)
+    return;
+  BOOST_TEST(p.m == 0x888);
+  BOOST_TEST(p.children.size() == 2);
+  BOOST_TEST(p.children[0].m1 == 1);
+  BOOST_TEST(p.children[0].m2 == 3);
+  BOOST_TEST(p.children[1].m1 == 2);
+  BOOST_TEST(p.children[1].m2 == 4);
+}
 

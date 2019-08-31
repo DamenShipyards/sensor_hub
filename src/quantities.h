@@ -24,6 +24,7 @@
 #include <math.h>
 
 #include "tools.h"
+#include "datetime.h"
 
 //! Storage type for quantity values
 using Value_type = double;
@@ -81,6 +82,24 @@ enum class Quantity {
   fay, ///< 33: Y component of free acceleration, acceleration with respect to earth surface
   faz, ///< 34: Z component of free acceleration, acceleration with respect to earth surface
   du,  ///< 35: Duration, time interval
+  hacc,///< 36: Horizontal position accuracy
+  vacc,///< 37: Vertical position accuracy
+  sacc,///< 38: Speed accuracy
+  cacc,///< 39: Course accuracy
+  racc,///< 40: Roll accuracy
+  pacc,///< 41: Pitch accuraty
+  yacc,///< 42: Yaw accuraty
+  hdac,///< 43: Heading accuracy
+  rax, ///< 44: Raw measurement of X component of acceleration
+  ray, ///< 45: Raw measurement of Y component of acceleration
+  raz, ///< 46: Raw measurement of Z component of acceleration
+  rrr, ///< 47: Raw measurement of Roll rate, angular velocity about X axis
+  rpr, ///< 48: Raw measurement of Pitch rate, angular velocity about Y axis
+  ryr, ///< 49: Raw measurement of Yaw rate, angular velocity about Z axis
+  rmx, ///< 50: Raw measurement of X component of magnetic flux vector
+  rmy, ///< 51: Raw measurement of Y component of magnetic flux vector
+  rmz, ///< 52: Raw measurement of Z component of magnetic flux vector
+  gtmp,///< 53: Gyroscope temperature
   end, ///< Enumeration end marker. Do not use
 };
 
@@ -127,6 +146,24 @@ QUANTITY_NAME(yr);
 QUANTITY_NAME(fax);
 QUANTITY_NAME(fay);
 QUANTITY_NAME(faz);
+QUANTITY_NAME(hacc);
+QUANTITY_NAME(vacc);
+QUANTITY_NAME(sacc);
+QUANTITY_NAME(cacc);
+QUANTITY_NAME(racc);
+QUANTITY_NAME(pacc);
+QUANTITY_NAME(yacc);
+QUANTITY_NAME(hdac);
+QUANTITY_NAME(rax);
+QUANTITY_NAME(ray);
+QUANTITY_NAME(raz);
+QUANTITY_NAME(rrr);
+QUANTITY_NAME(rpr);
+QUANTITY_NAME(ryr);
+QUANTITY_NAME(rmx);
+QUANTITY_NAME(rmy);
+QUANTITY_NAME(rmz);
+QUANTITY_NAME(gtmp);
 QUANTITY_NAME(du);
 
 template <Quantity quantity>
@@ -172,37 +209,83 @@ inline Quantity get_quantity(std::string& quantity_name) {
   return Quantity::end;
 }
 
-struct Data_quantity {
-  Quantity quantity;
+
+
+struct Data_value {
+  Value_type value;
+  bool operator==(const Value_type& other) const {
+    return other == this->value;
+  }
+  bool operator==(const Data_value& other) const {
+    return other.value == this->value;
+  }
 };
 
 struct Data_stamp {
   Value_type stamp;
-};
-
-struct Data_value {
-  Value_type value;
-};
-
-struct Quantity_value: public Data_quantity, public Data_value {};
-struct Stamped_value: public Data_stamp, public Data_value {
-  const double& operator[](const int index) {
-    return index == 0 ? stamp : value;
+  bool operator==(const Data_stamp& other) const {
+    return other.stamp == this->stamp;
+  }
+  bool simultaneous_with(const Value_type& stamp) const {
+    return stamp == this->stamp;
+  }
+  bool simultaneous_with(const Data_stamp& stamp) const {
+    return stamp == *this;
   }
 };
-struct Stamped_quantity: public Data_quantity, public Stamped_value {};
+
+struct Data_quantity {
+  Quantity quantity;
+  bool operator==(const Quantity& other) const {
+    return other == this->quantity;
+  }
+  bool operator==(const Data_quantity& other) const {
+    return other.quantity == this->quantity;
+  }
+};
+
+struct Quantity_value: public Data_value, public Data_quantity {
+  using Data_value::operator==;
+  using Data_quantity::operator==;
+  bool operator==(const Quantity_value& other) const {
+    return Data_quantity::operator==(other)
+           && Data_value::operator==(other);
+  }
+};
+
+struct Stamped_value: public Data_value, public Data_stamp {
+  using Data_value::operator==;
+  using Data_stamp::operator==;
+  const double operator[](const int index) {
+    return index == 0 ? value : stamp;
+  }
+  bool operator==(const Stamped_value& other) const {
+    return Data_value::operator==(other) 
+           && Data_stamp::operator==(other);
+  }
+};
+
+struct Stamped_quantity: public Stamped_value, Data_quantity {
+  using Stamped_value::operator==;
+  using Data_quantity::operator==;
+  const double operator[](const int index) {
+    return index == 0 ? value : index == 1 ? stamp : static_cast<double>(quantity);
+  }
+  bool operator==(const Stamped_quantity& other) const {
+    return Data_quantity::operator==(other) 
+           && Stamped_value::operator==(other);
+  }
+};
+
 
 inline Stamped_quantity stamped_quantity(double stamp, Quantity_value&& qv) {
-  return {qv.quantity, stamp, qv.value};
-}
-inline Stamped_quantity stamped_quantity(double stamp, const Quantity_value& qv) {
-  return {qv.quantity, stamp, qv.value};
+  return {qv.value, stamp, qv.quantity};
 }
 
-inline std::ostream& operator<<(std::ostream& os, Quantity quantity) {
-  os << get_quantity_name(quantity);
-  return os;
+inline Stamped_quantity stamped_quantity(double stamp, const Quantity_value& qv) {
+  return {qv.value, stamp, qv.quantity};
 }
+
 
 using Data_queue = std::deque<Stamped_value>;
 using Data_map = std::map<Quantity, Data_queue>;
@@ -253,6 +336,35 @@ inline double value_diff(Quantity quantity, const double& value1, const double& 
 
 inline double value_diff(const Stamped_quantity& qvalue, const double& value) {
   return value_diff(qvalue.quantity, qvalue.value, value);
+}
+
+
+inline std::ostream& operator<<(std::ostream& os, const Quantity quantity) {
+  return os << get_quantity_name(quantity);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Data_value& value) {
+  return os << value.value;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Data_stamp& stamp) {
+  return os << timestamp_to_string(stamp.stamp);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Data_quantity& quantity) {
+  return os << quantity.quantity;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Quantity_value& value) {
+  return os << static_cast<const Data_value&>(value) << ":" << static_cast<const Data_quantity&>(value);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Stamped_value& value) {
+  return os << static_cast<const Data_value&>(value) << "@" << static_cast<const Data_stamp&>(value);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Stamped_quantity& value) {
+  return os << static_cast<const Stamped_value&>(value) << ":" << static_cast<const Data_quantity&>(value);
 }
 
 #endif
