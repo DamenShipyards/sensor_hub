@@ -503,7 +503,7 @@ struct Payload_ins: public Payload {
     bitfield0_fax_valid=1 << 11,
     bitfield0_fay_valid=1 << 12,
     bitfield0_faz_valid=1 << 13
-  }
+  };
 
   uint32_t reserved1;
   uint32_t itow;
