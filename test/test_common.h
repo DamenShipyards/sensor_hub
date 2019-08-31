@@ -15,6 +15,7 @@ namespace asio = boost::asio;
 
 std::string usb_device;
 
+
 // tt::assertion takes no parameter, so usb_device is passed as global
 tt::assertion_result usb_dev_available()  {
   FILE *lsusb = popen("/usr/bin/lsusb", "r");
@@ -34,6 +35,7 @@ tt::assertion_result usb_dev_available()  {
 
   return usb_present;
 }
+
 
 
 tt::assertion_result usb_available(ut::test_unit_id test_id) {

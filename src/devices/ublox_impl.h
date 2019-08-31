@@ -81,8 +81,8 @@ namespace cfg {
 
   cbyte_t rate = 0x08;
   cbytes_t rate_payload = {
-    0xFA, 0x00, // MeasRate: 250ms -> 4Hz
-    0x02, 0x00, // NavRate: 2 (1 solution per 2 measurements) -> 2Hz output
+    0xF4, 0x01, // MeasRate: 500ms -> 2Hz
+    0x01, 0x00, // Output message every measurement
     0x00, 0x00, // TimeRef: UTC
   };
 
@@ -256,7 +256,7 @@ struct Data_packet {
       data_(), checksum_() {
     setup_payload(cls, id, payload_init);
   }
-  
+
   uint8_t get_cls() const {
     return get_data_byte(0);
   }
@@ -390,7 +390,7 @@ struct Time_data {
 
   static const auto get_parse_rule() {
     return little_dword >> little_word >> byte_ >> byte_  // itow - day
-           >> byte_ >> byte_ >> byte_ >> byte_ >> little_dword >> little_dword; // hour - nano             
+           >> byte_ >> byte_ >> byte_ >> byte_ >> little_dword >> little_dword; // hour - nano
   }
 
   bool add_values(Stamped_quantities& values) const {
@@ -404,7 +404,7 @@ struct Time_data {
   }
 };
 
-struct Position_data {  
+struct Position_data {
   int32_t lon;  // scale 10E-7 degrees
   int32_t lat;  // scale 10E-7 degrees
   int32_t height;  // scale 10E-3
@@ -417,17 +417,17 @@ struct Position_data {
       >> little_dword >> little_dword;  // hacc - vacc
   }
 
-  bool add_values_horizontal(Stamped_quantities& values) const {   
-    values.push_back({ lat * 10E-7, 0.0, Quantity::la });
-    values.push_back({ lon * 10E-7, 0.0, Quantity::lo });
-    values.push_back({ hacc * 10E-3, 0.0, Quantity::hacc });        
+  bool add_values_horizontal(Stamped_quantities& values) const {
+    values.push_back({ lat * 1E-7, 0.0, Quantity::la });
+    values.push_back({ lon * 1E-7, 0.0, Quantity::lo });
+    values.push_back({ hacc * 1E-3, 0.0, Quantity::hacc });
     return true;
   }
 
   bool add_values_vertical(Stamped_quantities& values) const {
-    values.push_back({ height * 10E-3, 0.0, Quantity::h1 });
-    values.push_back({ hmsl * 10E-3, 0.0, Quantity::h2 });
-    values.push_back({ vacc * 10E-3, 0.0, Quantity::vacc });
+    values.push_back({ height * 1E-3, 0.0, Quantity::h1 });
+    values.push_back({ hmsl * 1E-3, 0.0, Quantity::h2 });
+    values.push_back({ vacc * 1E-3, 0.0, Quantity::vacc });
     return true;
   }
 };
@@ -448,12 +448,12 @@ struct Velocity_data {
   int32_t headveh;  // scale 1E-5 degrees
 
   bool add_values(Stamped_quantities& values) const {
-    values.push_back({ gspeed * 10E-3, 0.0, Quantity::vog });
-    values.push_back({ hmot * 10E-5 * M_PI / 180.0, 0.0, Quantity::crs });
-    values.push_back({ sacc * 10E-3, 0.0, Quantity::sacc });
-    values.push_back({ headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::cacc });
-    values.push_back({ headveh * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdg });
-    values.push_back({ headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdac });
+    values.push_back({ gspeed * 1E-3, 0.0, Quantity::vog });
+    values.push_back({ hmot * 1E-5 * M_PI / 180.0, 0.0, Quantity::crs });
+    values.push_back({ sacc * 1E-3, 0.0, Quantity::sacc });
+    values.push_back({ headacc * 1E-5 * M_PI / 180.0, 0.0, Quantity::cacc });
+    values.push_back({ headveh * 1E-5 * M_PI / 180.0, 0.0, Quantity::hdg });
+    values.push_back({ headacc * 1E-5 * M_PI / 180.0, 0.0, Quantity::hdac });
     return true;
   }
 
@@ -476,16 +476,16 @@ struct Payload_pvt: public Payload {
   uint8_t flags2;  // Time validity confirmation: oh well....
   uint8_t numsv;
   Position_data position_data;
-  Velocity_data velocity_data;   
+  Velocity_data velocity_data;
   int16_t magdec;  // scale 1E-2 degrees
   uint16_t magacc;  // scale 1E-2 degrees
 
 
   static const auto get_parse_rule();
- 
+
   Stamped_quantities get_values() const override {
     Stamped_quantities values;
-  
+
     time_data.add_values(values);
     if (fixtype == fixtype_2d || fixtype == fixtype_3d || fixtype == fixtype_3d_deadreck) {
       position_data.add_values_horizontal(values);
@@ -493,9 +493,9 @@ struct Payload_pvt: public Payload {
         position_data.add_values_vertical(values);
       }
     }
-    
+
     if (flags & flags_headveh_valid) {
-      velocity_data.add_values(values);      
+      velocity_data.add_values(values);
     }
 
     return values;
@@ -525,16 +525,25 @@ struct Payload_att: public Payload {
   Stamped_quantities get_values() const override {
     Stamped_quantities values;
     if (accroll != 0) {
-      values.push_back({roll * 10E-5 * M_PI / 180.0, 0.0, Quantity::ro});
-      values.push_back({accroll * 10E-5 * M_PI / 180.0, 0.0, Quantity::racc});
+      double faccroll = accroll * 1E-5 * M_PI / 180.0;
+      if (faccroll < 0.05) {
+        values.push_back({roll * 1E-5 * M_PI / 180.0, 0.0, Quantity::ro});
+        values.push_back({faccroll, 0.0, Quantity::racc});
+      }
     }
     if (accpitch != 0) {
-      values.push_back({pitch * 10E-5 * M_PI / 180.0, 0.0, Quantity::pi});
-      values.push_back({accpitch * 10E-5 * M_PI / 180.0, 0.0, Quantity::pacc});
+      double faccpitch = accpitch * 1E-5 * M_PI / 180.0;
+      if (faccpitch < 0.05) {
+        values.push_back({pitch * 1E-5 * M_PI / 180.0, 0.0, Quantity::pi});
+        values.push_back({faccpitch, 0.0, Quantity::pacc});
+      }
     }
     if (accheading != 0) {
-      values.push_back({heading * 10E-5 * M_PI / 180.0, 0.0, Quantity::ya});
-      values.push_back({accheading * 10E-5 * M_PI / 180.0, 0.0, Quantity::yacc});
+      double faccheading = accheading * 1E-5 * M_PI / 180.0;
+      if (faccheading < 0.10) {
+        values.push_back({heading * 1E-5 * M_PI / 180.0, 0.0, Quantity::ya});
+        values.push_back({faccheading, 0.0, Quantity::yacc});
+      }
     }
     return values;
   }
@@ -543,7 +552,7 @@ struct Payload_att: public Payload {
 
 struct Payload_ins: public Payload {
   uint32_t bitfield0;
-  enum { 
+  enum {
     bitfield0_rr_valid=1 << 8,
     bitfield0_pr_valid=1 << 9,
     bitfield0_yr_valid=1 << 10,
@@ -571,17 +580,17 @@ struct Payload_ins: public Payload {
 
   Stamped_quantities get_values() const override {
     Stamped_quantities values;
-    if (bitfield0 & bitfield0_rr_valid) 
+    if (bitfield0 & bitfield0_rr_valid)
       values.push_back({xangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::rr});
-    if (bitfield0 & bitfield0_pr_valid) 
+    if (bitfield0 & bitfield0_pr_valid)
       values.push_back({yangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::pr});
-    if (bitfield0 & bitfield0_yr_valid) 
+    if (bitfield0 & bitfield0_yr_valid)
       values.push_back({zangrate * 10E-3 * M_PI / 180.0, 0.0, Quantity::yr});
-    if (bitfield0 & bitfield0_fax_valid) 
+    if (bitfield0 & bitfield0_fax_valid)
       values.push_back({xaccel * 10E-2, 0.0, Quantity::fax});
-    if (bitfield0 & bitfield0_fay_valid) 
+    if (bitfield0 & bitfield0_fay_valid)
       values.push_back({yaccel * 10E-2, 0.0, Quantity::fay});
-    if (bitfield0 & bitfield0_faz_valid) 
+    if (bitfield0 & bitfield0_faz_valid)
       values.push_back({zaccel * 10E-2, 0.0, Quantity::faz});
     return values;
   }
@@ -606,7 +615,7 @@ struct Sensor_data {
     uint32_t shifted = (data & 0xFFFFFF) << 8;
     int signed_shifted = *reinterpret_cast<int*>(&shifted);
     Value_type value = static_cast<Value_type>(signed_shifted);
-    if (reftag < stag) 
+    if (reftag < stag)
         return {0.0, 0.0, Quantity::end};
     double offset = (reftag - stag) * 0.01 / -256.0;
 
@@ -669,7 +678,7 @@ const auto Payload_pvt::get_parse_rule() {
     >> t_data  // time_data
     >> byte_ >> byte_ >> byte_ >> byte_  // fixtype - numsv
     >> p_data  // postion_data
-    >> v_data // velocity_data       
+    >> v_data // velocity_data
     >> little_word >> little_word;  // magdec - magacc
 }
 
@@ -718,13 +727,13 @@ auto payload_parse_rule = nav_pvt | nav_att | esf_ins | esf_raw;
 } }  // namespace ubx::parser
 
 BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Time_data,
-  itow, year, month, day, 
-  hour, min, sec, 
-  valid, tacc, 
+  itow, year, month, day,
+  hour, min, sec,
+  valid, tacc,
   nano
 )
 
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Position_data,  
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Position_data,
   lon, lat, height, hmsl,
   hacc, vacc
 )
@@ -735,16 +744,16 @@ BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Velocity_data,
   pdop, headveh
 )
 
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_pvt, 
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_pvt,
   time_data,
-  fixtype, flags, flags2, numsv,    
+  fixtype, flags, flags2, numsv,
   position_data,
   velocity_data,
   magdec, magacc
 )
 
 
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_att, 
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_att,
   itow, version, reserved1_16, reserved1_8,
   roll, pitch, heading,
   accroll, accpitch, accheading
@@ -756,10 +765,10 @@ BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_ins,
   xangrate, yangrate, zangrate,
   xaccel, yaccel, zaccel)
 
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw, 
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_raw,
     length, reserved1, sensor_data)
 
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Sensor_data, 
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Sensor_data,
     data, stag)
 
 namespace ubx { namespace parser {
@@ -808,7 +817,7 @@ void Ublox_parser::parse(const double& stamp) {
       }
     }
     else {
-      log(level::error, "Ublox packet check error: lenght %, %, checksum %, %", 
+      log(level::error, "Ublox packet check error: lenght %, %, checksum %, %",
           packet.get_length(), packet.calc_length(), packet.get_checksum(), packet.calc_checksum());
     }
     packet.clear();
@@ -857,9 +866,9 @@ cbytes_t cfg_gnss_glonass = parser::Data_packet(cls_cfg, cfg::gnss, gnss_glonass
 cbytes_t cfg_gnss_galileo = parser::Data_packet(cls_cfg, cfg::gnss, gnss_galileo_payload).get_packet();
 cbytes_t cfg_gnss_beidou = parser::Data_packet(cls_cfg, cfg::gnss, gnss_beidou_payload).get_packet();
 
-cbytes_t cfg_msg_nav_pvt = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::pvt, 0x0A }).get_packet();
-cbytes_t cfg_msg_nav_att = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::att, 0x0A }).get_packet();
-cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x0A }).get_packet();
+cbytes_t cfg_msg_nav_pvt = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::pvt, 0x01 }).get_packet();
+cbytes_t cfg_msg_nav_att = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav::att, 0x01 }).get_packet();
+cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x01 }).get_packet();
 cbytes_t cfg_msg_esf_raw = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::raw, 0x0A }).get_packet();
 
 
