@@ -350,7 +350,7 @@ private:
   void setup_payload(const byte_t cls, const byte_t id, cbytes_t& payload) {
     data_.push_back(cls);
     data_.push_back(id);
-    set_length(payload.size());
+    set_length(static_cast<uint16_t>(payload.size()));
     data_.insert(data_.end(), payload.begin(), payload.end());
     checksum_ = calc_checksum();
   }
@@ -375,8 +375,7 @@ struct Payload {
   }
 };
 
-
-struct Payload_pvt: public Payload {
+struct Time_data {
   uint32_t itow;  // scale 10E-3
   uint16_t year;
   uint8_t month;
@@ -385,72 +384,120 @@ struct Payload_pvt: public Payload {
   uint8_t min;
   uint8_t sec;
   uint8_t valid;  // 0: valid date, 1: valid time, 2: fully resolved, 3: valid mag
-  enum { valid_date = 0x01, valid_time=0x02, valid_full=0x04, valid_mag=0x08 };
+  enum { valid_date = 0x01, valid_time = 0x02, valid_full = 0x04, valid_mag = 0x08 };
   uint32_t tacc;  // scale 10e-9
   int32_t nano;  // scale 10e-9
-  uint8_t fixtype;  // 0: nofix, 1: dead reck, 2: 2D fix, 3: 3D fix,
-                    // 4 GNSS + dead reck, 5: time fix only
-  enum { fixtype_nofix, fixtype_deadreck, fixtype_2d, fixtype_3d, fixtype_3d_deadreck, fixtype_time };
-  uint8_t flags;  // 0: gnss fix ok, 1: diff solution, 2-4 pms state,
-                  // 5: headveh valid, 6-7 carr solution
-  enum { flags_gnss=0x01, flags_differential=0x02, flags_headveh_valid=0x20 };
-  uint8_t flags2;  // Time validity confirmation: oh well....
-  uint8_t numsv;
+
+  static const auto get_parse_rule() {
+    return little_dword >> little_word >> byte_ >> byte_  // itow - day
+           >> byte_ >> byte_ >> byte_ >> byte_ >> little_dword >> little_dword; // hour - nano             
+  }
+
+  bool add_values(Stamped_quantities& values) const {
+    if (valid & valid_full) {
+      values.push_back({ compose_time_value(year, month, day, hour, min, sec, nano), 0.0, Quantity::ut });
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+};
+
+struct Position_data {  
   int32_t lon;  // scale 10E-7 degrees
   int32_t lat;  // scale 10E-7 degrees
   int32_t height;  // scale 10E-3
   int32_t hmsl;  // scale 10E-3
   uint32_t hacc;  // scale 10E-3
   uint32_t vacc;  // scale 10E-3
-  int32_t veln;  // scale 10E-3
-  int32_t vele;  // scale 10E-3
-  int32_t veld;  // scale 10E-3
-  int32_t gspeed;  // scale 10E-3
-  int32_t hmot;  // scale 10E-5 degrees
-  uint32_t sacc; // scale 10E-3 m/s
-  uint32_t headacc;  // scale 10E-5 degrees
-  uint16_t pdop;  // scale !0E-2
-  uint32_t reserved1_32;
-  uint16_t reserved1_16;
-  int32_t headveh;  // scale 10E-5 degrees
-  int16_t magdec;  // scale 10E-2 degrees
-  uint16_t magacc;  // scale 10E-2 degrees
 
   static const auto get_parse_rule() {
-    return byte_(command::cls_nav) >> byte_(command::nav::pvt) >> little_word(92)
-        >> little_dword >> little_word >> byte_ >> byte_  // itow - day
-        >> byte_ >> byte_ >> byte_ >> byte_  // hour - valid
-        >> little_dword >> little_dword >> byte_ >> byte_ >> byte_ >> byte_  // tacc - numsv
-        >> little_dword >> little_dword >> little_dword >> little_dword  // lon - hmsl
-        >> little_dword >> little_dword >> little_dword >> little_dword >> little_dword // hacc - veld
-        >> little_dword >> little_dword >> little_dword >> little_dword // gspeed - headacc
-        >> little_word >> little_dword >> little_word >> little_dword // pdop - headveh
-        >> little_word >> little_word;  // magdec - magacc
+    return little_dword >> little_dword >> little_dword >> little_dword  // lon - hmsl
+      >> little_dword >> little_dword;  // hacc - vacc
   }
 
+  bool add_values_horizontal(Stamped_quantities& values) const {   
+    values.push_back({ lat * 10E-7, 0.0, Quantity::la });
+    values.push_back({ lon * 10E-7, 0.0, Quantity::lo });
+    values.push_back({ hacc * 10E-3, 0.0, Quantity::hacc });        
+    return true;
+  }
+
+  bool add_values_vertical(Stamped_quantities& values) const {
+    values.push_back({ height * 10E-3, 0.0, Quantity::h1 });
+    values.push_back({ hmsl * 10E-3, 0.0, Quantity::h2 });
+    values.push_back({ vacc * 10E-3, 0.0, Quantity::vacc });
+    return true;
+  }
+};
+
+struct Velocity_data {
+  int32_t veln;  // scale 1E-3
+  int32_t vele;  // scale 1E-3
+  int32_t veld;  // scale 1E-3
+  int32_t gspeed;  // scale 1E-3
+  int32_t hmot;  // scale 1E-5 degrees
+  uint32_t sacc; // scale 1E-3 m/s
+  uint32_t headacc;  // scale 1E-5 degrees
+  uint16_t pdop;  // scale 1E-2
+  /* Omitted
+  uint32_t reserved1_32;
+  uint16_t reserved1_16;
+  */
+  int32_t headveh;  // scale 1E-5 degrees
+
+  bool add_values(Stamped_quantities& values) const {
+    values.push_back({ gspeed * 10E-3, 0.0, Quantity::vog });
+    values.push_back({ hmot * 10E-5 * M_PI / 180.0, 0.0, Quantity::crs });
+    values.push_back({ sacc * 10E-3, 0.0, Quantity::sacc });
+    values.push_back({ headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::cacc });
+    values.push_back({ headveh * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdg });
+    values.push_back({ headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdac });
+    return true;
+  }
+
+  static const auto get_parse_rule() {
+    return little_dword >> little_dword >> little_dword // veln - veld
+        >> little_dword >> little_dword >> little_dword >> little_dword // gspeed - headacc
+        >> little_word >> omit[repeat(6)[byte_]] >> little_dword; // pdop - headveh
+        // >> little_word >> little_dword >> little_word >> little_dword; // pdop - headveh
+  }
+};
+
+struct Payload_pvt: public Payload {
+	Time_data time_data;
+  uint8_t fixtype;  // 0: nofix, 1: dead reck, 2: 2D fix, 3: 3D fix,
+                    // 4 GNSS + dead reck, 5: time fix only
+  enum { fixtype_nofix, fixtype_deadreck, fixtype_2d, fixtype_3d, fixtype_3d_deadreck, fixtype_time };
+  uint8_t flags;  // 0: gnss fix ok, 1: diff solution, 2-4 pms state,
+                  // 5: headveh valid, 6-7 carr solution
+  enum { flags_gnss = 0x01, flags_differential = 0x02, flags_headveh_valid = 0x20 };
+  uint8_t flags2;  // Time validity confirmation: oh well....
+  uint8_t numsv;
+  Position_data position_data;
+  Velocity_data velocity_data;   
+  int16_t magdec;  // scale 1E-2 degrees
+  uint16_t magacc;  // scale 1E-2 degrees
+
+
+  static const auto get_parse_rule();
+ 
   Stamped_quantities get_values() const override {
     Stamped_quantities values;
-    if (valid & valid_full) {
-      values.push_back({compose_time_value(year, month, day, hour, min, sec, nano), 0.0, Quantity::ut});
-    }
+  
+    time_data.add_values(values);
     if (fixtype == fixtype_2d || fixtype == fixtype_3d || fixtype == fixtype_3d_deadreck) {
-      values.push_back({lat * 10E-7, 0.0, Quantity::la});
-      values.push_back({lon * 10E-7, 0.0, Quantity::lo});
-      values.push_back({gspeed * 10E-3, 0.0, Quantity::vog});
-      values.push_back({hmot * 10E-5 * M_PI / 180.0, 0.0, Quantity::crs});
-      values.push_back({hacc * 10E-3, 0.0, Quantity::hacc});
-      values.push_back({sacc * 10E-3, 0.0, Quantity::sacc});
-      values.push_back({headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::cacc});
+      position_data.add_values_horizontal(values);
+      if (fixtype != fixtype_2d) {
+        position_data.add_values_vertical(values);
+      }
     }
-    if (fixtype == fixtype_3d || fixtype == fixtype_3d_deadreck) {
-      values.push_back({height * 10E-3, 0.0, Quantity::h1});
-      values.push_back({hmsl * 10E-3, 0.0, Quantity::h2});
-      values.push_back({vacc * 10E-3, 0.0, Quantity::vacc});
-    }
+    
     if (flags & flags_headveh_valid) {
-      values.push_back({headveh * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdg}); 
-      values.push_back({headacc * 10E-5 * M_PI / 180.0, 0.0, Quantity::hdac});
+      velocity_data.add_values(values);      
     }
+
     return values;
   }
 };
@@ -590,11 +637,7 @@ struct Payload_raw: public Payload {
   uint32_t reserved1;
   std::vector<Sensor_data> sensor_data;
 
-  static const auto get_parse_rule() {
-    return byte_(command::cls_esf) >> byte_(command::esf::raw) 
-           >> little_word  // length
-           >> little_dword >> *(Sensor_data::get_parse_rule());  // reserved1 - sensor_data
-  }
+  static const auto get_parse_rule();
 
   Stamped_quantities get_values() const override {
     Stamped_quantities values;
@@ -616,10 +659,29 @@ x3::rule<struct name, type> const name = "\"" #name "\""; \
 auto name##_def = type::get_parse_rule(); \
 BOOST_SPIRIT_DEFINE(name)
 
+RULE_DEFINE(t_data, Time_data)
+RULE_DEFINE(p_data, Position_data)
+RULE_DEFINE(v_data, Velocity_data)
+RULE_DEFINE(s_data, Sensor_data)
+
+const auto Payload_pvt::get_parse_rule() {
+  return byte_(command::cls_nav) >> byte_(command::nav::pvt) >> little_word(92)
+    >> t_data  // time_data
+    >> byte_ >> byte_ >> byte_ >> byte_  // fixtype - numsv
+    >> p_data  // postion_data
+    >> v_data // velocity_data       
+    >> little_word >> little_word;  // magdec - magacc
+}
+
+const auto Payload_raw::get_parse_rule() {
+  return byte_(command::cls_esf) >> byte_(command::esf::raw)
+    >> little_word >> little_dword   // length - reserved1
+    >> *s_data;  // sensor_data
+}
+
 RULE_DEFINE(nav_pvt, Payload_pvt)
 RULE_DEFINE(nav_att, Payload_att)
 RULE_DEFINE(esf_ins, Payload_ins)
-RULE_DEFINE(sensor_data, Sensor_data)
 RULE_DEFINE(esf_raw, Payload_raw)
 
 #undef RULE_DEFINE
@@ -633,7 +695,6 @@ Ublox_parser::Ublox_parser()
 Ublox_parser::~Ublox_parser() {
 }
 
-
 struct Ublox_parser::Payload_visitor {
   Stamped_queue values;
   double stamp;
@@ -646,7 +707,6 @@ struct Ublox_parser::Payload_visitor {
   }
 };
 
-
 Stamped_queue& Ublox_parser::get_values() {
   return visitor->values;
 }
@@ -657,15 +717,32 @@ auto payload_parse_rule = nav_pvt | nav_att | esf_ins | esf_raw;
 
 } }  // namespace ubx::parser
 
-BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_pvt, 
-  itow, year, month, day, hour, min, sec, valid,
-  tacc, nano, fixtype, flags, flags2, numsv,
-  lon,  lat, height, hmsl,  
-  hacc, vacc, veln, vele, veld,
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Time_data,
+  itow, year, month, day, 
+  hour, min, sec, 
+  valid, tacc, 
+  nano
+)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Position_data,  
+  lon, lat, height, hmsl,
+  hacc, vacc
+)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Velocity_data,
+  veln, vele, veld,
   gspeed, hmot, sacc, headacc,
-  pdop,  reserved1_32, reserved1_16, headveh,
+  pdop, headveh
+)
+
+BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_pvt, 
+  time_data,
+  fixtype, flags, flags2, numsv,    
+  position_data,
+  velocity_data,
   magdec, magacc
 )
+
 
 BOOST_FUSION_ADAPT_STRUCT(ubx::parser::Payload_att, 
   itow, version, reserved1_16, reserved1_8,
