@@ -87,6 +87,7 @@
     <ClInclude Include="..\src\devices\xsens.h" />
     <ClInclude Include="..\src\devices\xsens_impl.h" />
     <ClInclude Include="..\src\driver\install.h" />
+    <ClInclude Include="..\src\functions.h" />
     <ClInclude Include="..\src\http.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\loop.h" />
