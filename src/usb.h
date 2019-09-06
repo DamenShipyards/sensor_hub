@@ -219,14 +219,19 @@ static void handle_transfer(libusb_transfer* transfer) {
   }
 }
 
-struct Usb {
-  Usb() = delete;
-  Usb(boost::asio::io_context& io_context);
-  ~Usb();
+
+struct LibUsb {
   bool open(int vendor_id, int product_id, int seq=0);
   bool open(const std::string& device_str, int seq);
   void open(const std::string& device_str);
   void close();
+};
+
+
+struct Usb: public LibUsb {
+  Usb() = delete;
+  Usb(boost::asio::io_context& io_context);
+  ~Usb();
 
   template<typename OperationContext>
   void submit_operation(OperationContext* operation_context, int endpoint) {
@@ -306,6 +311,23 @@ private:
   size_t read_packet_size_;
   Transfer_queue transfers_;
 };
+
+inline std::string get_usb_connection_string(
+    const std::string& vendor_product,
+    boost::asio::io_context ctx) {
+  Usb usb(ctx);
+  for (int i = 0; i < 4; ++i) {
+    try {
+       usb.open(vendor_product, i);
+       usb.close();
+       return fmt::format("%,%", vendor_product, i);
+    }
+    catch (const Usb_exception& e){
+      log(level::debug, "USB device %,% not found", vendor_product, i);
+    }
+    return "auto_connection_string_not_found";
+  }
+}
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

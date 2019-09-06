@@ -139,8 +139,17 @@ struct Device: public Named_object {
     set_connected(false);
   }
 
-  const std::string& get_connection_string() const {
-    return connection_string_;
+  virtual std::string get_auto_connection_string() const {
+    return "unimplemented_auto_connection_string";
+  }
+
+  const std::string get_connection_string() const {
+    if (connection_string_ == "auto") {
+      return this->get_auto_connection_string();
+    }
+    else {
+      return connection_string_;
+    }
   }
 
   void set_connection_string(const std::string& connection_string) {

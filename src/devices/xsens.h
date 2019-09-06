@@ -293,7 +293,7 @@ private:
 };
 
 
-template <typename Port, typename ContextProvider>
+template <typename Port, class ContextProvider>
 struct MTi_G_710: public Xsens<Port, ContextProvider> {
 
   MTi_G_710(): Xsens<Port, ContextProvider>() {
@@ -304,28 +304,36 @@ struct MTi_G_710: public Xsens<Port, ContextProvider> {
     log(level::info, "Destroying Xsens_MTi_G_710");
   }
 
+  std::string get_auto_connection_string() const override {
+    return get_usb_connection_string("2639:0017", ContextProvider::get_context());
+  }
+
   bool get_output_configuration(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens GetOutputConfiguration");
-    return this->exec_command(command::get_output_configuration, command::get_output_configuration_ack, command::error_resp, yield);
+    return this->exec_command(command::get_output_configuration, 
+        command::get_output_configuration_ack, command::error_resp, yield);
   }
 
   bool set_output_configuration(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetOutputConfiguration");
-    return this->exec_command(command::set_output_configuration, command::output_configuration_ack, command::error_resp, yield);
+    return this->exec_command(command::set_output_configuration, 
+        command::output_configuration_ack, command::error_resp, yield);
   }
 
   bool set_option_flags(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetOptionFlags");
-    return this->exec_command(command::set_option_flags, command::option_flags_ack, command::error_resp, yield);
+    return this->exec_command(command::set_option_flags, 
+        command::option_flags_ack, command::error_resp, yield);
   }
 
   bool set_string_output_type(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetStringOutputType");
-    return this->exec_command(command::set_string_output_type, command::string_output_type_ack, command::error_resp, yield);
+    return this->exec_command(command::set_string_output_type, 
+        command::string_output_type_ack, command::error_resp, yield);
   }
 };
 
