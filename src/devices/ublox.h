@@ -29,6 +29,7 @@
 #include <ostream>
 #include <deque>
 #include <iterator>
+#include <type_traits>
 
 
 namespace ubx {
@@ -146,11 +147,13 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
     log(level::info, "Destroying Ublox_NEO_M8U");
   }
 
+
   bool setup_ports(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup ports");
     return this->exec_command(command::cfg_prt_usb, response::ack, response::nak, yield) 
         && this->exec_command(command::cfg_prt_uart, response::ack, response::nak, yield);
   }
+
 
   bool get_version(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U get version info");
@@ -191,10 +194,12 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
     return result;
   }
 
+
   bool setup_power_management(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup power management");
     return this->exec_command(command::cfg_pms, response::ack, response::nak, yield);
   }
+
 
   bool setup_gnss(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup GNSS");
@@ -202,11 +207,13 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
         && use_glonass(yield);  // Use GPS + Glonass by default
   }
 
+
   bool setup_navigation_rate(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup navigation rate");
     return this->exec_command(command::cfg_rate, response::ack, response::nak, yield) 
         && this->exec_command(command::cfg_hnr, response::ack, response::nak, yield);
   }
+
 
   bool setup_messages(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup messages");
@@ -216,21 +223,26 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
         && this->exec_command(command::cfg_msg_esf_raw, response::ack, response::nak, yield);
   }
 
+
   bool use_glonass(asio::yield_context yield) {
     log(level::info, "Ublox NEO M8U use GLONASS");
     return this->exec_command(command::cfg_gnss_glonass, response::ack, response::nak, yield);
   }
+
 
   bool use_galileo(asio::yield_context yield) {
     log(level::info, "Ublox NEO M8U use Galileo");
     return this->exec_command(command::cfg_gnss_galileo, response::ack, response::nak, yield);
   }
 
+
   bool use_beidou(asio::yield_context yield) {
     log(level::info, "Ublox NEO M8U use Beidou");
     return this->exec_command(command::cfg_gnss_beidou, response::ack, response::nak, yield);
   }
+
 };
+
 
 }  //namespace ubx
 

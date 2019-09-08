@@ -220,15 +220,33 @@ static void handle_transfer(libusb_transfer* transfer) {
 }
 
 
-struct LibUsb {
+struct Lib_usb {
+  Lib_usb();
+  ~Lib_usb();
   bool open(int vendor_id, int product_id, int seq=0);
   bool open(const std::string& device_str, int seq);
   void open(const std::string& device_str);
   void close();
+protected:
+  auto& get_context() {
+    return ctx_;
+  }
+  auto& get_handle() {
+    return device_;
+  }
+  virtual void setup_endpoints() {};
+  virtual void setup_events() {};
+private:
+  libusb_context* ctx_;
+  libusb_device_handle* device_;
+  struct Usb_descriptors;
+  std::unique_ptr<Usb_descriptors> descriptors_;
+protected:
+  std::unique_ptr<Usb_descriptors>& get_descriptors();
 };
 
 
-struct Usb: public LibUsb {
+struct Usb: public Lib_usb {
   Usb() = delete;
   Usb(boost::asio::io_context& io_context);
   ~Usb();
@@ -239,7 +257,7 @@ struct Usb: public LibUsb {
 
     libusb_fill_bulk_transfer(
         transfer,
-        device_,
+        this->get_handle(),
         static_cast<uint8_t>(endpoint),
         operation_context->get_data().data(),
         static_cast<int>(operation_context->get_data().size()),
@@ -297,14 +315,14 @@ struct Usb: public LibUsb {
 
     return init.result.get();
   }
+  void close();
   void cancel();
+protected:
+  void setup_endpoints() override;
+  void setup_events() override;
 private:
   boost::asio::io_context& io_ctx_;
   boost::asio::io_context::strand strand_;
-  libusb_context* ctx_;
-  libusb_device_handle* device_;
-  struct Usb_descriptors;
-  std::unique_ptr<Usb_descriptors> descriptors_;
   struct Usb_event_handler;
   std::unique_ptr<Usb_event_handler> event_handler_;
   int read_endpoint_, write_endpoint_;
@@ -312,10 +330,9 @@ private:
   Transfer_queue transfers_;
 };
 
-inline std::string get_usb_connection_string(
-    const std::string& vendor_product,
-    boost::asio::io_context ctx) {
-  Usb usb(ctx);
+
+inline std::string get_usb_connection_string(const std::string& vendor_product) {
+  Lib_usb usb;
   for (int i = 0; i < 4; ++i) {
     try {
        usb.open(vendor_product, i);
@@ -323,10 +340,10 @@ inline std::string get_usb_connection_string(
        return fmt::format("%,%", vendor_product, i);
     }
     catch (const Usb_exception& e){
-      log(level::debug, "USB device %,% not found", vendor_product, i);
+      log(level::debug, "USB device %,% not found or already connected", vendor_product, i);
     }
-    return "auto_connection_string_not_found";
   }
+  return "usb_connection_string_not_found";
 }
 
 #endif

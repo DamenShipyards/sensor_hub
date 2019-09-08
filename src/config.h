@@ -14,9 +14,11 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+#include <string>
 #include <boost/property_tree/ptree.hpp>
 
 extern boost::property_tree::ptree& get_config();
+extern std::string get_dev_connection_string(const std::string& prefix);
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

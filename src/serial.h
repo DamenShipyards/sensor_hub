@@ -18,10 +18,14 @@
 #include <string>
 #include <exception>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/serial_port.hpp>
+#include <boost/filesystem.hpp>
 
 using serial_port = boost::asio::serial_port;
 using asio_serial = boost::asio::serial_port_base;
+namespace fs = boost::filesystem;
+namespace algo = boost::algorithm;
 
 using std::runtime_error;
 
@@ -93,6 +97,46 @@ struct Serial: public serial_port {
   }
 };
 
+
+inline bool can_open_serial(boost::asio::io_context& ctx, const std::string& device_str) {
+  boost::system::error_code ec;
+  serial_port s{ctx};
+  // not (!) because "open" returns an error code, so success means *not* an error
+  if (!s.open(device_str, ec)) {
+    s.close();
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+#ifdef _WIN32
+
+inline std::string get_serial_connection_string(boost::asio::io_context& ctx, const std::string& prefix,
+    const std::string& device) {
+}
+
+#else
+
+inline std::string get_serial_connection_string(boost::asio::io_context& ctx, const std::string& prefix) {
+  static const auto dev_dir = fs::path("/dev/sensor_hub");
+  std::string match = (dev_dir / prefix).string();
+  fs::directory_iterator it{dev_dir};
+  while (it != fs::directory_iterator{}) {
+    std::string item = it->path().string();
+    if (algo::starts_with(item, match)) {
+      if (can_open_serial(ctx, item)) {
+        return item;
+      }
+    } 
+    ++it;
+  }
+  log(level::debug, "Dev device %* not found or already connected", match);
+  return "dev_connection_string_not_found";
+}
+
+#endif  // ifdef _WIN32
 
 #endif  // SERIAL_H_
 

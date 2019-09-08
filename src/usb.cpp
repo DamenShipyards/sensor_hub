@@ -82,7 +82,7 @@ private:
 
 
 
-struct Usb::Usb_descriptors {
+struct Lib_usb::Usb_descriptors {
   Usb_descriptors() = delete;
   Usb_descriptors(libusb_device_handle* device_handle)
       : handle_(device_handle), descriptor_(), active_config_(nullptr) {
@@ -215,62 +215,18 @@ private:
 
 
 
-struct Usb::Usb_event_handler {
-  Usb_event_handler() = delete;
-  Usb_event_handler(libusb_context* usb_ctx)
-      : usb_ctx_(usb_ctx),
-        handler_ctx_(), work_guard_(make_work_guard(handler_ctx_)),
-        worker_(boost::bind(&asio::io_context::run, &handler_ctx_)) {
-  }
-  ~Usb_event_handler() {
-    close();
-  }
-  void close() {
-    usb_ctx_ = nullptr;
-    if (!handler_ctx_.stopped()) {
-      handler_ctx_.stop();
-      worker_.join();
-    }
-  }
-  void handle_events() {
-    if (usb_ctx_ != nullptr && !handler_ctx_.stopped())
-      handler_ctx_.post(boost::bind(&Usb_event_handler::handle_events_, this));
-  }
-private:
-  libusb_context* usb_ctx_;
-  asio::io_context handler_ctx_;
-  asio::executor_work_guard<asio::io_context::executor_type> work_guard_;
-  boost::thread worker_;
-
-  void handle_events_() {
-    timeval tv = timeval{0, 100000};
-    while (usb_ctx_ != nullptr) {
-      int r = libusb_handle_events_timeout_completed(usb_ctx_, &tv, nullptr);
-      if (r != 0) {
-        log(level::error, "Failed to handle USB events, error %", r);
-      }
-    }
-  }
-
-};
-
-
-Usb::Usb(boost::asio::io_context& io_context)
-    : io_ctx_(io_context), strand_(io_context),
-      ctx_(nullptr), device_(nullptr), descriptors_(nullptr),
-      read_endpoint_(0), write_endpoint_(0), read_packet_size_(0),
-      transfers_() {
+Lib_usb::Lib_usb(): ctx_(nullptr), device_(nullptr), descriptors_(nullptr) {
   ctx_ = Usb_context::get_instance().get_context();
 }
 
 
-Usb::~Usb() {
+Lib_usb::~Lib_usb() {
   close();
   // Context will be freed by Usb_context singleton
 }
 
 
-bool Usb::open(int vendor_id, int product_id, int seq) {
+bool Lib_usb::open(int vendor_id, int product_id, int seq) {
   libusb_device** devs;
 
   // Start by closing any previously opened device
@@ -324,15 +280,11 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
           }
         }
 
-        read_endpoint_ = descriptors_->get_read_endpoint();
-        write_endpoint_ = descriptors_->get_write_endpoint();
-        read_packet_size_ = descriptors_->get_read_packet_size(read_endpoint_);
+        setup_endpoints();
 
-        event_handler_ = std::make_unique<Usb_event_handler>(ctx_);
-        event_handler_->handle_events();
+        setup_events();
 
-        log(level::info, "Successfully opened USB device with endpoints: %, %: %",
-            write_endpoint_, read_endpoint_, read_packet_size_);
+
         break;
       interface_failure:
         descriptors_ = nullptr;
@@ -347,7 +299,8 @@ bool Usb::open(int vendor_id, int product_id, int seq) {
   return device_ != nullptr;
 }
 
-bool Usb::open(const std::string& device_str, int seq) {
+
+bool Lib_usb::open(const std::string& device_str, int seq) {
   std::vector<std::string> fields;
   boost::split(fields, device_str, [](char c) { return c == ':'; });
   if (fields.size() != 2) {
@@ -359,7 +312,8 @@ bool Usb::open(const std::string& device_str, int seq) {
   return open(vendor_id, product_id, seq);
 }
 
-void Usb::open(const std::string& device_str) {
+
+void Lib_usb::open(const std::string& device_str) {
   std::vector<std::string> fields;
   boost::split(fields, device_str, [](char c){ return c == ','; });
   bool result = false;
@@ -380,9 +334,8 @@ void Usb::open(const std::string& device_str) {
   }
 }
 
-void Usb::close() {
-  cancel();
-  event_handler_ = nullptr;
+
+void Lib_usb::close() {
   if (device_ != nullptr) {
     if (descriptors_ != nullptr) {
       for (int i = 0; i < descriptors_->get_interface_count(); ++i) {
@@ -399,10 +352,92 @@ void Usb::close() {
   }
 }
 
+
+std::unique_ptr<Lib_usb::Usb_descriptors>& Lib_usb::get_descriptors() {
+  return descriptors_;
+}
+
+
+
+struct Usb::Usb_event_handler {
+  Usb_event_handler() = delete;
+  Usb_event_handler(libusb_context* usb_ctx)
+      : usb_ctx_(usb_ctx),
+        handler_ctx_(), work_guard_(make_work_guard(handler_ctx_)),
+        worker_(boost::bind(&asio::io_context::run, &handler_ctx_)) {
+  }
+  ~Usb_event_handler() {
+    close();
+  }
+  void close() {
+    usb_ctx_ = nullptr;
+    if (!handler_ctx_.stopped()) {
+      handler_ctx_.stop();
+      worker_.join();
+    }
+  }
+  void handle_events() {
+    if (usb_ctx_ != nullptr && !handler_ctx_.stopped())
+      handler_ctx_.post(boost::bind(&Usb_event_handler::handle_events_, this));
+  }
+private:
+  libusb_context* usb_ctx_;
+  asio::io_context handler_ctx_;
+  asio::executor_work_guard<asio::io_context::executor_type> work_guard_;
+  boost::thread worker_;
+
+  void handle_events_() {
+    timeval tv = timeval{0, 100000};
+    while (usb_ctx_ != nullptr) {
+      int r = libusb_handle_events_timeout_completed(usb_ctx_, &tv, nullptr);
+      if (r != 0) {
+        log(level::error, "Failed to handle USB events, error %", r);
+      }
+    }
+  }
+
+};
+
+
+
+Usb::Usb(boost::asio::io_context& io_context)
+    : Lib_usb(), io_ctx_(io_context), strand_(io_context),
+      read_endpoint_(0), write_endpoint_(0), read_packet_size_(0),
+      transfers_() {
+}
+
+
+Usb::~Usb() {
+}
+
+
+void Usb::setup_endpoints() {
+  write_endpoint_ = this->get_descriptors()->get_write_endpoint();
+  read_endpoint_ = this->get_descriptors()->get_read_endpoint();
+  read_packet_size_ = this->get_descriptors()->get_read_packet_size(read_endpoint_);
+  log(level::info, "Successfully setup USB device with endpoints: %, %: %",
+      write_endpoint_, read_endpoint_, read_packet_size_);
+}
+
+
+void Usb::setup_events() {
+  event_handler_ = std::make_unique<Usb_event_handler>(this->get_context());
+  event_handler_->handle_events();
+}
+
+
+void Usb::close() {
+  cancel();
+  event_handler_ = nullptr;
+  Lib_usb::close();
+}
+
+
 void Usb::cancel() {
   transfers_.cancel();
   asio::deadline_timer tmr(io_ctx_, posix_time::milliseconds(50));
   tmr.wait();
 }
+
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
