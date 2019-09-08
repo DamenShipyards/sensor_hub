@@ -145,6 +145,7 @@ struct Service {
       std::string device_type = cfg.get(fmt::format("{:s}.type", device_section), "missing_device_type");
       Device_ptr device = create_device(device_type);
       device->set_name(cfg.get(fmt::format("{:s}.name", device_section), "missing_device_name"));
+      device->set_enabled(cfg.get(fmt::format("{:s}.enabled", device_section), false))
       std::string connection_string = cfg.get(fmt::format("{:s}.connection_string", device_section), "missing_connection_string");
       auto usb_address = get_usb_address(connection_string);
       check_install_usb_driver(usb_address.first, usb_address.second);
@@ -192,7 +193,7 @@ struct Service {
    */
   void connect_devices(asio::yield_context yield) {
     for (auto&& device: devices_) {
-      if (!device->is_connected()) {
+      if (device->is_enabled() && !device->is_connected()) {
         device->connect(yield);
       }
     }
@@ -232,7 +233,6 @@ struct Service {
    * Called every ten seconds
    */
   void ten_seconds_service(asio::yield_context yield) {
-    connect_devices(yield);
   }
 
 
@@ -240,6 +240,7 @@ struct Service {
    * Called every minute of uptime
    */
   void one_minute_service(asio::yield_context yield) {
+    connect_devices(yield);
   }
 
 
