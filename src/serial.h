@@ -18,10 +18,14 @@
 #include <string>
 #include <exception>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/serial_port.hpp>
+#include <boost/filesystem.hpp>
 
 using serial_port = boost::asio::serial_port;
 using asio_serial = boost::asio::serial_port_base;
+namespace fs = boost::filesystem;
+namespace algo = boost::algorithm;
 
 using std::runtime_error;
 
@@ -93,6 +97,90 @@ struct Serial: public serial_port {
   }
 };
 
+
+inline bool can_open_serial(boost::asio::io_context& ctx, const std::string& device_str) {
+  boost::system::error_code ec;
+  serial_port s{ctx};
+  // not (!) because "open" returns an error code, so success means *not* an error
+  if (!s.open(device_str, ec)) {
+    s.close();
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+#ifdef _WIN32
+
+inline std::string get_serial_connection_string(boost::asio::io_context& ctx, 
+    const std::string& prefix,
+    const std::string& service,
+    const std::string& device) {
+  int ret;
+  HKEY key = NULL;
+  int count = 0;
+  DWORD size = MAX_PATH;
+  char dev_str[MAX_PATH];
+  char com_str[MAX_PATH];
+  std::string service_key = "SYSTEM\\CurrentControlSet\\Services\\" + service + "\\Enum";
+  std::string serial_key = "HARDWARE\\DEVICEMAP\\SERIALCOMM";
+
+  // Get the ublox driver service instance count
+  ret = RegGetValueA(HKEY_LOCAL_MACHINE, service_key.c_str(), "Count", RRF_RT_DWORD, NULL, &count, &size);
+  if (ret != ERROR_SUCCESS) {
+    log(level::info, "Couldn't read registry value: %\\Count, error %", service_key, ret);
+    return "serial_connection_string_not_found";
+  };
+  // Then loop over the entries...
+  for (int i = 0; i < count; ++i) {
+    size = MAX_PATH;
+    ret = RegGetValueA(HKEY_LOCAL_MACHINE, service_key.c_str(), std::to_string(i).c_str(), RRF_RT_REG_SZ, NULL, &dev_str, &size);
+    if (ret != ERROR_SUCCESS) {
+      log(level::error, "Couldn't read registry value: %\\%, error %", service_key, i, ret);
+      return "serial_connection_string_not_found";
+    };
+    // .. to see whether we found a matching device
+    std::string full_device = std::string(dev_str);
+    if (algo::starts_with(full_device, device)) {
+      size = MAX_PATH;
+      // .., if it matches, get it's com port from the registry
+      std::string value_name = fmt::format("{:s}{:d}", prefix, i);
+      ret = RegGetValueA(HKEY_LOCAL_MACHINE, serial_key.c_str(), value_name.c_str(), RRF_RT_REG_SZ, NULL, &com_str, &size);
+      if (ret != ERROR_SUCCESS) {
+        log(level::error, "Couldn't read registry value: %\\%, error %", serial_key, value_name, ret);
+        return "serial_connection_string_not_found";
+      };
+      std::string result = fmt::format("\\\\.\\{:s}", com_str);
+      if (can_open_serial(ctx, result)) {
+        return result;
+      }
+    }
+  }
+  log(level::info, "Serial device %* not found or already connected", device);
+  return "serial_connection_string_not_found";
+}
+
+#else
+
+inline std::string get_serial_connection_string(boost::asio::io_context& ctx, const std::string& prefix) {
+  static const auto dev_dir = fs::path("/dev/sensor_hub");
+  std::string match = (dev_dir / prefix).string();
+  fs::directory_iterator it{dev_dir};
+  while (it != fs::directory_iterator{}) {
+    std::string item = it->path().string();
+    if (algo::starts_with(item, match)) {
+      if (can_open_serial(ctx, item)) {
+        return item;
+      }
+    } 
+    ++it;
+  }
+  log(level::info, "Serial device %* not found or already connected", match);
+  return "dev_connection_string_not_found";
+}
+
+#endif  // ifdef _WIN32
 
 #endif  // SERIAL_H_
 

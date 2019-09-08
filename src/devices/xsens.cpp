@@ -19,8 +19,19 @@
 // For context provider
 #include "../loop.h"
 
+// Ports:
+#include "../serial.h"
+#include "../usb.h"
+
 // Add factories to registry
-using Xsens_MTi_G_710_usb = xsens::MTi_G_710<Usb, Context_provider>;
+struct Xsens_MTi_G_710_usb: public xsens::MTi_G_710<Usb, Context_provider> {
+
+  std::string get_auto_connection_string() const override {
+    return get_usb_connection_string("2639:0017");
+  }
+
+};
+
 using Xsens_MTi_G_710_serial = xsens::MTi_G_710<asio::serial_port, Context_provider>;
 
 using Xsens_MTi_G_710_usb_factory = Device_factory<Xsens_MTi_G_710_usb>;

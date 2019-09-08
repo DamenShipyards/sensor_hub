@@ -100,7 +100,6 @@
     <ClInclude Include="..\src\tools.h" />
     <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\src\usb.h" />
-    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="sensor_hub.rc" />

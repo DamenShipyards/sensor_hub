@@ -18,6 +18,8 @@
 #include "types.h"
 #include "quantities.h"
 
+#include <string>
+
 #include <boost/date_time/date.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>

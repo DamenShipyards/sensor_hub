@@ -7,7 +7,7 @@
  * (C) 2018 Damen Shipyards. All rights reserved.
  * \license
  * This software is proprietary. Any use without written
- * permission from the copyright holder is strictly 
+ * permission from the copyright holder is strictly
  * forbidden.
  */
 
@@ -47,14 +47,18 @@ class Device_exception: public runtime_error {
 
 struct Named_object {
   Named_object(): id_(), name_() {}
-  Named_object(const std::string id, const std::string name): id_(id), name_(name) {}
+  Named_object(const std::string id, const std::string name):
+    id_(id), name_(name), enabled_(false) {}
+
   const std::string& get_id() const {
     return id_;
   }
 
+
   const std::string& get_name() const {
     return name_;
   }
+
 
   void set_id(const std::string& id) {
     if (id != id_) {
@@ -62,6 +66,8 @@ struct Named_object {
       id_ = id;
     }
   }
+
+
   void set_name(const std::string& name) {
     if (name != name_) {
       log(level::info, "Setting name to \"%\"", name);
@@ -69,9 +75,19 @@ struct Named_object {
       init_device_log(name);
     }
   }
+
+  void set_enabled(const bool value) {
+    enabled_ = value;
+  }
+
+  bool is_enabled() const {
+    return enabled_;
+  }
+
 private:
   std::string id_;
   std::string name_;
+  bool enabled_;
 };
 
 /**
@@ -80,6 +96,7 @@ private:
  * The application will maintain a list of instantiations of descendants of this class
  */
 struct Device: public Named_object {
+
   Device(): Named_object(fmt::format("id_{:d}", seq_), fmt::format("device_{:d}", seq_)),
             connected_(false), data_(), enable_logging_(false), processors_() {
     log(level::debug, "Constructing Device");
@@ -90,9 +107,11 @@ struct Device: public Named_object {
 
   Device& operator=(Device const&) = delete;
 
+
   virtual ~Device() {
     log(level::debug, "Destroying Device");
   }
+
 
   virtual const bool get_value(const Quantity& quantity, Value_type& value) const {
     auto it = data_.find(quantity);
@@ -103,6 +122,7 @@ struct Device: public Named_object {
     return true;
   }
 
+
   virtual const bool get_sample(const Quantity& quantity, Stamped_value& sample) const {
     auto it = data_.find(quantity);
     if (it == data_.end() || it->second.empty()) {
@@ -112,12 +132,14 @@ struct Device: public Named_object {
     return true;
   }
 
+
   const Value_type get_value(const Quantity& quantity) const {
     Value_type value;
     if (!get_value(quantity, value))
       throw Quantity_not_available();
     return value;
   }
+
 
   virtual void connect(asio::yield_context yield) {
     bool initialized = initialize(yield);
@@ -127,25 +149,41 @@ struct Device: public Named_object {
       throw Device_exception("Failed to initialize device");
   }
 
+
   virtual bool initialize(asio::yield_context yield) {
     return true;
   }
+
 
   virtual const bool is_connected() const {
     return connected_;
   }
 
+
   virtual void disconnect() {
     set_connected(false);
   }
 
-  const std::string& get_connection_string() const {
-    return connection_string_;
+
+  virtual std::string get_auto_connection_string() const {
+    return "unimplemented_auto_connection_string";
   }
+
+
+  const std::string get_connection_string() const {
+    if (connection_string_ == "auto") {
+      return this->get_auto_connection_string();
+    }
+    else {
+      return connection_string_;
+    }
+  }
+
 
   void set_connection_string(const std::string& connection_string) {
     connection_string_ = connection_string;
   }
+
 
   void enable_logging(const bool value) {
     enable_logging_ = value;
@@ -157,6 +195,7 @@ struct Device: public Named_object {
     }
   }
 
+
   virtual void use_as_time_source(const bool value) {
     use_as_time_source_ = value;
     if (value) {
@@ -164,9 +203,11 @@ struct Device: public Named_object {
     }
   }
 
+
   void add_processor(Processor_ptr processor) {
     processors_.push_back(processor);
   }
+
 protected:
 
   void insert_value(const Stamped_quantity& value) {
@@ -188,6 +229,7 @@ protected:
       log(this->get_name(), ss.str());
     }
   }
+
 
   void set_connected(const bool connected) {
     if (connected == connected_) {
@@ -235,6 +277,7 @@ struct Port_device: public Device {
       return;
     }
 
+
     std::string connection_string = get_connection_string();
     try {
       port_.open(connection_string);
@@ -242,8 +285,9 @@ struct Port_device: public Device {
     }
     catch (std::exception& e) {
       log(level::error, "Failed to connect using \"%\" error \"%\"", connection_string, e.what());
-      return;	  
+      return;	
     }
+
 
     try {
       Device::connect(yield);
@@ -254,21 +298,24 @@ struct Port_device: public Device {
     }
   }
 
+
   void disconnect() override {
     if (is_connected())
       set_connected(false);
     port_.close();
   }
 
+
   Port& get_port() {
     return port_;
   }
 
+
   bool exec_command(
-      cbytes_t& command, 
-      cbytes_t& expected_response, 
-      cbytes_t& error_response, 
-      asio::yield_context yield, 
+      cbytes_t& command,
+      cbytes_t& expected_response,
+      cbytes_t& error_response,
+      asio::yield_context yield,
       bytes_t* data=nullptr,
       int timeout=1000) {
     Port& port = this->get_port();
@@ -316,7 +363,7 @@ struct Port_device: public Device {
         if (error_found >= 0) {
           int error_code_offset = static_cast<int>(error_response.size());
           if ((error_found + error_code_offset) < static_cast<int>(response.size())) {
-            log(level::error, "Received % error: %", this->get_name(), 
+            log(level::error, "Received % error: %", this->get_name(),
                 static_cast<int>(response[error_found + error_code_offset]));
           }
           else {
@@ -363,16 +410,20 @@ struct Port_device: public Device {
     }
   }
 
+
   void wait(int milli_seconds, asio::yield_context yield) {
     asio::deadline_timer waiter(ContextProvider::get_context(), posix_time::milliseconds(milli_seconds));
     waiter.async_wait(yield);
   }
 
+
   virtual bool reset(asio::yield_context yield) {
     return true;
   }
+
 protected:
   Port port_;
+
 };
 
 template <class DeviceClass>
@@ -422,11 +473,14 @@ private:
   }
 };
 
+
 //! Unique pointer to a device
 using Device_ptr = std::unique_ptr<Device>;
 
+
 //! Container with pointers to devices
 using Devices = std::vector<Device_ptr>;
+
 
 /**
  * Base class for a device factory
@@ -436,6 +490,7 @@ struct Device_factory_base {
     return Device_ptr(nullptr);
   }
 };
+
 
 /**
  * Device factory for "DeviceType"
@@ -447,6 +502,7 @@ struct Device_factory: public Device_factory_base {
     return std::make_unique<device_type>();
   }
 };
+
 
 //! Unique pointer to a device factory
 using Device_factory_ptr = std::unique_ptr<Device_factory_base>;
@@ -472,5 +528,6 @@ extern pt::ptree get_device_tree(const Device& device);
 extern std::string get_device_json(const Device& device);
 
 
-#endif
+#endif  // ifndef DEVICE_H_
+
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

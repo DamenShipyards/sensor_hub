@@ -17,17 +17,16 @@
 #include "log.h"
 #include "loop.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include <boost/filesystem.hpp>
 
 #ifdef _WIN32
 #include <shlobj.h>
 #include <objbase.h>
 #endif
 
-namespace fs = boost::filesystem;
-using pth = boost::filesystem::path;
 namespace pt = boost::property_tree;
+namespace fs = boost::filesystem;
 
 struct Config {
   Config(Config const&) = delete;
@@ -42,7 +41,7 @@ struct Config {
   }
 private:
   Config(): config_() {
-    pth config_file = get_config_file();
+    fs::path config_file = get_config_file();
     log(level::info, "Using configuration file: %", config_file);
     if (fs::exists(config_file)) {
       load(config_file);
@@ -53,16 +52,16 @@ private:
 
   pt::ptree config_;
 
-  pth get_config_dir() {
+  fs::path get_config_dir() {
 #   ifdef _WIN32
     PWSTR szPath = nullptr;
     SHGetKnownFolderPath(FOLDERID_ProgramData, NULL, 0, &szPath);
-    pth p(szPath);
+    fs::path p(szPath);
     CoTaskMemFree(szPath);
     p = p / "Damen" / "SensorHub" / "Config";
     fs::create_directories(p);
 #   else
-    pth p("/etc/sensor_hub");
+    fs::path p("/etc/sensor_hub");
     try {
       fs::create_directories(p);
     }
@@ -75,15 +74,15 @@ private:
     return p;
   }
 
-  pth get_config_file() {
+  fs::path get_config_file() {
     return  get_config_dir() / "sensor_hub.conf";
   }
 
-  void load(const pth& p) {
+  void load(const fs::path& p) {
     pt::read_ini(p.string(), config_);
   }
 
-  void save(const pth& p) {
+  void save(const fs::path& p) {
     pt::write_ini(p.string(), config_);
   }
 
@@ -160,12 +159,14 @@ private:
 
     set_default("device0.type", "xsens_mti_g_710_usb");
     set_default("device0.name", "Xsens-MTi-G-710");
-    set_default("device0.connection_string", "2639:0017,0");
+    set_default("device0.enabled", false);
+    set_default("device0.connection_string", "auto");
     set_default("device0.enable_logging", false);
     set_default("device0.use_as_time_source", false);
 
     set_default("device1.type", "ublox_neo_m8u_serial");
     set_default("device1.name", "Ublox-NEO-M8U");
+    set_default("device1.enabled", false);
     set_default("device1.connection_string", "auto");
     set_default("device1.enable_logging", false);
     set_default("device1.use_as_time_source", false);
@@ -206,5 +207,7 @@ private:
 pt::ptree& get_config() {
   return Config::get_instance().get_config();
 }
+
+
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
