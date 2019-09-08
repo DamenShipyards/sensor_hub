@@ -1,4 +1,5 @@
 Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\ubloxusb\Enum
+Count: 1
 0: USB\VID_1546&PID_01A8\6&38fcca26&0&1
 
 Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\USB\VID_1546&PID_01A8\6&38fcca26&0&1

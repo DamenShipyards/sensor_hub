@@ -113,8 +113,16 @@ inline bool can_open_serial(boost::asio::io_context& ctx, const std::string& dev
 
 #ifdef _WIN32
 
-inline std::string get_serial_connection_string(boost::asio::io_context& ctx, const std::string& prefix,
+inline std::string get_serial_connection_string(boost::asio::io_context& ctx, 
+    const std::string& prefix,
+    const std::string& service,
     const std::string& device) {
+  int ret;
+  HKEY key;
+  std::string service_key = "SYSTEM\\CurrentControlSet\\Services\\" + service + "\\Enum";
+  std::string serial_key = "HARDWARE\\DEVICEMAP\\SERIALCOMM"
+
+
 }
 
 #else

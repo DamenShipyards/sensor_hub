@@ -25,7 +25,7 @@ struct Ublox_NEO_M8U_serial: public ubx::NEO_M8U<Serial, Context_provider> {
 
   std::string get_auto_connection_string() const override {
 #ifdef _WIN32
-    std::string result = get_serial_connection_string(Context_provider::get_context(), "", "");
+    std::string result = get_serial_connection_string(Context_provider::get_context(), "UBLOXUSBPort", "ubloxusb", "USB\\VID_1546&PID_01A8");
 #else
     std::string result = get_serial_connection_string(Context_provider::get_context(), "ublox_neo_m8u-ttyACM");
 #endif
