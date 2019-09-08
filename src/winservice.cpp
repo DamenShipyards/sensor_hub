@@ -76,13 +76,11 @@ void print_error(int error)
 static int ServiceSetupEventLogging()
 {
   int ret;
-  HKEY key;
+  HKEY key = NULL;
   LPCTSTR s;
   DWORD	typesSupported;
   TCHAR path[MAX_PATH];
   DWORD	n;
-
-  key = NULL;
 
   // Add/Open source name as a sub-key under the Application key in the EventLog registry key.
   s = TEXT("SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\") SERVICE_NAME;
