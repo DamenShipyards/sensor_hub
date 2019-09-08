@@ -2,6 +2,8 @@
 # XSens
 SUBSYSTEM=="usb", ATTRS{idVendor}=="2639", ACTION=="add", GROUP="plugdev", MODE="0660"
 
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1546", ACTION=="add", GROUP="plugdev", MODE="0660"
+
 # Create symlink in /dev/sensor_hub for serial devices
 ACTION=="remove", GOTO="serial_end"
 SUBSYSTEM!="tty", GOTO="serial_end"
