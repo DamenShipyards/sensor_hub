@@ -340,7 +340,7 @@ inline std::string get_usb_connection_string(const std::string& vendor_product) 
        return fmt::format("%,%", vendor_product, i);
     }
     catch (const Usb_exception& e){
-      log(level::debug, "USB device %,% not found or already connected", vendor_product, i);
+      log(level::info, "USB device %,% not found or already connected: %", vendor_product, i, e.what());
     }
   }
   return "usb_connection_string_not_found";
