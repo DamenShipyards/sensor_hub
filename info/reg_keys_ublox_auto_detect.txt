@@ -1,0 +1,8 @@
+Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\ubloxusb\Enum
+0: USB\VID_1546&PID_01A8\6&38fcca26&0&1
+
+Computer\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\USB\VID_1546&PID_01A8\6&38fcca26&0&1
+FriendlyName: u-blox GNSS Receiver (COM6)
+
+Computer\HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\SERIALCOMM
+\Device\UBLOXUSBPort0: COM6
