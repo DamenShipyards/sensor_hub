@@ -145,7 +145,7 @@ struct Service {
       std::string device_type = cfg.get(fmt::format("{:s}.type", device_section), "missing_device_type");
       Device_ptr device = create_device(device_type);
       device->set_name(cfg.get(fmt::format("{:s}.name", device_section), "missing_device_name"));
-      device->set_enabled(cfg.get(fmt::format("{:s}.enabled", device_section), false))
+      device->set_enabled(cfg.get(fmt::format("{:s}.enabled", device_section), false));
       std::string connection_string = cfg.get(fmt::format("{:s}.connection_string", device_section), "missing_connection_string");
       auto usb_address = get_usb_address(connection_string);
       check_install_usb_driver(usb_address.first, usb_address.second);
