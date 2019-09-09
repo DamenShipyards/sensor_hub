@@ -53,6 +53,8 @@ extern cbytes_t cfg_msg_nav_att;
 extern cbytes_t cfg_msg_esf_ins;
 extern cbytes_t cfg_msg_esf_raw;
 
+extern cbytes_t sec_uniqid;
+
 constexpr uint8_t size_offset = 4;
 constexpr uint8_t data_offset = 6;
 
@@ -63,6 +65,7 @@ namespace response {
 extern cbytes_t ack;
 extern cbytes_t nak;
 extern cbytes_t mon_ver;
+extern cbytes_t sec_uniqid;
 
 }  // namespace response
 
@@ -99,7 +102,8 @@ struct Ublox: public Port_device<Port, ContextProvider>, public Polling_mixin<Ub
   bool initialize(asio::yield_context yield) override {
     bool result =
         setup_ports(yield)
-        && get_version(yield)
+        && request_version(yield)
+        && request_id(yield)
         && setup_power_management(yield)
         && setup_gnss(yield)
         && setup_navigation_rate(yield)
@@ -125,7 +129,8 @@ struct Ublox: public Port_device<Port, ContextProvider>, public Polling_mixin<Ub
   }
 
   virtual bool setup_ports(asio::yield_context yield) = 0;
-  virtual bool get_version(asio::yield_context yield) = 0;
+  virtual bool request_version(asio::yield_context yield) = 0;
+  virtual bool request_id(asio::yield_context yield) = 0;
   virtual bool setup_power_management(asio::yield_context yield) = 0;
   virtual bool setup_gnss(asio::yield_context yield) = 0;
   virtual bool setup_navigation_rate(asio::yield_context yield) = 0;
@@ -155,7 +160,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
   }
 
 
-  bool get_version(asio::yield_context yield) override {
+  bool request_version(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U get version info");
     // Prime the reponse with offset of response length offset in the received data
     bytes_t response = { command::size_offset, command::size_offset + 1 };
@@ -190,6 +195,28 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
           }
         }
       }
+    }
+    return result;
+  }
+
+
+  bool request_id(asio::yield_context yield) override {
+    log(level::info, "Ublox NEO M8U get unique identifier");
+    // Prime the reponse with offset of response length offset in the received data
+    bytes_t response = { command::size_offset, command::size_offset + 1 };
+    constexpr size_t min_len = 9;
+    constexpr size_t id_offset = 4;
+    bool result = this->exec_command(command::sec_uniqid, response::sec_uniqid, response::nak, yield, &response);
+    if (result && (response.size() - command::data_offset) >= min_len) {
+      std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}{:02X}",
+          static_cast<uint8_t>(response[command::data_offset + id_offset + 0]),
+          static_cast<uint8_t>(response[command::data_offset + id_offset + 1]),
+          static_cast<uint8_t>(response[command::data_offset + id_offset + 2]),
+          static_cast<uint8_t>(response[command::data_offset + id_offset + 3]),
+          static_cast<uint8_t>(response[command::data_offset + id_offset + 4])
+          );
+      log(level::info, "Ublox device serial#: %", serial_no);
+      this->set_id("ublox_" + serial_no);
     }
     return result;
   }

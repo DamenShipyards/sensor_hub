@@ -106,6 +106,7 @@ namespace cfg {
     0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
   };
 
+
   cbyte_t gnss = 0x3E;
   cbytes_t gnss_payload = {
     0x00,  // Version
@@ -217,6 +218,10 @@ namespace esf {
 }  // namespace esf
 
 
+cbyte_t cls_sec = 0x27;
+namespace sec {
+  cbyte_t uniqid = 0x03;
+}  // namespace sec
 
 }  // namespace command
 
@@ -871,6 +876,7 @@ cbytes_t cfg_msg_nav_att = parser::Data_packet(cls_cfg, cfg::msg, { cls_nav, nav
 cbytes_t cfg_msg_esf_ins = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::ins, 0x01 }).get_packet();
 cbytes_t cfg_msg_esf_raw = parser::Data_packet(cls_cfg, cfg::msg, { cls_esf, esf::raw, 0x0A }).get_packet();
 
+cbytes_t sec_uniqid = parser::Data_packet(cls_sec, sec::uniqid, {}).get_packet();
 
 }  // namespace command
 
@@ -879,6 +885,7 @@ namespace response {
 cbytes_t ack = { command::sync_1, command::sync_2, command::cls_ack, command::ack::ack, 0x02, 0x00, command::cls_cfg };
 cbytes_t nak = { command::sync_1, command::sync_2, command::cls_ack, command::ack::nak, 0x02, 0x00, command::cls_cfg };
 cbytes_t mon_ver = { command::sync_1, command::sync_2, command::cls_mon, command::mon::ver };
+cbytes_t sec_uniqid = { command::sync_1, command::sync_2, command::cls_sec, command::sec::uniqid };
 
 }  // namespace response
 

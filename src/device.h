@@ -62,7 +62,7 @@ struct Named_object {
 
   void set_id(const std::string& id) {
     if (id != id_) {
-      log(level::info, "Setting device id to \"%\"", this->get_id());
+      log(level::info, "Setting device id from \"%\" to \"%\"", id_, id);
       id_ = id;
     }
   }

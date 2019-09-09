@@ -225,7 +225,7 @@ struct Xsens: public Port_device<Port, ContextProvider>, public Polling_mixin<Xs
           static_cast<uint8_t>(response[command::data_offset + 2]),
           static_cast<uint8_t>(response[command::data_offset + 3])
       );
-      log(level::info, "Device serial#: %", serial_no);
+      log(level::info, "Xsens device serial#: %", serial_no);
       this->set_id("xsens_" + serial_no);
     }
     return result;
