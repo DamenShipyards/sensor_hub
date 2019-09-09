@@ -1,0 +1,7 @@
+[Unit]
+Description=Sensor Hub Daemon
+
+[Service]
+ExecStart=/usr/sbin/sensor_hub start
+ExecStop=/usr/sbin/sensor_hub stop
+PIDFile=/var/run/sensor_hub.pid
