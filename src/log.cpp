@@ -17,7 +17,6 @@
 #include <sstream>
 #include <memory>
 
-#include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <boost/log/sinks.hpp>
@@ -36,8 +35,6 @@
 #endif
 
 using namespace boost::log;
-namespace fs = boost::filesystem;
-using pth = boost::filesystem::path;
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level)
 BOOST_LOG_ATTRIBUTE_KEYWORD(tag_attr, "Tag", std::string)
@@ -93,16 +90,16 @@ struct Logger {
     file_sink_->flush();
   }
 
-  pth get_log_dir() {
+  fs::path get_log_dir() {
 #   ifdef _WIN32
     PWSTR szPath = nullptr;
     SHGetKnownFolderPath(FOLDERID_ProgramData, NULL, 0, &szPath);
-    pth p(szPath);
+    fs::path p(szPath);
     CoTaskMemFree(szPath);
     p = p / "Damen" / "SensorHub" / "Log";
     fs::create_directories(p);
 #   else
-    pth p("/var/log/sensor_hub");
+    fs::path p("/var/log/sensor_hub");
     try {
       fs::create_directories(p);
     }
@@ -115,26 +112,39 @@ struct Logger {
     return p;
   }
 
-  pth get_device_log_dir() {
-#   ifdef _WIN32
-    PWSTR szPath = nullptr;
-    SHGetKnownFolderPath(FOLDERID_ProgramData, NULL, 0, &szPath);
-    pth p(szPath);
-    CoTaskMemFree(szPath);
-    p = p / "Damen" / "SensorHub" / "DeviceLogs";
-#   else
-    pth p = get_log_dir() / "device_logs";
-#   endif
-    fs::create_directories(p);
-    return p;
+
+  void set_device_log_dir(const fs::path& dir) {
+    device_log_dir_ = dir;
   }
+
+
+  fs::path get_device_log_dir() {
+    if (device_log_dir_.empty()) {
+#   ifdef _WIN32
+      PWSTR szPath = nullptr;
+      SHGetKnownFolderPath(FOLDERID_ProgramData, NULL, 0, &szPath);
+      fs::path p(szPath);
+      CoTaskMemFree(szPath);
+      p = p / "Damen" / "SensorHub" / "DeviceLogs";
+#   else
+      fs::path p = get_log_dir() / "device_logs";
+#   endif
+      fs::create_directories(p);
+      return p;
+    }
+    else {
+      return device_log_dir_;
+    }
+  }
+
 
   void set_log_level(level lvl) {
     file_sink_->set_filter(!expressions::has_attr(tag_attr) && severity >= lvl);
   }
 
 private:
-  Logger(): log_(), device_log_() {
+
+  Logger(): device_log_dir_(), log_(), device_log_() {
     add_common_attributes();
     file_sink_ =
         add_file_log(
@@ -158,11 +168,12 @@ private:
     file_sink_->set_filter(!expressions::has_attr(tag_attr));
   }
 
+  fs::path device_log_dir_;
   sources::severity_logger_mt<level> log_;
   sources::logger device_log_;
   boost::shared_ptr<sinks::synchronous_sink<sinks::text_file_backend> > file_sink_;
 
-  pth get_log_filename() {
+  fs::path get_log_filename() {
     return  get_log_dir() / "sensor_hub.%8N.log";
   }
 };
@@ -182,10 +193,13 @@ sources::logger& get_device_log() {
 }
 
 
-void init_device_log(const std::string& device_name) {
-  typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
+bool init_device_log(const std::string& device_name) {
   auto log_dir = Logger::get_instance().get_device_log_dir();
-  auto filename = log_dir / (device_name + ".%8N.log");
+  if (!fs::exists(log_dir)) {
+    return false;
+  }
+  typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
+  auto filename = log_dir / ("%Y%m%dT%H%M%S." + device_name + ".%8N.log");
   auto sink = boost::make_shared<file_sink>(
       keywords::file_name = filename,
       keywords::open_mode = std::ios_base::app,
@@ -201,11 +215,16 @@ void init_device_log(const std::string& device_name) {
   sink->locked_backend()->scan_for_files();
   sink->set_filter(tag_attr == device_name);
   core::get()->add_sink(sink);
+  return true;
 }
 
 
 void set_log_level(level lvl) {
   Logger::get_instance().set_log_level(lvl);
+}
+
+void set_device_log_dir(const fs::path& dir) {
+  Logger::get_instance().set_device_log_dir(dir);
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

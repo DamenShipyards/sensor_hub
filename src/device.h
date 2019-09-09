@@ -72,7 +72,6 @@ struct Named_object {
     if (name != name_) {
       log(level::info, "Setting name to \"%\"", name);
       name_ = name;
-      init_device_log(name);
     }
   }
 
@@ -210,6 +209,21 @@ struct Device: public Named_object {
 
 protected:
 
+  std::string get_device_log_name() const {
+    return this->get_id() + "." + this->get_name();
+  }
+
+
+  void setup_device_log() {
+    if (!enable_logging_)
+      return;
+    bool initialized = init_device_log(this->get_device_log_name());
+    if (initialized) {
+      log(level::info, "Device log started: %", this->get_device_log_name());
+    }
+  }
+
+
   void insert_value(const Stamped_quantity& value) {
     if (use_as_time_source_ && value.quantity == Quantity::ut) {
       adjust_clock_diff(value.value - value.stamp);
@@ -226,7 +240,7 @@ protected:
     if (enable_logging_) {
       std::stringstream ss;
       ss << std::setprecision(15) << value.stamp << "," << value.quantity << "," << value.value;
-      log(this->get_name(), ss.str());
+      log(this->get_device_log_name(), ss.str());
     }
   }
 
@@ -238,6 +252,7 @@ protected:
     connected_ = connected;
     if (connected) {
       log(level::info, "Device \"%\" : % connected", this->get_name(), this->get_id());
+      setup_device_log();
     }
     else {
       log(level::info, "Device \"%\" : % disconnected", this->get_name(), this->get_id());

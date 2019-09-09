@@ -318,6 +318,7 @@ int enter_loop() {
   boost::property_tree::ptree& cfg = get_config();
   set_log_level(cfg.get("logging.level", "info"));
   log(level::debug, "Debug logging enabled");
+  set_device_log_dir(cfg.get("logging.device_log_dir", ""));
 
   Service& service = Service::get_instance();
 

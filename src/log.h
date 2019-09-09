@@ -25,8 +25,11 @@
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
+#include <boost/filesystem.hpp>
 
 #include <fmt/format.h>
+
+namespace fs = boost::filesystem;
 
 // We define our own severity levels
 enum class level {
@@ -38,8 +41,9 @@ enum class level {
 
 extern boost::log::sources::severity_logger_mt<level>& get_log();
 extern boost::log::sources::logger& get_device_log();
-extern void init_device_log(const std::string& device_name);
+extern bool init_device_log(const std::string& device_name);
 extern void set_log_level(level lvl);
+extern void set_device_log_dir(const fs::path& dir);
 
 
 template <typename M>

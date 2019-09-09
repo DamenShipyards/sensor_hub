@@ -93,6 +93,7 @@ private:
 
   void set_defaults() {
     set_default("logging.level", "info");
+    set_default("logging.device_log_dir", "");
 
     set_default("http.enabled", true);
     set_default("http.address", "localhost");
