@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(log_test) {
 }
 
 BOOST_AUTO_TEST_CASE(device_log_test) {
-  init_device_log("test_device");
+  init_device_log("test_id", "test_device");
   log("test_device", "Test device message");
   log(level::info, "Logged test device message");
 }

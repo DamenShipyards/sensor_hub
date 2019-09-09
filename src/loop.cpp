@@ -201,6 +201,16 @@ struct Service {
 
 
   /**
+   * Try to setup device logs that haven't been setup already
+   */
+  void check_setup_device_logs() {
+    for (auto&& device: devices_) {
+      device->check_setup_device_log();
+    }
+  }
+
+
+  /**
    * Called every second
    */
   void one_second_service(asio::yield_context yield) {
@@ -241,6 +251,7 @@ struct Service {
    */
   void one_minute_service(asio::yield_context yield) {
     connect_devices(yield);
+    check_setup_device_logs();
   }
 
 

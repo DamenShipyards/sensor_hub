@@ -97,7 +97,7 @@ private:
 struct Device: public Named_object {
 
   Device(): Named_object(fmt::format("id_{:d}", seq_), fmt::format("device_{:d}", seq_)),
-            connected_(false), data_(), enable_logging_(false), processors_() {
+            connected_(false), data_(), enable_logging_(false), device_log_initialized_(false), processors_() {
     log(level::debug, "Constructing Device");
     ++seq_;
   }
@@ -207,22 +207,23 @@ struct Device: public Named_object {
     processors_.push_back(processor);
   }
 
-protected:
 
-  std::string get_device_log_name() const {
-    return this->get_id() + "." + this->get_name();
-  }
-
-
-  void setup_device_log() {
-    if (!enable_logging_)
-      return;
-    bool initialized = init_device_log(this->get_device_log_name());
-    if (initialized) {
-      log(level::info, "Device log started: %", this->get_device_log_name());
+  void check_setup_device_log() {
+    if (this->is_connected()) {
+      setup_device_log();
     }
   }
 
+protected:
+
+  void setup_device_log() {
+    if (!enable_logging_ || device_log_initialized_)
+      return;
+    device_log_initialized_ = init_device_log(this->get_id(), this->get_name());
+    if (device_log_initialized_) {
+      log(level::info, "Device log started: %", this->get_name());
+    }
+  }
 
   void insert_value(const Stamped_quantity& value) {
     if (use_as_time_source_ && value.quantity == Quantity::ut) {
@@ -240,7 +241,9 @@ protected:
     if (enable_logging_) {
       std::stringstream ss;
       ss << std::setprecision(15) << value.stamp << "," << value.quantity << "," << value.value;
-      log(this->get_device_log_name(), ss.str());
+      if (enable_logging_ && device_log_initialized_) {
+        log(this->get_name(), ss.str());
+      }
     }
   }
 
@@ -249,14 +252,13 @@ protected:
     if (connected == connected_) {
       log(level::warning, "Connected state of device was already: %", connected);
     }
-    connected_ = connected;
     if (connected) {
       log(level::info, "Device \"%\" : % connected", this->get_name(), this->get_id());
-      setup_device_log();
     }
     else {
       log(level::info, "Device \"%\" : % disconnected", this->get_name(), this->get_id());
     }
+    connected_ = connected;
   }
 
 private:
@@ -265,6 +267,7 @@ private:
   std::string connection_string_;
   Data_map data_;
   bool enable_logging_;
+  bool device_log_initialized_;
   bool use_as_time_source_;
   Processors processors_;
 };
@@ -308,7 +311,7 @@ struct Port_device: public Device {
       Device::connect(yield);
     }
     catch (std::exception& e) {
-      log(level::error, "Failed to connect \"%\"", this->get_name(), e.what());
+      log(level::error, "Failed to connect \"%\": %", this->get_name(), e.what());
       port_.close();
     }
   }

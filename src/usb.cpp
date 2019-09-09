@@ -434,9 +434,11 @@ void Usb::close() {
 
 
 void Usb::cancel() {
+  log(level::info, "Cancelling outstanding USB IO...");
   transfers_.cancel();
-  asio::deadline_timer tmr(io_ctx_, posix_time::milliseconds(50));
+  asio::deadline_timer tmr(io_ctx_, posix_time::milliseconds(100));
   tmr.wait();
+  log(level::info, "Cancelled outstanding USB IO");
 }
 
 

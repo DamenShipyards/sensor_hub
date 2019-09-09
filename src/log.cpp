@@ -20,12 +20,14 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <boost/log/sinks.hpp>
+#include <boost/log/core/core.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/utility/manipulators/to_log.hpp>
+#include <boost/log/utility/exception_handler.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/sinks/async_frontend.hpp>
 
@@ -44,6 +46,30 @@ static const char* level_strings[] = {
   " - INFO    - ",
   " - WARNING - ",
   " - ERROR   - ",
+};
+
+
+struct device_log_exception_handler {
+
+  typedef void result_type;
+
+  void handle(std::string const& msg) const {
+    int cur = boost::posix_time::second_clock::local_time().time_of_day().hours();
+    static int last = cur - 1;
+
+    if (cur != last) {
+      log(level::info, msg);
+      last = cur;
+    }
+  }
+
+  void operator() (std::exception const& e) const {
+    handle(fmt::format("Exception in device logger: {:s}", e.what()));
+  }
+
+  void operator() () const {
+    handle("Unknown exception in device logger");
+  }
 };
 
 std::ostream& operator<< (std::ostream& strm, level lvl)
@@ -146,6 +172,9 @@ private:
 
   Logger(): device_log_dir_(), log_(), device_log_() {
     add_common_attributes();
+    core::get()->add_global_attribute("UtcStamp", boost::log::attributes::utc_clock());
+    core::get()->set_exception_handler(make_exception_suppressor());
+
     file_sink_ =
         add_file_log(
             keywords::file_name = get_log_filename(),
@@ -155,7 +184,7 @@ private:
             keywords::format =
               expressions::stream
                 << expressions::format_date_time<boost::posix_time::ptime>(
-                  "TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
+                  "UtcStamp", "%Y-%m-%dT%H:%M:%S.%fZ")
                 << expressions::attr<level, level_tag>("Severity")
                 << expressions::smessage
         );
@@ -193,28 +222,32 @@ sources::logger& get_device_log() {
 }
 
 
-bool init_device_log(const std::string& device_name) {
-  auto log_dir = Logger::get_instance().get_device_log_dir();
-  if (!fs::exists(log_dir)) {
+bool init_device_log(const std::string& device_id, const std::string& device_name) {
+  try {
+    auto log_dir = Logger::get_instance().get_device_log_dir();
+    typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
+    auto filename = log_dir / (device_id + ".%Y%m%dT%H%M%S."  + device_name + ".%8N.log");
+    auto collector = sinks::file::make_collector(
+        keywords::target = log_dir,
+        keywords::min_free_space = 256 * 1024 * 1024,
+        keywords::max_files = 32
+        );
+    auto sink = boost::make_shared<file_sink>(
+        keywords::file_name = filename,
+        keywords::open_mode = std::ios_base::app,
+        keywords::rotation_size = 32 * 1024 * 1024,
+        keywords::auto_flush = false
+        );
+    sink->set_exception_handler(make_exception_handler<std::exception>(device_log_exception_handler()));
+    sink->locked_backend()->set_file_collector(collector);
+    sink->locked_backend()->scan_for_files();
+    sink->set_filter(tag_attr == device_name);
+    core::get()->add_sink(sink);
+  }
+  catch (std::exception const& e) {
+    log(level::debug, "Can't initialize device log: %", e.what());
     return false;
   }
-  typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
-  auto filename = log_dir / ("%Y%m%dT%H%M%S." + device_name + ".%8N.log");
-  auto sink = boost::make_shared<file_sink>(
-      keywords::file_name = filename,
-      keywords::open_mode = std::ios_base::app,
-      keywords::rotation_size = 32 * 1024 * 1024,
-      keywords::auto_flush = false
-  );
-  auto collector = sinks::file::make_collector(
-      keywords::target = log_dir,
-      keywords::min_free_space = 256 * 1024 * 1024,
-      keywords::max_files = 32
-  );
-  sink->locked_backend()->set_file_collector(collector);
-  sink->locked_backend()->scan_for_files();
-  sink->set_filter(tag_attr == device_name);
-  core::get()->add_sink(sink);
   return true;
 }
 
