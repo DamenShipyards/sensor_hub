@@ -423,8 +423,8 @@ struct Position_data {
   }
 
   bool add_values_horizontal(Stamped_quantities& values) const {
-    values.push_back({ lat * 1E-7, 0.0, Quantity::la });
-    values.push_back({ lon * 1E-7, 0.0, Quantity::lo });
+    values.push_back({ lat * 1E-7 * M_PI / 180.0, 0.0, Quantity::la });
+    values.push_back({ lon * 1E-7 * M_PI / 180.0, 0.0, Quantity::lo });
     values.push_back({ hacc * 1E-3, 0.0, Quantity::hacc });
     return true;
   }
