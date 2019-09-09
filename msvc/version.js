@@ -13,8 +13,18 @@ var product = "Unknown"
 var gitrevfile = FSO.OpenTextFile(CD + "\\gitrev.txt", ForReading);
 var gitrev = gitrevfile.ReadAll();
 var today = new Date();
-var dd = String(today.getDate()).padStart(2, '0');
-var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+
+var dd = today.getDate()
+if (dd < 10)
+	dd = '0' + dd
+else
+	dd = '' + dd
+var mm = today.getMonth() + 1;  //January is 0!
+if (mm < 10)
+	mm = '0' + mm
+else
+	m = '' + mm
+
 var yyyy = today.getFullYear();
 var date = yyyy + '-' + mm + '-' + dd;
 
