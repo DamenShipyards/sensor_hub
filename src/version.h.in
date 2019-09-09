@@ -1,0 +1,4 @@
+#define GITREV @GITREV@
+#define VERSION @VERSION@
+#define DATE @DATE@
+

@@ -6,11 +6,19 @@ project(SensorHub)
 execute_process(COMMAND which gcc OUTPUT_VARIABLE CMAKE_C_COMPILER)
 execute_process(COMMAND which g++ OUTPUT_VARIABLE CMAKE_CXX_COMPILER)
 execute_process(COMMAND awk -F= "/Version/ { print $2 }" ${CMAKE_CURRENT_SOURCE_DIR}/version.ini OUTPUT_VARIABLE VERSION)
-execute_process(COMMAND sh -c "echo \"#define GITREV `git rev-parse --short HEAD`\" > ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h")
-execute_process(COMMAND sh -c "echo \"#define VERSION ${VERSION}\" >> ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h")
-message("Building application version ${VERSION}")
+execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE GITREV)
+execute_process(COMMAND date +%Y OUTPUT_VARIABLE YEAR)
+execute_process(COMMAND date +%Y-%m-%d OUTPUT_VARIABLE DATE)
+
 string(STRIP ${CMAKE_C_COMPILER} CMAKE_C_COMPILER)
 string(STRIP ${CMAKE_CXX_COMPILER} CMAKE_CXX_COMPILER)
+string(STRIP ${VERSION} VERSION)
+string(STRIP ${GITREV} GITREV)
+string(STRIP ${YEAR} YEAR)
+string(STRIP ${DATE} DATE)
+
+message("Building application version ${VERSION} rev ${GITREV} on ${DATE}")
+
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -33,6 +41,10 @@ set(SENSORHUB_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
 set(XSENS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/xsens/include")
 set(MODBUS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/modbus/include")
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rapidjson/include")
+
+set(VERSION_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in)
+set(VERSION_H ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
+configure_file(${VERSION_H_IN} ${VERSION_H} @ONLY)
 
 add_definitions(
   -DBOOST_LOG_DYN_LINK

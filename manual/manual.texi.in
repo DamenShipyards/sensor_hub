@@ -10,7 +10,7 @@
 @copying
 This manual is for Sensor Hub version @VERSION@
 
-Copyright @copyright{} 2018 Damen Shipyards Gorinchem
+Copyright @copyright{} @YEAR@ Damen Shipyards Gorinchem
 @end copying
 
 @titlepage

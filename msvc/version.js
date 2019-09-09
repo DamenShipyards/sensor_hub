@@ -12,6 +12,11 @@ var version = "0.0.0.0";
 var product = "Unknown"
 var gitrevfile = FSO.OpenTextFile(CD + "\\gitrev.txt", ForReading);
 var gitrev = gitrevfile.ReadAll();
+var today = new Date();
+var dd = String(today.getDate()).padStart(2, '0');
+var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+var yyyy = today.getFullYear();
+var date = yyyy + '-' + mm + '-' + dd;
 
 String.prototype.trim = function()
 {
@@ -33,6 +38,7 @@ for (i = 0; i < verlines.length; i++) {
 StdOut.WriteLine("Found product: " + product);
 StdOut.WriteLine("Found version: " + version);
 StdOut.WriteLine("Git revision : " + gitrev);
+StdOut.WriteLine("Build date   : " + date);
 
 var verdigits = version.split(".");
 var shortver = verdigits[0] + "." + verdigits[1] + "." + verdigits[2];
@@ -72,4 +78,5 @@ outfile.close();
 outfile = FSO.OpenTextFile(CD + "\\..\\src\\version.h", ForWriting, true, 0);
 outfile.WriteLine("#define GITREV " + gitrev);
 outfile.WriteLine("#define VERSION " + version);
+outfile.WriteLine("#define DATE " + date);
 outfile.close();
