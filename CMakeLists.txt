@@ -22,8 +22,12 @@ message("Building application version ${VERSION} rev ${GITREV} on ${DATE}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-set(BUILD_SHARED_LIBS OFF)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+set(BUILD_SHARED_LIBS ON)
+else()
 set(Boost_USE_STATIC_LIBS ON)
+endif()
+
 find_package(Boost 1.70.0 REQUIRED 
   system date_time filesystem log log_setup unit_test_framework thread regex coroutine chrono
 )
@@ -120,7 +124,6 @@ macro(new_test NEW_TEST)
   )
   set_target_properties(${NEW_TEST} PROPERTIES 
     LINK_FLAGS "-Wl,--no-as-needed"
-    COMPILE_FLAGS "-ggdb -Wall -pedantic -DDEBUG"
     RUNTIME_OUTPUT_DIRECTORY test
   )
   target_link_libraries(${NEW_TEST} 

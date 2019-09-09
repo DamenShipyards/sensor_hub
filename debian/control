@@ -1,0 +1,12 @@
+Source: sensor-hub
+Maintainer: Jaap Versteegh <j.r.versteegh@orca-st.com>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 9)
+
+Package: sensor-hub
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Sensor Hub
+ Daemon for collecting, logging and redistributing sensor data.
