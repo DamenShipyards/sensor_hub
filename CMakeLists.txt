@@ -34,6 +34,7 @@ add_definitions(
 else()
 add_definitions(
   -DBOOST_LOG_DYN_LINK
+  -DBOOST_TEST_DYN_LINK
   -DFMT_HEADER_ONLY
 )
 endif()
@@ -143,7 +144,6 @@ macro(new_test NEW_TEST)
     Boost::unit_test_framework
     ${LIBUSB_1_LIBRARY}
   )
-  add_definitions(-DBOOST_TEST_DYN_LINK)
   add_test(${NEW_TEST} test/${NEW_TEST})
 endmacro()
 
