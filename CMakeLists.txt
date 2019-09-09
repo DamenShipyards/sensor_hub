@@ -17,15 +17,25 @@ string(STRIP ${GITREV} GITREV)
 string(STRIP ${YEAR} YEAR)
 string(STRIP ${DATE} DATE)
 
-message("Building application version ${VERSION} rev ${GITREV} on ${DATE}")
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
 
+message("Building application version ${VERSION} rev ${GITREV} on ${DATE}: ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-set(BUILD_SHARED_LIBS ON)
-else()
+# Link boost statically in release builds
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
 set(Boost_USE_STATIC_LIBS ON)
+add_definitions(
+  -DFMT_HEADER_ONLY
+)
+else()
+add_definitions(
+  -DBOOST_LOG_DYN_LINK
+  -DFMT_HEADER_ONLY
+)
 endif()
 
 find_package(Boost 1.70.0 REQUIRED 
@@ -39,7 +49,7 @@ find_package(Doxygen)
 find_program(BUILD_MANUAL texi2dvi)
 
 set (CMAKE_CXX_STANDARD 17)
-set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic")
+set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic -Wno-psabi")
 set (CMAKE_CXX_FLAGS_RELEASE  "-O3")
 
 set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -52,11 +62,6 @@ set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rapidjson/includ
 set(VERSION_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in)
 set(VERSION_H ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
 configure_file(${VERSION_H_IN} ${VERSION_H} @ONLY)
-
-add_definitions(
-  -DBOOST_LOG_DYN_LINK
-  -DFMT_HEADER_ONLY
-)
 
 enable_testing()
 
