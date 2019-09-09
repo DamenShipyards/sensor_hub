@@ -22,7 +22,8 @@ message("Building application version ${VERSION} rev ${GITREV} on ${DATE}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
-set(BUILD_SHARED_LIBS ON)
+set(BUILD_SHARED_LIBS OFF)
+set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.70.0 REQUIRED 
   system date_time filesystem log log_setup unit_test_framework thread regex coroutine chrono
 )
@@ -34,6 +35,8 @@ find_package(Doxygen)
 find_program(BUILD_MANUAL texi2dvi)
 
 set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic")
+set (CMAKE_CXX_FLAGS_RELEASE  "-O3")
 
 set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")
@@ -105,9 +108,8 @@ add_executable(sensor_hub
 )
 
 set_target_properties(sensor_hub PROPERTIES
-    LINK_FLAGS "-Wl,--no-as-needed"
-    COMPILE_FLAGS "-ggdb -Wall -pedantic"
-  )
+  LINK_FLAGS "-Wl,--no-as-needed"
+)
 
 macro(new_test NEW_TEST)
   set(TEST_SOURCES ${ARGN})
