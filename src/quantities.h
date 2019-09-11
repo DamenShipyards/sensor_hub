@@ -214,6 +214,7 @@ inline Quantity get_quantity(std::string& quantity_name) {
 
 
 struct Data_value {
+  Data_value() = default;
   Data_value(const Value_type& v): value(v) {}
   Value_type value;
   bool operator==(const Value_type& other) const {
@@ -225,6 +226,7 @@ struct Data_value {
 };
 
 struct Data_stamp {
+  Data_stamp() = default;
   Data_stamp(const double& s): stamp(s) {}
   double stamp;
   bool operator==(const Data_stamp& other) const {
@@ -239,6 +241,7 @@ struct Data_stamp {
 };
 
 struct Data_quantity {
+  Data_quantity() = default;
   Data_quantity(const Quantity& q): quantity(q) {}
   Quantity quantity;
   bool operator==(const Quantity& other) const {
@@ -250,6 +253,7 @@ struct Data_quantity {
 };
 
 struct Quantity_value: public Data_value, public Data_quantity {
+  Quantity_value() = default;
   Quantity_value(const Data_value& dv, const Data_quantity& dq):
     Data_value(dv), Data_quantity(dq) {}
   Quantity_value(const Value_type& v, const Quantity& q):
@@ -263,6 +267,7 @@ struct Quantity_value: public Data_value, public Data_quantity {
 };
 
 struct Stamped_value: public Data_value, public Data_stamp {
+  Stamped_value() = default;
   Stamped_value(const Data_value& dv, const Data_stamp& ds):
     Data_value(dv), Data_stamp(ds) {}
   Stamped_value(const Value_type& v, const double& s):
@@ -279,6 +284,7 @@ struct Stamped_value: public Data_value, public Data_stamp {
 };
 
 struct Stamped_quantity: public Stamped_value, Data_quantity {
+  Stamped_quantity() = default;
   Stamped_quantity(const Stamped_value& sv, const Data_quantity& dq):
     Stamped_value(sv), Data_quantity(dq) {}
   Stamped_quantity(const Value_type& v, const double& s, const Quantity& q):
