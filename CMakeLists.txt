@@ -168,6 +168,30 @@ new_test(test_xsens_impl datetime.cpp log.cpp types.cpp)
 new_test(test_ublox device.cpp log.cpp datetime.cpp types.cpp)
 new_test(test_ublox_impl datetime.cpp log.cpp types.cpp)
 
+install(
+  TARGETS sensor_hub
+  DESTINATION sbin
+  COMPONENT runtime
+)
+
+install(
+  FILES ${CMAKE_CURRENT_SOURCE_DIR}/setup/files/99-sensor_hub.rules
+  DESTINATION /etc/udev/rules.d
+  COMPONENT runtime
+)
+
+install(
+  FILES ${CMAKE_CURRENT_SOURCE_DIR}/setup/files/sensor_hub.service
+  DESTINATION /lib/systemd/system
+  COMPONENT runtime
+)
+
+install(
+  FILES ${CMAKE_CURRENT_SOURCE_DIR}/setup/files/sensor_hub.conf
+  DESTINATION /etc/sensor_hub
+  COMPONENT configuration
+)
+
 if(DOXYGEN_FOUND)
   set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
   set(DOXYFILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
@@ -195,4 +219,12 @@ if(BUILD_MANUAL)
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/manual
     COMMENT "Generating Manual with TexInfo"
   )
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/manual/sensor_hub.pdf
+        ${CMAKE_CURRENT_BINARY_DIR}/manual/sensor_hub.chm 
+  DESTINATION share/doc/sensor_hub
+  COMPONENT documentation
+)
+
 endif()
