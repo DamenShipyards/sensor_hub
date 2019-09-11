@@ -48,8 +48,8 @@ Device_ptr create_device(const std::string& name) {
 
 
 
-pt::ptree get_device_tree(const Device& device) {
-  pt::ptree tree;
+prtr::ptree get_device_tree(const Device& device) {
+  prtr::ptree tree;
   tree.put("name", device.get_name());
   tree.put("id", device.get_id());
   tree.put("connected", device.is_connected());

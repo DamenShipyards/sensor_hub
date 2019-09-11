@@ -37,6 +37,7 @@
 #endif
 
 using namespace boost::log;
+namespace pt = boost::posix_time;
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", level)
 BOOST_LOG_ATTRIBUTE_KEYWORD(tag_attr, "Tag", std::string)
@@ -54,7 +55,7 @@ struct device_log_exception_handler {
   typedef void result_type;
 
   void handle(std::string const& msg) const {
-    int cur = boost::posix_time::second_clock::local_time().time_of_day().hours();
+    int cur = pt::second_clock::local_time().time_of_day().hours();
     static int last = cur - 1;
 
     if (cur != last) {
@@ -183,7 +184,7 @@ private:
             keywords::rotation_size = 8 * 1024 * 1024,
             keywords::format =
               expressions::stream
-                << expressions::format_date_time<boost::posix_time::ptime>(
+                << expressions::format_date_time<pt::ptime>(
                   "UtcStamp", "%Y-%m-%dT%H:%M:%S.%fZ")
                 << expressions::attr<level, level_tag>("Severity")
                 << expressions::smessage

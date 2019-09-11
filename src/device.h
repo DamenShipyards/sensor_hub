@@ -35,7 +35,7 @@
 #include "types.h"
 
 namespace asio = boost::asio;
-namespace pt = boost::property_tree;
+namespace prtr = boost::property_tree;
 
 using std::runtime_error;
 
@@ -339,7 +339,7 @@ struct Port_device: public Device {
     Port& port = this->get_port();
 
     // Set a timeout for the command to complete
-    asio::deadline_timer timeout_timer(ContextProvider::get_context(), posix_time::milliseconds(timeout));
+    asio::deadline_timer timeout_timer(ContextProvider::get_context(), pt::milliseconds(timeout));
     timeout_timer.async_wait(
         [&](const boost::system::error_code& error) {
           if (!error)
@@ -430,7 +430,7 @@ struct Port_device: public Device {
 
 
   void wait(int milli_seconds, asio::yield_context yield) {
-    asio::deadline_timer waiter(ContextProvider::get_context(), posix_time::milliseconds(milli_seconds));
+    asio::deadline_timer waiter(ContextProvider::get_context(), pt::milliseconds(milli_seconds));
     waiter.async_wait(yield);
   }
 
@@ -538,7 +538,7 @@ extern Device_ptr create_device(const std::string& name);
 /**
  * Get boost property tree from device
  */
-extern pt::ptree get_device_tree(const Device& device);
+extern prtr::ptree get_device_tree(const Device& device);
 
 /**
  * Get json string from device

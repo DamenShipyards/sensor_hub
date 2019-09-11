@@ -32,8 +32,6 @@
 
 namespace xsens {
 
-namespace posix_time = boost::posix_time;
-
 namespace command {
 
 constexpr byte_t packet_start = 0xFA;

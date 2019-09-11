@@ -35,7 +35,7 @@
 #include <memory>
 
 
-namespace posix_time = boost::posix_time;
+namespace pt = boost::posix_time;
 
 
 struct Service {
@@ -218,7 +218,7 @@ struct Service {
     tmr_.async_wait(yield[ec]);
     if (!ec) {
       // Setup next tick
-      tmr_.expires_from_now(posix_time::seconds(1));
+      tmr_.expires_from_now(pt::seconds(1));
       asio::spawn(ctx_, boost::bind(&Service::one_second_service, this, _1));
 
       static int counter = 0;
@@ -282,7 +282,7 @@ struct Service {
    * stopped.
    */
   int run() {
-    tmr_.expires_from_now(posix_time::seconds(1));
+    tmr_.expires_from_now(pt::seconds(1));
     asio::spawn(ctx_, boost::bind(&Service::one_second_service, this, _1));
     return static_cast<int>(ctx_.run());
   }

@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(connection_test, *ut::precondition(ublox_available)) {
   std::cout << "Arguments: " << argc << ", Running time: " << running_time << std::endl;
   asio::io_context& ctx = Ctx::get_context();
   NEO_M8U<Serial, Ctx> ublox;
-  asio::deadline_timer tmr(ctx, posix_time::milliseconds(running_time));
+  asio::deadline_timer tmr(ctx, pt::milliseconds(running_time));
   tmr.async_wait(
       [&ctx](boost::system::error_code ec) {
         ctx.stop();

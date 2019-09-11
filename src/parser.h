@@ -27,9 +27,6 @@
 #include <deque>
 #include <iterator>
 
-
-namespace posix_time = boost::posix_time;
-
 namespace x3 = boost::spirit::x3;
 
 using Quantity_values = std::vector<Quantity_value>;

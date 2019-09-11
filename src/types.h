@@ -73,7 +73,7 @@ private:
   }
 };
 
-namespace posix_time = boost::posix_time;
+namespace pt = boost::posix_time;
 
 extern std::ostream& operator<<(std::ostream& os, cbytes_t data);
 

@@ -25,7 +25,7 @@
 
 
 namespace asio = boost::asio;
-namespace posix_time = boost::posix_time;
+namespace pt = boost::posix_time;
 
 
 std::string get_usb_class_string(uint8_t class_enum) {
@@ -436,7 +436,7 @@ void Usb::close() {
 void Usb::cancel() {
   log(level::info, "Cancelling outstanding USB IO...");
   transfers_.cancel();
-  asio::deadline_timer tmr(io_ctx_, posix_time::milliseconds(100));
+  asio::deadline_timer tmr(io_ctx_, pt::milliseconds(100));
   tmr.wait();
   log(level::info, "Cancelled outstanding USB IO");
 }

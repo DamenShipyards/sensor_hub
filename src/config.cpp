@@ -25,7 +25,7 @@
 #include <objbase.h>
 #endif
 
-namespace pt = boost::property_tree;
+namespace prtr = boost::property_tree;
 namespace fs = boost::filesystem;
 
 struct Config {
@@ -36,7 +36,7 @@ struct Config {
     static Config instance; 
     return instance;
   }
-  pt::ptree& get_config() {
+  prtr::ptree& get_config() {
     return config_;
   }
 private:
@@ -50,7 +50,7 @@ private:
     save(config_file);
   }
 
-  pt::ptree config_;
+  prtr::ptree config_;
 
   fs::path get_config_dir() {
 #   ifdef _WIN32
@@ -79,11 +79,11 @@ private:
   }
 
   void load(const fs::path& p) {
-    pt::read_ini(p.string(), config_);
+    prtr::read_ini(p.string(), config_);
   }
 
   void save(const fs::path& p) {
-    pt::write_ini(p.string(), config_);
+    prtr::write_ini(p.string(), config_);
   }
 
   template <typename Value>
@@ -205,7 +205,7 @@ private:
 };
 
 
-pt::ptree& get_config() {
+prtr::ptree& get_config() {
   return Config::get_instance().get_config();
 }
 

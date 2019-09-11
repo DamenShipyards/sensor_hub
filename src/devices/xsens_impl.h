@@ -229,7 +229,6 @@ struct Date_time: public Data_packet {
   uint8_t flags;
 
   Quantity_values get_values() const override {
-    using namespace posix_time;
     if (flags & valid_utc) {
       // Return a list with one Unix Time value
       return Quantity_values{compose_time_quantity(year, month, day, hour, minute, second, nano)};

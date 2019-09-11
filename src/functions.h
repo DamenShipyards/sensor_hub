@@ -30,10 +30,10 @@ inline double compose_time_value(
     const int year, const int month, const int day,
     const int hour, const int minute, const int second,
     const int nanosecond) {
-  using namespace posix_time;
-  ptime t(
+  pt::ptime t(
       gregorian::date(year, month, day),
-      hours(hour) + minutes(minute) + seconds(second) + microseconds(nanosecond/1000)
+      pt::hours(hour) + pt::minutes(minute) + pt::seconds(second) 
+      + pt::microseconds(nanosecond/1000)
   );
   // Return a Unix Time value
   return 1E-6 * (t - unix_epoch).total_microseconds();

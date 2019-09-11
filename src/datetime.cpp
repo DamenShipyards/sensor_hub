@@ -52,7 +52,7 @@ struct Clock {
 
 private:
   Clock(): value_(0), offset_(0), adjust_rate_(DEFAULT_ADJUST_RATE) {
-    auto dt_now = date_time::microsec_clock<posix_time::ptime>::universal_time();
+    auto dt_now = date_time::microsec_clock<pt::ptime>::universal_time();
     auto sys_now = chrono::system_clock::now().time_since_epoch();
     
     auto since_epoch =  dt_now - unix_epoch;
@@ -80,7 +80,7 @@ private:
 };
 
 
-const posix_time::ptime unix_epoch{boost::posix_time::time_from_string("1970-01-01 00:00:00.000")}; 
+const pt::ptime unix_epoch{pt::time_from_string("1970-01-01 00:00:00.000")}; 
 const double Clock::rate_{static_cast<double>(chrono::system_clock::duration::period::num) /
                           static_cast<double>(chrono::system_clock::duration::period::den)};
 

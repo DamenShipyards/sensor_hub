@@ -29,14 +29,14 @@
 #define DEFAULT_ADJUST_RATE 0.025
 
 namespace chrono = boost::chrono;
-namespace posix_time = boost::posix_time;
+namespace pt = boost::posix_time;
 namespace date_time = boost::date_time;
 
 /**
  * Get UTC unix time stamp from central clock
  */
 extern double get_time();
-extern const posix_time::ptime unix_epoch; 
+extern const pt::ptime unix_epoch; 
 
 /**
  * Adjust central clock
@@ -68,9 +68,9 @@ extern void set_clock_adjust_rate(const double& rate);
 inline std::string timestamp_to_string(const double& stamp) {
   double secs = 0;
   double micros = std::modf(stamp, &secs) * 1E6;
-  auto t = unix_epoch + posix_time::seconds(static_cast<long>(secs)) 
-                      + posix_time::microseconds(static_cast<long>(micros));
-  return posix_time::to_iso_extended_string(t);
+  auto t = unix_epoch + pt::seconds(static_cast<long>(secs)) 
+                      + pt::microseconds(static_cast<long>(micros));
+  return pt::to_iso_extended_string(t);
 }
 
 #endif
