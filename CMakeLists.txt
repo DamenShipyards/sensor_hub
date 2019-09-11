@@ -50,8 +50,8 @@ find_package(Doxygen)
 find_program(BUILD_MANUAL texi2dvi)
 
 set (CMAKE_CXX_STANDARD 17)
-set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic -Wno-psabi")
-set (CMAKE_CXX_FLAGS_RELEASE  "-O3 -Wno-psabi")
+set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic -Wno-psabi -Wno-write-strings")
+set (CMAKE_CXX_FLAGS_RELEASE  "-O3 -Wno-psabi -Wno-write-strings")
 
 set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")

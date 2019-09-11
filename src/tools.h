@@ -56,7 +56,7 @@ private:
 
 template<typename E, template <E> typename Tr, E e>
 constexpr inline auto get_enum_trait() {
-  return Tr<e>::value;
+  return Tr<e>::value();
 }
 
 /**
