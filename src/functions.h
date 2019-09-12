@@ -7,7 +7,7 @@
  * (C) 2019 Damen Shipyards. All rights reserved.
  * \license
  * This software is proprietary. Any use without written
- * permission from the copyright holder is strictly 
+ * permission from the copyright holder is strictly
  * forbidden.
  */
 
@@ -30,10 +30,10 @@ inline double compose_time_value(
     const int year, const int month, const int day,
     const int hour, const int minute, const int second,
     const int nanosecond) {
-  using namespace posix_time;
-  ptime t(
+  posix_time::ptime t(
       gregorian::date(year, month, day),
-      hours(hour) + minutes(minute) + seconds(second) + microseconds(nanosecond/1000)
+      posix_time::hours(hour) + posix_time::minutes(minute) +
+      posix_time::seconds(second) + posix_time::microseconds(nanosecond/1000)
   );
   // Return a Unix Time value
   return 1E-6 * (t - unix_epoch).total_microseconds();
@@ -44,7 +44,7 @@ inline Quantity_value compose_time_quantity(
     const int hour, const int minute, const int second,
     const int nanosecond) {
   // Return a Unix Time quantity value
-  return Quantity_value{compose_time_value(year, month, day, hour, minute, second, nanosecond), 
+  return Quantity_value{compose_time_value(year, month, day, hour, minute, second, nanosecond),
                         Quantity::ut};
 }
 

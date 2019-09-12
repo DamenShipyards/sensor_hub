@@ -37,7 +37,7 @@ inline std::pair<int, int> get_usb_address(const std::string& connection_string)
     vendor_id = std::stol(fields[0], 0, 16);
     product_id = std::stol(fields[1], 0, 16);
   }
-  return std::pair(vendor_id, product_id);
+  return std::pair<int, int>(vendor_id, product_id);
 }
 
 inline void check_install_usb_driver(int vid, int pid) {

@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(iteration_test)
 
   BOOST_TEST(count == 54);
   BOOST_TEST(qs[34] == "faz");
-  constexpr const char* const qn = Quantity_name<Quantity::yr>::value;
+  constexpr const char* const qn = Quantity_name<Quantity::yr>::value();
   std::string s(qn);
   BOOST_TEST(s == "yr");
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(data_assignment_test) {
   BOOST_TEST(dv.value == sv.value);
   dv = qv;
   BOOST_TEST(dv.value == qv.value);
-  sq = stamped_quantity(150.0, qv);
+  sq = Stamped_quantity(150.0, qv);
   sq = {sv, Quantity::ut};
 }
 

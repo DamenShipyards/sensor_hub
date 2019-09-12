@@ -32,7 +32,6 @@
 
 namespace xsens {
 
-namespace posix_time = boost::posix_time;
 
 namespace command {
 

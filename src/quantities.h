@@ -215,7 +215,7 @@ inline Quantity get_quantity(std::string& quantity_name) {
 
 struct Data_value {
   Data_value() = default;
-  Data_value(const Value_type& v): value(v) {}
+  constexpr Data_value(const Value_type& v): value(v) {}
   Value_type value;
   bool operator==(const Value_type& other) const {
     return other == this->value;
@@ -227,7 +227,7 @@ struct Data_value {
 
 struct Data_stamp {
   Data_stamp() = default;
-  Data_stamp(const double& s): stamp(s) {}
+  constexpr Data_stamp(const double& s): stamp(s) {}
   double stamp;
   bool operator==(const Data_stamp& other) const {
     return other.stamp == this->stamp;
@@ -242,7 +242,7 @@ struct Data_stamp {
 
 struct Data_quantity {
   Data_quantity() = default;
-  Data_quantity(const Quantity& q): quantity(q) {}
+  constexpr Data_quantity(const Quantity& q): quantity(q) {}
   Quantity quantity;
   bool operator==(const Quantity& other) const {
     return other == this->quantity;
@@ -254,9 +254,9 @@ struct Data_quantity {
 
 struct Quantity_value: public Data_value, public Data_quantity {
   Quantity_value() = default;
-  Quantity_value(const Data_value& dv, const Data_quantity& dq):
+  constexpr Quantity_value(const Data_value& dv, const Data_quantity& dq):
     Data_value(dv), Data_quantity(dq) {}
-  Quantity_value(const Value_type& v, const Quantity& q):
+  constexpr Quantity_value(const Value_type& v, const Quantity& q):
     Data_value(v), Data_quantity(q) {}
   using Data_value::operator==;
   using Data_quantity::operator==;
@@ -268,9 +268,9 @@ struct Quantity_value: public Data_value, public Data_quantity {
 
 struct Stamped_value: public Data_value, public Data_stamp {
   Stamped_value() = default;
-  Stamped_value(const Data_value& dv, const Data_stamp& ds):
+  constexpr Stamped_value(const Data_value& dv, const Data_stamp& ds):
     Data_value(dv), Data_stamp(ds) {}
-  Stamped_value(const Value_type& v, const double& s):
+  constexpr Stamped_value(const Value_type& v, const double& s):
     Data_value(v), Data_stamp(s) {}
   using Data_value::operator==;
   using Data_stamp::operator==;
@@ -285,11 +285,11 @@ struct Stamped_value: public Data_value, public Data_stamp {
 
 struct Stamped_quantity: public Stamped_value, Data_quantity {
   Stamped_quantity() = default;
-  Stamped_quantity(const Stamped_value& sv, const Data_quantity& dq):
+  constexpr Stamped_quantity(const Stamped_value& sv, const Data_quantity& dq):
     Stamped_value(sv), Data_quantity(dq) {}
-  Stamped_quantity(const Value_type& v, const double& s, const Quantity& q):
+  constexpr Stamped_quantity(const Value_type& v, const double& s, const Quantity& q):
     Stamped_value(v, s), Data_quantity(q) {}
-  Stamped_quantity(const double& s, const Quantity_value& qv):
+  constexpr Stamped_quantity(const double& s, const Quantity_value& qv):
     Stamped_value(qv.value, s), Data_quantity(qv.quantity) {}
   using Stamped_value::operator==;
   using Data_quantity::operator==;
