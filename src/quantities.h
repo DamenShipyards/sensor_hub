@@ -110,7 +110,8 @@ using Quantity_type = std::underlying_type<Quantity>::type;
 template <Quantity quantity> struct Quantity_name { };
 
 //! Macro for adding quantity name traits DRY style.
-#define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static inline constexpr char value[] = #NAME; }
+#define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static constexpr inline char* const value() { return #NAME; } }
+
 QUANTITY_NAME(ut);
 QUANTITY_NAME(la);
 QUANTITY_NAME(lo);
@@ -165,6 +166,7 @@ QUANTITY_NAME(rmy);
 QUANTITY_NAME(rmz);
 QUANTITY_NAME(gtmp);
 QUANTITY_NAME(du);
+#undef QUANTITY_NAME
 
 template <Quantity quantity>
 constexpr inline decltype(auto) get_quantity_name() {
@@ -212,6 +214,8 @@ inline Quantity get_quantity(std::string& quantity_name) {
 
 
 struct Data_value {
+  Data_value() = default;
+  constexpr Data_value(const Value_type& v): value(v) {}
   Value_type value;
   bool operator==(const Value_type& other) const {
     return other == this->value;
@@ -222,7 +226,9 @@ struct Data_value {
 };
 
 struct Data_stamp {
-  Value_type stamp;
+  Data_stamp() = default;
+  constexpr Data_stamp(const double& s): stamp(s) {}
+  double stamp;
   bool operator==(const Data_stamp& other) const {
     return other.stamp == this->stamp;
   }
@@ -235,6 +241,8 @@ struct Data_stamp {
 };
 
 struct Data_quantity {
+  Data_quantity() = default;
+  constexpr Data_quantity(const Quantity& q): quantity(q) {}
   Quantity quantity;
   bool operator==(const Quantity& other) const {
     return other == this->quantity;
@@ -245,6 +253,11 @@ struct Data_quantity {
 };
 
 struct Quantity_value: public Data_value, public Data_quantity {
+  Quantity_value() = default;
+  constexpr Quantity_value(const Data_value& dv, const Data_quantity& dq):
+    Data_value(dv), Data_quantity(dq) {}
+  constexpr Quantity_value(const Value_type& v, const Quantity& q):
+    Data_value(v), Data_quantity(q) {}
   using Data_value::operator==;
   using Data_quantity::operator==;
   bool operator==(const Quantity_value& other) const {
@@ -254,6 +267,11 @@ struct Quantity_value: public Data_value, public Data_quantity {
 };
 
 struct Stamped_value: public Data_value, public Data_stamp {
+  Stamped_value() = default;
+  constexpr Stamped_value(const Data_value& dv, const Data_stamp& ds):
+    Data_value(dv), Data_stamp(ds) {}
+  constexpr Stamped_value(const Value_type& v, const double& s):
+    Data_value(v), Data_stamp(s) {}
   using Data_value::operator==;
   using Data_stamp::operator==;
   const double operator[](const int index) {
@@ -266,6 +284,13 @@ struct Stamped_value: public Data_value, public Data_stamp {
 };
 
 struct Stamped_quantity: public Stamped_value, Data_quantity {
+  Stamped_quantity() = default;
+  constexpr Stamped_quantity(const Stamped_value& sv, const Data_quantity& dq):
+    Stamped_value(sv), Data_quantity(dq) {}
+  constexpr Stamped_quantity(const Value_type& v, const double& s, const Quantity& q):
+    Stamped_value(v, s), Data_quantity(q) {}
+  constexpr Stamped_quantity(const double& s, const Quantity_value& qv):
+    Stamped_value(qv.value, s), Data_quantity(qv.quantity) {}
   using Stamped_value::operator==;
   using Data_quantity::operator==;
   const double operator[](const int index) {
@@ -276,15 +301,6 @@ struct Stamped_quantity: public Stamped_value, Data_quantity {
            && Stamped_value::operator==(other);
   }
 };
-
-
-inline Stamped_quantity stamped_quantity(double stamp, Quantity_value&& qv) {
-  return {qv.value, stamp, qv.quantity};
-}
-
-inline Stamped_quantity stamped_quantity(double stamp, const Quantity_value& qv) {
-  return {qv.value, stamp, qv.quantity};
-}
 
 
 using Data_queue = std::deque<Stamped_value>;

@@ -125,6 +125,7 @@ BOOST_AUTO_TEST_CASE(horizontal_acceleration_peak_test, * ut::tolerance(0.000000
 
   history.set_name("Test-Acceleration-History");
   Stamped_quantity value;
+  std::cout << value << std::endl;
   for (int i = 0; i < 400; ++i) {
     value.quantity = Quantity::fax;
     value.stamp += 0.01 * M_PI;

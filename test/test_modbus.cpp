@@ -15,6 +15,8 @@ static int result1 = 0;
 static int result2 = 0;
 
 struct Client: public modbus::Client {
+  using modbus::Client::Client;
+
   void on_read_reply(
       modbus::tcp_mbap const & header, 
       modbus::response::read_holding_registers const & response, 

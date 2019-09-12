@@ -17,7 +17,7 @@ using namespace std::string_literals;
 
 using namespace xsens;
 
-auto to_float = [](char *c){
+float to_float(const char* c) {
   char data[4];
   for (int i=3; i>=0; --i) {
     data[i] = *c++;

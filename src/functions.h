@@ -7,7 +7,7 @@
  * (C) 2019 Damen Shipyards. All rights reserved.
  * \license
  * This software is proprietary. Any use without written
- * permission from the copyright holder is strictly 
+ * permission from the copyright holder is strictly
  * forbidden.
  */
 
@@ -44,7 +44,7 @@ inline Quantity_value compose_time_quantity(
     const int hour, const int minute, const int second,
     const int nanosecond) {
   // Return a Unix Time quantity value
-  return Quantity_value{compose_time_value(year, month, day, hour, minute, second, nanosecond), 
+  return Quantity_value{compose_time_value(year, month, day, hour, minute, second, nanosecond),
                         Quantity::ut};
 }
 

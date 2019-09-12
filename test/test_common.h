@@ -12,6 +12,7 @@
 namespace tt = boost::test_tools;
 namespace ut = boost::unit_test;
 namespace asio = boost::asio;
+namespace posix_time = boost::posix_time;
 
 std::string usb_device;
 

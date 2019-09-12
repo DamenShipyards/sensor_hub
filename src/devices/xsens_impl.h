@@ -404,7 +404,7 @@ struct Xsens_parser::Data_visitor {
 
   void operator()(const Data_packet& data_packet) {
     for (auto& value: data_packet.get_values()) {
-      values.push_back(stamped_quantity(stamp, value));
+      values.push_back(Stamped_quantity(stamp, value));
     }
   }
 };
