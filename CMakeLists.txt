@@ -222,8 +222,13 @@ if(BUILD_MANUAL)
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/manual/sensor_hub.pdf
-        ${CMAKE_CURRENT_BINARY_DIR}/manual/sensor_hub.chm 
   DESTINATION share/doc/sensor_hub
+  COMPONENT documentation
+)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/manual/sensor_hub.info
+  DESTINATION share/doc/sensor_hub/info
   COMPONENT documentation
 )
 
