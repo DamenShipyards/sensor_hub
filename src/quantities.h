@@ -214,21 +214,41 @@ inline Quantity get_quantity(std::string& quantity_name) {
 
 
 struct Data_value {
-  Data_value() = default;
+  Data_value(): value() {};
+  constexpr Data_value(const Data_value& v): value(v.value) {}
   constexpr Data_value(const Value_type& v): value(v) {}
-  Value_type value;
+  Data_value& operator=(const Data_value& other) {
+    value = other.value;
+    return *this;
+  }
+  Data_value& operator=(const Value_type& other) {
+    value = other;
+    return *this;
+  }
   bool operator==(const Value_type& other) const {
     return other == this->value;
   }
   bool operator==(const Data_value& other) const {
     return other.value == this->value;
   }
+  double operator[](const int index) const {
+    return index == 0 ? value : 0.0;
+  }
+  Value_type value;
 };
 
 struct Data_stamp {
-  Data_stamp() = default;
+  Data_stamp(): stamp() {}
+  constexpr Data_stamp(const Data_stamp& s): stamp(s.stamp) {}
   constexpr Data_stamp(const double& s): stamp(s) {}
-  double stamp;
+  Data_stamp& operator=(const Data_stamp& other) {
+    stamp = other.stamp;
+    return *this;
+  }
+  Data_stamp& operator=(const double& other) {
+    stamp = other;
+    return *this;
+  }
   bool operator==(const Data_stamp& other) const {
     return other.stamp == this->stamp;
   }
@@ -238,28 +258,47 @@ struct Data_stamp {
   bool simultaneous_with(const Data_stamp& stamp) const {
     return stamp == *this;
   }
+  double operator[](const int index) const {
+    return index == 0 ? stamp : 0.0;
+  }
+  double stamp;
 };
 
 struct Data_quantity {
-  Data_quantity() = default;
+  Data_quantity(): quantity(Quantity::end) {}
+  constexpr Data_quantity(const Data_quantity& q): quantity(q.quantity) {}
   constexpr Data_quantity(const Quantity& q): quantity(q) {}
-  Quantity quantity;
+  Data_quantity& operator=(const Data_quantity& other) {
+    quantity = other.quantity;
+    return *this;
+  }
+  Data_quantity& operator=(const Quantity other) {
+    quantity = other;
+    return *this;
+  }
   bool operator==(const Quantity& other) const {
     return other == this->quantity;
   }
   bool operator==(const Data_quantity& other) const {
     return other.quantity == this->quantity;
   }
+  double operator[](const int index) const {
+    return index == 0 ? static_cast<double>(quantity) : 0.0;
+  }
+  Quantity quantity;
 };
 
 struct Quantity_value: public Data_value, public Data_quantity {
-  Quantity_value() = default;
+  Quantity_value(): Data_value(), Data_quantity() {}
   constexpr Quantity_value(const Data_value& dv, const Data_quantity& dq):
     Data_value(dv), Data_quantity(dq) {}
   constexpr Quantity_value(const Value_type& v, const Quantity& q):
     Data_value(v), Data_quantity(q) {}
   using Data_value::operator==;
   using Data_quantity::operator==;
+  double operator[](const int index) const {
+    return index == 0 ? value : index == 1 ? static_cast<double>(quantity) : 0.0;
+  }
   bool operator==(const Quantity_value& other) const {
     return Data_quantity::operator==(other)
            && Data_value::operator==(other);
@@ -267,7 +306,7 @@ struct Quantity_value: public Data_value, public Data_quantity {
 };
 
 struct Stamped_value: public Data_value, public Data_stamp {
-  Stamped_value() = default;
+  Stamped_value(): Data_value(), Data_stamp() {}
   constexpr Stamped_value(const Data_value& dv, const Data_stamp& ds):
     Data_value(dv), Data_stamp(ds) {}
   constexpr Stamped_value(const Value_type& v, const double& s):
@@ -275,7 +314,7 @@ struct Stamped_value: public Data_value, public Data_stamp {
   using Data_value::operator==;
   using Data_stamp::operator==;
   double operator[](const int index) const {
-    return index == 0 ? value : stamp;
+    return index == 0 ? value : index == 1 ? stamp : 0.0;
   }
   bool operator==(const Stamped_value& other) const {
     return Data_value::operator==(other) 
@@ -284,7 +323,7 @@ struct Stamped_value: public Data_value, public Data_stamp {
 };
 
 struct Stamped_quantity: public Stamped_value, Data_quantity {
-  Stamped_quantity() = default;
+  Stamped_quantity(): Stamped_value(), Data_quantity() {}
   constexpr Stamped_quantity(const Stamped_value& sv, const Data_quantity& dq):
     Stamped_value(sv), Data_quantity(dq) {}
   constexpr Stamped_quantity(const Value_type& v, const double& s, const Quantity& q):
@@ -294,7 +333,7 @@ struct Stamped_quantity: public Stamped_value, Data_quantity {
   using Stamped_value::operator==;
   using Data_quantity::operator==;
   double operator[](const int index) const {
-    return index == 0 ? value : index == 1 ? stamp : static_cast<double>(quantity);
+    return index == 0 ? value : index == 1 ? stamp : index == 2 ? static_cast<double>(quantity) : 0.0;
   }
   bool operator==(const Stamped_quantity& other) const {
     return Data_quantity::operator==(other) 
