@@ -159,19 +159,19 @@ struct Xsens: public Port_device<Port, ContextProvider>, public Polling_mixin<Xs
     return this->exec_command(command::goto_measurement, command::measurement_ack, command::error_resp, yield);
   }
 
-  virtual bool get_output_configuration(asio::yield_context yield) {
+  virtual bool get_output_configuration(asio::yield_context) {
     return true;
   }
 
-  virtual bool set_output_configuration(asio::yield_context yield) {
+  virtual bool set_output_configuration(asio::yield_context) {
     return true;
   }
 
-  virtual bool set_option_flags(asio::yield_context yield) {
+  virtual bool set_option_flags(asio::yield_context) {
     return true;
   }
 
-  virtual bool set_string_output_type(asio::yield_context yield) {
+  virtual bool set_string_output_type(asio::yield_context) {
     return true;
   }
 

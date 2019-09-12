@@ -47,12 +47,16 @@ struct Serial: public serial_port {
     switch (fields.size()) {
       case 5: 
         stop_bits_s = fields[4];
+        /* fall through */
       case 4:
         parity_s = fields[3];
+        /* fall through */
       case 3:
         data_bits_s = fields[2];
+        /* fall through */
       case 2:
         baud_rate_s = fields[1];
+        /* fall through */
       case 1:
         device_s = fields[0];
         break;

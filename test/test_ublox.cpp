@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(connection_test, *ut::precondition(ublox_available)) {
   NEO_M8U<Serial, Ctx> ublox;
   asio::deadline_timer tmr(ctx, pt::milliseconds(running_time));
   tmr.async_wait(
-      [&ctx](boost::system::error_code ec) {
+      [&ctx](boost::system::error_code) {
         ctx.stop();
       }
   );

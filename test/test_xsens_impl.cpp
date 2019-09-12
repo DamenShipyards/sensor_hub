@@ -23,7 +23,7 @@ float to_float(const char* c) {
     data[i] = *c++;
   }
   return *reinterpret_cast<float*>(&data);
-};
+}
 
 BOOST_AUTO_TEST_CASE(xsens_parse_acceleration_test) {
   std::string data = "\x40\x20\x0c\xbd\x77\x48\x07\xbc\x0e\xdc\x7b\x41\x1c\xd1\x56"s;

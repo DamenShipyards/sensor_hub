@@ -99,7 +99,7 @@ struct Unknown {
   Unknown(uint8_t id): _id(id), len(0) {}
   uint8_t _id;
   int len;
-  virtual const int get_val() const {
+  virtual int get_val() const {
     return 0;
   }
 };
@@ -109,7 +109,7 @@ struct Id_data_packet: public Unknown {
   Id_data_packet(): Unknown(DataId) {}
   uint8_t len;
   uint8_t val1;
-  const int get_val() const override {
+  int get_val() const override {
     return static_cast<int>(val1);
   }
 
@@ -118,7 +118,7 @@ struct Id_data_packet: public Unknown {
 template <uint8_t DataId>
 struct Id_data_packet2: public Id_data_packet<DataId> {
   uint16_t val2;
-  const int get_val() const override {
+  int get_val() const override {
     return static_cast<int>(val2);
   }
 };

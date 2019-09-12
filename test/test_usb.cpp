@@ -36,7 +36,7 @@ static size_t bytes_handled = 0;
 static size_t bytes_read = 0;
 static boost::asio::io_context io_context;
 
-void handle_read(boost::system::error_code ec, size_t bytes_read) {
+void handle_read(boost::system::error_code, size_t bytes_read) {
   bytes_handled = bytes_read;
 }
 

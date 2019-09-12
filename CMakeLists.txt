@@ -32,6 +32,7 @@ add_definitions(
   -DFMT_HEADER_ONLY
 )
 else()
+set(BUILD_SHARED_LIBS ON)
 add_definitions(
   -DBOOST_LOG_DYN_LINK
   -DBOOST_TEST_DYN_LINK
@@ -50,7 +51,7 @@ find_package(Doxygen)
 find_program(BUILD_MANUAL texi2dvi)
 
 set (CMAKE_CXX_STANDARD 17)
-set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic -Wno-psabi -Wno-write-strings -Wfatal-errors")
+set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic -Wno-psabi -Wno-write-strings -Wextra -Werror -Wfatal-errors")
 set (CMAKE_CXX_FLAGS_RELEASE  "-O3 -Wno-psabi -Wno-write-strings -Wfatal-errors")
 
 set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")

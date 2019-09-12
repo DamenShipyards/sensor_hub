@@ -39,7 +39,7 @@ tt::assertion_result usb_dev_available()  {
 
 
 
-tt::assertion_result usb_available(ut::test_unit_id test_id) {
+tt::assertion_result usb_available(ut::test_unit_id) {
   const char* device_str = getenv("USB");
   if (device_str != nullptr) {
     usb_device = device_str;
@@ -55,14 +55,14 @@ tt::assertion_result usb_available(ut::test_unit_id test_id) {
 }
 
 
-tt::assertion_result xsens_available(ut::test_unit_id test_id) {
+tt::assertion_result xsens_available(ut::test_unit_id) {
   usb_device = "2639:0017";
 
   return usb_dev_available();
 }
 
 
-tt::assertion_result ublox_available(ut::test_unit_id test_id) {
+tt::assertion_result ublox_available(ut::test_unit_id) {
   usb_device = "1546:01a8";
 
   return usb_dev_available();

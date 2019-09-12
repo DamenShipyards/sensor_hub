@@ -242,7 +242,7 @@ struct Service {
   /**
    * Called every ten seconds
    */
-  void ten_seconds_service(asio::yield_context yield) {
+  void ten_seconds_service(asio::yield_context) {
   }
 
 
@@ -258,7 +258,7 @@ struct Service {
   /**
    * Called every five minutes of uptime
    */
-  void five_minutes_service(asio::yield_context yield) {
+  void five_minutes_service(asio::yield_context) {
     static int counter = 0;
     counter += 5;
     log(level::debug, "Uptime: % minutes", counter);
@@ -268,7 +268,7 @@ struct Service {
   /**
    * Called every hour of uptime
    */
-  void hourly_service(asio::yield_context yield) {
+  void hourly_service(asio::yield_context) {
     static int counter = 0;
     log(level::info, "Uptime: % hours", ++counter);
   }

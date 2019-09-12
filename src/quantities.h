@@ -110,7 +110,7 @@ using Quantity_type = std::underlying_type<Quantity>::type;
 template <Quantity quantity> struct Quantity_name { };
 
 //! Macro for adding quantity name traits DRY style.
-#define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static constexpr inline char* const value() { return #NAME; } }
+#define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static constexpr inline char* value() { return #NAME; } }
 
 QUANTITY_NAME(ut);
 QUANTITY_NAME(la);
@@ -179,7 +179,7 @@ constexpr auto quantity_sequence = Quantity_sequence();
 
 
 template <typename T>
-constexpr inline const char* get_quantity_name_impl(Quantity quantity) {
+constexpr inline const char* get_quantity_name_impl(Quantity) {
   return "";
 }
 
@@ -274,7 +274,7 @@ struct Stamped_value: public Data_value, public Data_stamp {
     Data_value(v), Data_stamp(s) {}
   using Data_value::operator==;
   using Data_stamp::operator==;
-  const double operator[](const int index) {
+  double operator[](const int index) const {
     return index == 0 ? value : stamp;
   }
   bool operator==(const Stamped_value& other) const {
@@ -293,7 +293,7 @@ struct Stamped_quantity: public Stamped_value, Data_quantity {
     Stamped_value(qv.value, s), Data_quantity(qv.quantity) {}
   using Stamped_value::operator==;
   using Data_quantity::operator==;
-  const double operator[](const int index) {
+  double operator[](const int index) const {
     return index == 0 ? value : index == 1 ? stamp : static_cast<double>(quantity);
   }
   bool operator==(const Stamped_quantity& other) const {

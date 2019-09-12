@@ -262,6 +262,12 @@ struct Data_packet {
     setup_payload(cls, id, payload_init);
   }
 
+  Data_packet& operator=(const Data_packet& packet) {
+    data_ = packet.data_;
+    checksum_ = packet.checksum_;
+    return *this;
+  }
+
   uint8_t get_cls() const {
     return get_data_byte(0);
   }

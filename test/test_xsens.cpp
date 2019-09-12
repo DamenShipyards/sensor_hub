@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(connection_test, *ut::precondition(xsens_available)) {
   MTi_G_710<Usb, Ctx> xsens;
   asio::deadline_timer tmr(ctx, pt::milliseconds(3000));
   tmr.async_wait(
-      [&ctx](boost::system::error_code ec) {
+      [&ctx](boost::system::error_code) {
         ctx.stop();
       }
   );

@@ -59,9 +59,9 @@ uint16_t Statistics::get_modbus_reg(size_t index) const {
     case Statistic::f_n + 1:
       return static_cast<uint16_t>(stat.n);
     case Statistic::f_mean + 1:
-      base_scale.scale_to_u16(q, stat.mean);
+      return static_cast<uint16_t>(base_scale.scale_to_u16(q, stat.mean));
     case Statistic::f_stddev + 1:
-      base_scale.scale_to_u16(q, sqrt(stat.variance));
+      return static_cast<uint16_t>(base_scale.scale_to_u16(q, sqrt(stat.variance)));
     default:
       // Shouldn't happen
       return 0;

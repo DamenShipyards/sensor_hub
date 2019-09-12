@@ -112,7 +112,7 @@ struct Device: public Named_object {
   }
 
 
-  virtual const bool get_value(const Quantity& quantity, Value_type& value) const {
+  virtual bool get_value(const Quantity& quantity, Value_type& value) const {
     auto it = data_.find(quantity);
     if (it == data_.end() || it->second.empty()) {
       return false;
@@ -122,7 +122,7 @@ struct Device: public Named_object {
   }
 
 
-  virtual const bool get_sample(const Quantity& quantity, Stamped_value& sample) const {
+  virtual bool get_sample(const Quantity& quantity, Stamped_value& sample) const {
     auto it = data_.find(quantity);
     if (it == data_.end() || it->second.empty()) {
       return false;
@@ -132,7 +132,7 @@ struct Device: public Named_object {
   }
 
 
-  const Value_type get_value(const Quantity& quantity) const {
+  Value_type get_value(const Quantity& quantity) const {
     Value_type value;
     if (!get_value(quantity, value))
       throw Quantity_not_available();
@@ -149,12 +149,12 @@ struct Device: public Named_object {
   }
 
 
-  virtual bool initialize(asio::yield_context yield) {
+  virtual bool initialize(asio::yield_context) {
     return true;
   }
 
 
-  virtual const bool is_connected() const {
+  virtual bool is_connected() const {
     return connected_;
   }
 
@@ -435,7 +435,7 @@ struct Port_device: public Device {
   }
 
 
-  virtual bool reset(asio::yield_context yield) {
+  virtual bool reset(asio::yield_context) {
     return true;
   }
 

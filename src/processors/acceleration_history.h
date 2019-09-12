@@ -50,9 +50,9 @@ struct Acceleration_peak {
     return 5;
   }
 
-  enum {
+  enum field_t {
     f_start, f_duration, f_peak, f_mean, f_rms
-  } field_t;
+  };
 };
 
 

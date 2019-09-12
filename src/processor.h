@@ -29,14 +29,14 @@
 struct Processor {
   Processor(): name_() {}
 
-  virtual void insert_value(const Stamped_quantity& value) {
+  virtual void insert_value(const Stamped_quantity&) {
   }
 
-  virtual double operator[](size_t index) {
+  virtual double operator[](size_t) {
     return 0;
   }
 
-  virtual uint16_t get_modbus_reg(size_t index) const {
+  virtual uint16_t get_modbus_reg(size_t) const {
     return 0;
   }
 
@@ -48,10 +48,10 @@ struct Processor {
     return 0;
   }
 
-  virtual void set_param(const std::string& name, const double& value) { 
+  virtual void set_param(const std::string&, const double&) { 
   }
 
-  virtual void set_filter(const std::string& filter) {
+  virtual void set_filter(const std::string&) {
   }
 
   std::string get_name() const {

@@ -18,7 +18,7 @@ struct Client: public modbus::Client {
   using modbus::Client::Client;
 
   void on_read_reply(
-      modbus::tcp_mbap const & header, 
+      modbus::tcp_mbap const &, 
       modbus::response::read_holding_registers const & response, 
       boost::system::error_code const & error ) {
     if (!error) {
@@ -30,8 +30,8 @@ struct Client: public modbus::Client {
   }
 
   void on_write_reply(
-      modbus::tcp_mbap const & header, 
-      modbus::response::write_multiple_registers const & response, 
+      modbus::tcp_mbap const &, 
+      modbus::response::write_multiple_registers const &, 
       boost::system::error_code const & error) {
     if (!error)
       read_holding_registers(0, 128, 2, 

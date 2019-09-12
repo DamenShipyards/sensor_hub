@@ -40,8 +40,8 @@ inline std::pair<int, int> get_usb_address(const std::string& connection_string)
   return std::pair<int, int>(vendor_id, product_id);
 }
 
-inline void check_install_usb_driver(int vid, int pid) {
 #ifdef _WIN32
+inline void check_install_usb_driver(int vid, int pid) {
   if (vid <= 0)
     return;
   struct wdi_device_info *device, *list;
@@ -74,5 +74,7 @@ inline void check_install_usb_driver(int vid, int pid) {
     }
     wdi_destroy_list(list);
   }
-#endif
 }
+#else
+inline void check_install_usb_driver(int, int) {}
+#endif

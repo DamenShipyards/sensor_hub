@@ -295,6 +295,7 @@ struct Data_value: public Data_packet {
    */
   template <uint16_t PFORMAT = FORMAT>
   static const auto get_parse_rule(typename std::enable_if<PFORMAT == XDI_SubFormatFloat, int>::type n=0) {
+    (void)n;
     return big_word(did) >> byte_(DIM * 4) >> repeat(DIM)[big_bin_float];
   }
 
@@ -303,6 +304,7 @@ struct Data_value: public Data_packet {
    */
   template <uint16_t PFORMAT = FORMAT>
   static const auto get_parse_rule(typename std::enable_if<PFORMAT == XDI_SubFormatDouble, int>::type n=0) {
+    (void)n;
     return big_word(did) >> byte_(DIM * 8) >> repeat(DIM)[big_bin_double];
   }
 

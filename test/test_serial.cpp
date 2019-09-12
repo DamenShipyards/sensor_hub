@@ -21,7 +21,7 @@ namespace asio = boost::asio;
 namespace fs = boost::filesystem;
 using pth = boost::filesystem::path;
 
-tt::assertion_result serial_available(ut::test_unit_id test_id) {
+tt::assertion_result serial_available(ut::test_unit_id) {
   const char* port_env = getenv("SERIAL");
   std::string port;
   if (port_env != nullptr) {
@@ -56,7 +56,7 @@ void loopback(asio::yield_context yield) {
       });
   asio::const_buffer buf = asio::buffer(message);
   asio::async_write(serial, buf, [] (
-          const boost::system::error_code& ec,
+          const boost::system::error_code&,
           std::size_t bytes_transferred) {
         bytes_written = bytes_transferred;
       });

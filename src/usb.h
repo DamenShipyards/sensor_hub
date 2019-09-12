@@ -138,7 +138,7 @@ struct Operation_context {
 
   template<typename B = BufferSequence>
   typename std::enable_if<!boost::asio::is_mutable_buffer_sequence<B>::value, void>::type
-  consume_read_data(size_t len) {
+  consume_read_data(size_t) {
   }
 
   void post(boost::system::error_code& ec, size_t bytes_transferred, libusb_transfer* transfer) {
