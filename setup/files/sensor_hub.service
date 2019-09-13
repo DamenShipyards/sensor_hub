@@ -1,5 +1,9 @@
 [Unit]
 Description=Sensor Hub Daemon
+After=network.target
+
+[Install]
+WantedBy=multi-user.target
 
 [Service]
 ExecStart=/usr/sbin/sensor_hub start
