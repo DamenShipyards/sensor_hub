@@ -1,6 +1,8 @@
 #include <exception>
 #include <boost/filesystem.hpp>
 #include <boost/asio/signal_set.hpp>
+#include <boost/program_options.hpp>
+
 #include <cstdlib>
 #include <cstdio>
 
@@ -30,21 +32,19 @@
 
 
 namespace fs = boost::filesystem;
-using pth = boost::filesystem::path;
-const pth pid_file_default_name = "/var/run/sensor_hub.pid";
+namespace po = boost::program_options;
+
+const fs::path pid_file_default_name = "/var/run/sensor_hub.pid";
 
 
-void print_usage() {
-  std::cout << "Usage: sensor_hub [start|stop] <options>" << std::endl;
+void print_usage(po::options_description& options_description) {
+  std::cout << "Usage: sensor_hub <options> [start|stop]" << std::endl;
   std::cout << "Start or stop the Damen Sensor Hub daemon." << std::endl;
   std::cout << std::endl;
-  std::cout << "  start                  start a daemon" << std::endl;
-  std::cout << "  stop                   stop a running daemon" << std::endl;
+  std::cout << "  start                 start a daemon" << std::endl;
+  std::cout << "  stop                  stop a running daemon" << std::endl;
   std::cout << std::endl;
-  std::cout << "Options:" << std::endl;
-  std::cout << "  --help                 display this help and exit" << std::endl;
-  std::cout << "  --version              display version information and exit" << std::endl;
-  std::cout << "  --pidfile <filename>   alternative to default pidfile" << std::endl;
+  std::cout << options_description << std::endl;
 }
 
 
@@ -54,7 +54,7 @@ struct Pid_error: public std::runtime_error {
 
 
 struct Pid_file {
-  Pid_file(const pth& fpath): fpath_(fpath), fd_(0) {
+  Pid_file(const fs::path& fpath): fpath_(fpath), fd_(0) {
     int flags = O_RDWR | O_NOCTTY;
     if (!fs::exists(fpath_))
       flags |= O_CREAT;
@@ -85,7 +85,7 @@ struct Pid_file {
     fs::remove(fpath_, ec);
   }
 private:
-  pth fpath_;
+  fs::path fpath_;
   int fd_;
 };
 
@@ -93,15 +93,25 @@ private:
 int main(int argc, char* argv[])
 {
   try {
-    pth p{argv[0]};
+    fs::path p{argv[0]};
     p = fs::canonical(p);
+
+    po::options_description desc{"Options"};
+    desc.add_options()
+      ("help,h", "display this help and exit")
+      ("version,v", "display version info and exit")
+      ("pidfile,p", "alternative to default file")
+      ("update-config", "update the configuration file");
+
+    po::positional_options_description pos_desc;
+    pos_desc.add("start|stop", -1);
 
 
     bool show_version = false;
     bool show_help = false;
     bool start = false;
     bool stop = false;
-    pth pid_file_name = pid_file_default_name;
+    fs::path pid_file_name = pid_file_default_name;
 
     for (int i = 0; i < argc; ++i) {
       if (std::string(argv[i]) == "start") {
@@ -122,7 +132,7 @@ int main(int argc, char* argv[])
           pid_file_name = argv[i];
         }
         else {
-          print_usage();
+          print_usage(desc);
           return INVALID_COMMAND_LINE;
         }
       }
@@ -134,7 +144,7 @@ int main(int argc, char* argv[])
     }
 
     if (show_help || (!start && !stop)) {
-      print_usage();
+      print_usage(desc);
       return show_help ? PROGRAM_SUCCESS : INVALID_COMMAND_LINE; 
     }
 

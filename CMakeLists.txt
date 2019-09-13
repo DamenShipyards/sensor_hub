@@ -41,7 +41,7 @@ add_definitions(
 endif()
 
 find_package(Boost 1.70.0 REQUIRED 
-  system date_time filesystem log log_setup unit_test_framework thread regex coroutine chrono
+  system date_time filesystem log log_setup unit_test_framework thread regex coroutine chrono program_options
 )
 
 find_package(libusb-1.0 1.0.22 REQUIRED)
@@ -105,6 +105,7 @@ link_libraries(
   Boost::system
   Boost::date_time
   Boost::filesystem
+  Boost::program_options
   Boost::log
   Boost::log_setup
   Boost::thread
