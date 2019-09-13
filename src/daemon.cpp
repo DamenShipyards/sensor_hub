@@ -1,7 +1,8 @@
 #include <exception>
+#include <chrono>
+#include <thread>
 #include <boost/filesystem.hpp>
 #include <boost/asio/signal_set.hpp>
-#include <boost/program_options.hpp>
 
 #include <cstdlib>
 #include <cstdio>
@@ -13,36 +14,32 @@
 #include <fcntl.h>
 #include <sys/file.h>
 
-#include "log.h"
-#include "loop.h"
-#include "tools.h"
-#include "version.h"
+#include "main.h"
 
 // Return codes
 #define PROGRAM_SUCCESS 0
-#define INVALID_COMMAND_LINE 1000
-#define UNHANDLED_EXCEPTION 1001
-#define UNKNOWN_EXCEPTION 1002
-#define DAEMON_ALREADY_RUNNING 1003
-#define STOP_DAEMON_FAILED 1004
-#define FORK_FAILURE 1005
-#define DAEMON_INIT_FAILURE 1006
-#define DAEMON_NOT_RUNNING 1007
-#define PID_ERROR 1008
+#define INVALID_COMMAND_LINE 10
+#define UNHANDLED_EXCEPTION 11
+#define UNKNOWN_EXCEPTION 12
+#define DAEMON_ALREADY_RUNNING 13
+#define STOP_DAEMON_FAILED 14
+#define FORK_FAILURE 15
+#define DAEMON_INIT_FAILURE 16
+#define DAEMON_NOT_RUNNING 17
+#define PID_ERROR 18
+#define DAEMON_START_FAILURE 19
 
 
 namespace fs = boost::filesystem;
-namespace po = boost::program_options;
-
-const fs::path pid_file_default_name = "/var/run/sensor_hub.pid";
 
 
 void print_usage(po::options_description& options_description) {
-  std::cout << "Usage: sensor_hub <options> [start|stop]" << std::endl;
+  std::cout << "Usage: sensor_hub <options> [start|stop|restart]" << std::endl;
   std::cout << "Start or stop the Damen Sensor Hub daemon." << std::endl;
   std::cout << std::endl;
   std::cout << "  start                 start a daemon" << std::endl;
   std::cout << "  stop                  stop a running daemon" << std::endl;
+  std::cout << "  restart               restart a running daemon" << std::endl;
   std::cout << std::endl;
   std::cout << options_description << std::endl;
 }
@@ -96,47 +93,47 @@ int main(int argc, char* argv[])
     fs::path p{argv[0]};
     p = fs::canonical(p);
 
-    po::options_description desc{"Options"};
-    desc.add_options()
+    const std::string pid_file_default = "/var/run/sensor_hub.pid";
+
+    po::options_description desc_args{"Options"};
+    desc_args.add_options()
       ("help,h", "display this help and exit")
       ("version,v", "display version info and exit")
-      ("pidfile,p", "alternative to default file")
+      ("pidfile,p", 
+           po::value<std::string>()->default_value(pid_file_default), 
+           "alternative to default pid file")
       ("update-config", "update the configuration file");
 
-    po::positional_options_description pos_desc;
-    pos_desc.add("start|stop", -1);
+    po::options_description command_args{"Commands"};
+    command_args.add_options()
+      ("commands", po::value<std::vector<std::string> >(), "stop|start|restart daemon");
+
+    po::positional_options_description pos_args;
+    pos_args.add("commands", -1);
+
+    po::options_description command_line;
+    command_line.add(desc_args).add(command_args);
+
+    po::variables_map vm;
+    po::store(po::command_line_parser(argc, argv).
+        options(command_line).positional(pos_args).run(), vm);
+    po::notify(vm);
 
 
-    bool show_version = false;
-    bool show_help = false;
+    bool show_help = vm.count("help") != 0;
+    bool show_version = vm.count("version") != 0;
     bool start = false;
     bool stop = false;
-    fs::path pid_file_name = pid_file_default_name;
-
-    for (int i = 0; i < argc; ++i) {
-      if (std::string(argv[i]) == "start") {
-        start = true;
-      }
-      if (std::string(argv[i]) == "stop") {
-        stop = true;
-      }
-      if (std::string(argv[i]) == "--help") {
-        show_help = true;
-      }
-      if (std::string(argv[i]) == "--version") {
-        show_version = true;
-      }
-      if (std::string(argv[i]) == "--pidfile") {
-        ++i;
-        if (i < argc) {
-          pid_file_name = argv[i];
-        }
-        else {
-          print_usage(desc);
-          return INVALID_COMMAND_LINE;
-        }
+    if (vm.count("commands") > 0) {
+      auto commands = vm["commands"].as<std::vector<std::string> >();
+      start = std::find(commands.begin(), commands.end(), "start") != commands.end();
+      stop = std::find(commands.begin(), commands.end(), "stop") != commands.end();
+      if (std::find(commands.begin(), commands.end(), "restart") != commands.end()) {
+        start = stop = true;
       }
     }
+
+    fs::path pid_file_name = vm["pidfile"].as<std::string>();
 
     if (show_version) {
       print_version();
@@ -144,26 +141,36 @@ int main(int argc, char* argv[])
     }
 
     if (show_help || (!start && !stop)) {
-      print_usage(desc);
+      print_usage(desc_args);
       return show_help ? PROGRAM_SUCCESS : INVALID_COMMAND_LINE; 
     }
 
     if (stop) {
       if (!fs::exists(pid_file_name)) {
-        std::cerr << "Pid file not found. Daemon not running?" << std::endl;
-        return DAEMON_NOT_RUNNING;
+        if (!start) {
+          std::cerr << "Pid file not found. Daemon not running?" << std::endl;
+          return DAEMON_NOT_RUNNING;
+        }
       }
       fs::ifstream ifs{pid_file_name};
       pid_t pid;
       ifs >> pid;
       ifs.close();
       if (kill(pid, SIGINT) == 0) {
-        return PROGRAM_SUCCESS;
+        if (!start)
+          return PROGRAM_SUCCESS;
+        // Sleep before restart
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
       }
       else {
         std::cerr << "Failed to stop daemon." << std::endl;
         return STOP_DAEMON_FAILED;
       }
+    }
+
+    if (!start) {
+      std::cerr << "Invalid command." << std::endl;
+      return INVALID_COMMAND_LINE;
     }
 
     // Daemonize
@@ -173,8 +180,18 @@ int main(int argc, char* argv[])
         std::cerr << "Fork failure." << std::endl;
         return FORK_FAILURE;
       }
-      else if (pid != 0)
-        // We're the parent -> exit
+      else if (pid != 0) {
+        // We're the parent -> exit, but wait a little
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+        if (fs::exists(pid_file_name)) {
+          // Parent -> exit
+          return PROGRAM_SUCCESS;
+        } else {
+          std::cerr << "Daemon failed to start." << std::endl;
+          return DAEMON_START_FAILURE;
+        }
+      }
         return PROGRAM_SUCCESS;
 
       // Child continues here: become session leader
@@ -189,9 +206,9 @@ int main(int argc, char* argv[])
         std::cerr << "Fork failure." << std::endl;
         return FORK_FAILURE;
       }
-      else if (pid != 0)
-        // Parent -> exit
+      else if (pid != 0) {
         return PROGRAM_SUCCESS;
+      }
     }
 
     {

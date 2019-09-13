@@ -40,14 +40,15 @@ struct Config {
     return config_;
   }
 private:
-  Config(): config_() {
+  Config(bool update=false): config_() {
     fs::path config_file = get_config_file();
     log(level::info, "Using configuration file: %", config_file);
     if (fs::exists(config_file)) {
       load(config_file);
     }
     set_defaults();
-    save(config_file);
+    if (update)
+      save(config_file);
   }
 
   prtr::ptree config_;

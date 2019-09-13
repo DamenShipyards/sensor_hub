@@ -17,18 +17,10 @@
 #include <locale>
 #include <codecvt>
 
-#include "log.h"
-#include "loop.h"
-#include "tools.h"
-#include "version.h"
+#include "main.h"
 
 #include <Windows.h>
 
-#include <boost/filesystem.hpp>
-
-
-namespace fs = boost::filesystem;
-using pth = boost::filesystem::path;
 
 typedef std::wstring_convert<std::codecvt_utf8_utf16<TCHAR>, TCHAR> utf_converter;
 
@@ -396,7 +388,7 @@ int _tmain (int argc, TCHAR *argv[])
   // TCHAR* to utf8 char* converter
   utf_converter conv_utf8;
 
-  pth p{argv[0]};
+  fs::path p{argv[0]};
   p = fs::canonical(p);
   p.make_preferred();
   log(level::info, "Starting % version %", p, STRINGIFY(VERSION));

@@ -100,6 +100,8 @@ inline void set_log_level(const std::string& slevel) {
   }
 }
 
+extern std::string get_current_log_file();
+
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

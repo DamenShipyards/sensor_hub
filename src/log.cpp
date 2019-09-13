@@ -169,6 +169,11 @@ struct Logger {
     file_sink_->set_filter(!expressions::has_attr(tag_attr) && severity >= lvl);
   }
 
+
+  std::string get_current_log_file() {
+    return file_sink_->locked_backend()->get_current_file_name().string();
+  }
+
 private:
 
   Logger(): device_log_dir_(), log_(), device_log_() {
@@ -259,6 +264,10 @@ void set_log_level(level lvl) {
 
 void set_device_log_dir(const fs::path& dir) {
   Logger::get_instance().set_device_log_dir(dir);
+}
+
+std::string get_current_log_file() {
+  return Logger::get_instance().get_current_log_file();
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
