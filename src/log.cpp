@@ -55,8 +55,8 @@ struct device_log_exception_handler {
   typedef void result_type;
 
   void handle(std::string const& msg) const {
-    int cur = pt::second_clock::local_time().time_of_day().hours();
-    static int last = cur - 1;
+    auto cur = pt::second_clock::local_time().time_of_day().hours();
+    static auto last = cur - 1;
 
     if (cur != last) {
       log(level::info, msg);

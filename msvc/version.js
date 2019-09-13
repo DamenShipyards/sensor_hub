@@ -88,5 +88,5 @@ outfile.close();
 outfile = FSO.OpenTextFile(CD + "\\..\\src\\version.h", ForWriting, true, 0);
 outfile.WriteLine("#define GITREV " + gitrev);
 outfile.WriteLine("#define VERSION " + version);
-outfile.WriteLine("#define DATE " + date);
+outfile.WriteLine("#define BUILD_DATE " + date);
 outfile.close();

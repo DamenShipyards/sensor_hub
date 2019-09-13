@@ -21,7 +21,6 @@
 
 #include <Windows.h>
 
-
 typedef std::wstring_convert<std::codecvt_utf8_utf16<TCHAR>, TCHAR> utf_converter;
 
 SERVICE_STATUS g_ServiceStatus = {0};
@@ -44,17 +43,16 @@ DWORD WINAPI ServiceWorkerThread (LPVOID lpParam);
     goto exit; \
   }
 #define SERVICE_DEPENDENCIES TEXT("Tcpip\0\0")
-#define ERROR_INVALID_COMMAND 1;
-#define ERROR_TOO_MANY_PARAMETERS 2;
 
-void print_usage()
+
+void print_usage(const po::options_description& desc_args)
 {
-  std::cout << "Usage:" << std::endl
-            << " sensor_hub <command>" << std::endl
-            << "   Commands:" << std::endl
-            << "     install: Install the service" << std::endl
-            << "     uninstall: Remove the service" << std::endl
-            << "     version: Print version and exit" << std::endl;
+  std::cout << "Usage: sensor_hub [options] [<command>]" << std::endl
+            << "Install or remove service" << std::endl
+            << "Commands:" << std::endl
+            << "  install               Install the service" << std::endl
+            << "  uninstall             Remove the service" << std::endl
+            << desc_args << std::endl;
 }
 
 void print_error(int error)
@@ -299,14 +297,19 @@ static int InstallService(LPCTSTR inName, LPCTSTR inDisplayName, LPCTSTR inDescr
   service = NULL;
 
   size = GetFullPathName(inPath, MAX_PATH, fullPath, &namePtr);
-  check_error(size);
+  if (size == 0)
+    return GetLastError();
+
+  std::basic_string<TCHAR> cmd_line = _T("\"");
+  cmd_line += fullPath;
+  cmd_line += _T("\" service");
 
   // Create the service and start it.
   scm = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
   check_error(scm);
 
   service = CreateService( scm, inName, inDisplayName, SERVICE_ALL_ACCESS, SERVICE_WIN32_SHARE_PROCESS,
-      SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, fullPath, NULL, NULL, SERVICE_DEPENDENCIES,
+      SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, cmd_line.c_str(), NULL, NULL, SERVICE_DEPENDENCIES,
       NULL, NULL );
   check_error(service);
 
@@ -384,97 +387,119 @@ const po::variables_map& get_program_options() {
   return vm;
 }
 
-int _tmain (int argc, TCHAR *argv[])
-{
-  int ret = ERROR_SUCCESS;
-
-
-  po::options_description desc_args{"Options"};
-  desc_args.add_options()
-    ("help,h", "display this help and exit")
-    ("version,v", "display version info and exit")
-    ("update-config", "update the configuration file");
-
-  po::options_description command_args{"Commands"};
-  command_args.add_options()
-    ("command", po::value<std::string>(), "install|uninstall");
-
-  po::positional_options_description pos_args;
-  pos_args.add("command", -1);
-
-  po::options_description command_line;
-  command_line.add(desc_args).add(command_args);
-
-  po::store(po::command_line_parser(argc, argv).
-      options(command_line).positional(pos_args).run(), vm);
-  po::notify(vm);
-
-  // TCHAR* to utf8 char* converter
-  utf_converter conv_utf8;
-
-  fs::path p{argv[0]};
-  p = fs::canonical(p);
-  p.make_preferred();
-  log(level::info, "Starting % version %", p, STRINGIFY(VERSION));
-
+int run_service() {
   ServiceSetupEventLogging();
   SERVICE_TABLE_ENTRY ServiceTable[] =
   {
-    {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
+    {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION)ServiceMain},
     {NULL, NULL}
   };
+  if (StartServiceCtrlDispatcher(ServiceTable) == FALSE)
+  {
+    auto err = GetLastError();
+    log(level::error, "Failed to start service control dispatcher: %", err);
+    ReportStatus(EVENTLOG_ERROR_TYPE, "Failed to start service control dispatcher: %d", err);
+    return err;
+  }
+  return ERROR_SUCCESS;
+}
 
-  if (argc > 1) {
-    if (argc > 2) {
-      print_usage();
-      log(level::error, "Invalid command line parameters.");
-      return ERROR_TOO_MANY_PARAMETERS;
+int _tmain (int argc, TCHAR *argv[])
+{
+  fs::path p{ argv[0] };
+  p = fs::canonical(p);
+  p.make_preferred();
+
+  int ret = ERROR_SUCCESS;
+
+  try {
+    po::options_description desc_args{ "Options" };
+    desc_args.add_options()
+      ("help,h", "display this help and exit")
+      ("version,v", "display version info and exit")
+      ("update-config", "update the configuration file");
+
+    po::options_description command_args{ "Commands" };
+    command_args.add_options()
+      ("command", po::value<std::string>(), "install|uninstall");
+
+    po::positional_options_description pos_args;
+    pos_args.add("command", -1);
+
+    po::options_description command_line;
+    command_line.add(desc_args).add(command_args);
+
+    po::store(po::wcommand_line_parser(argc, argv)
+      .options(command_line).positional(pos_args).run(), vm);
+    po::notify(vm);
+
+    if (vm.empty()) {
+      std::cerr << "Missing parameter." << std::endl;
+      print_usage(desc_args);
+      return INVALID_COMMAND_LINE + 0x4000;
     }
-    else if (_tcscmp(argv[1], _T("install")) == 0) {
+
+    bool help = vm.count("help") > 0;
+    bool version = vm.count("version") > 0;
+    bool update_config = vm.count("update-config") > 0;
+
+    if (version) {
+      print_version();
+      return PROGRAM_SUCCESS;
+    }
+    else if (help) {
+      print_usage(desc_args);
+      return PROGRAM_SUCCESS;
+    }
+    else if (vm.count("command") == 0) {
+      std::cerr << "Missing command." << std::endl;
+      print_usage(desc_args);
+      return INVALID_COMMAND_LINE + 0x4000;
+    }
+    else if (vm["command"].as<std::string>() == "install") {
       ret = InstallService(SERVICE_NAME, SERVICE_NAME, SERVICE_DESCR, argv[0]);
       if (ret != 0) {
         print_error(ret);
-        log(level::error, "Failed to install service: %", ret);
+        std::cerr << "Failed to install service: " << ret << std::endl;
       }
       else {
         std::cout << "Service installed." << std::endl;
-        log(level::info, "Service installed.");
       }
       return ret;
     }
-    else if (_tcscmp(argv[1], _T("uninstall")) == 0) {
+    else if (vm["command"].as<std::string>() == "uninstall") {
       ret = RemoveService(SERVICE_NAME);
       if (ret != 0) {
         print_error(ret);
-        log(level::error, "Failed to remove service: %", ret);
+        std::cerr << "Failed to remove service: " << ret << std::endl;
       }
       else {
         std::cout << "Service removed." << std::endl;
-        log(level::info, "Service removed.");
       }
       return ret;
     }
-    else if (_tcscmp(argv[1], _T("version")) == 0) {
-      print_version();
+    else if (vm["command"].as<std::string>() == "service") {
+      log(level::info, "Starting % version %", p, STRINGIFY(VERSION));
+      ret = run_service();
+      log(level::info, "Exiting main: %", ret);
       return ret;
     }
     else {
-      print_usage();
-      log(level::error, "Invalid command line parameter: %", conv_utf8.to_bytes(argv[1]));
-      return ERROR_INVALID_COMMAND;
+      std::cerr << "Invalid command: " << vm["command"].as<std::string>() << "." << std::endl;
+      print_usage(desc_args);
+      return INVALID_COMMAND_LINE + 0x4000;
     }
-  }
 
-  if (StartServiceCtrlDispatcher(ServiceTable) == FALSE)
-  {
-    print_usage();
-    auto err = GetLastError();
-    log(level::error, "Failed to start service control dispatcher: %", err);
-    return err;
+    return PROGRAM_SUCCESS;
   }
-
-  log(level::info, "Returning from main");
-  return ret;
+  catch (std::exception& e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return UNHANDLED_EXCEPTION + 0x4000;
+  }
+  catch (...) {
+    std::cerr << "Unknown error." << std::endl;
+    return UNKNOWN_EXCEPTION + 0x4000;
+  }
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

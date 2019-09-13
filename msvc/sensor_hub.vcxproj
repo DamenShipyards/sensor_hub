@@ -91,6 +91,7 @@
     <ClInclude Include="..\src\http.h" />
     <ClInclude Include="..\src\log.h" />
     <ClInclude Include="..\src\loop.h" />
+    <ClInclude Include="..\src\main.h" />
     <ClInclude Include="..\src\modbus.h" />
     <ClInclude Include="..\src\processor.h" />
     <ClInclude Include="..\src\processors\acceleration_history.h" />

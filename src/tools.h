@@ -135,7 +135,7 @@ inline double sqr(const double value) {
 inline void print_version() {
   std::cout << "Damen Sensor Hub " << STRINGIFY(VERSION) << std::endl;
   std::cout << "   Git revision  : " << STRINGIFY(GITREV) << std::endl;
-  std::cout << "   Build date    : " << STRINGIFY(DATE) << std::endl;
+  std::cout << "   Build date    : " << STRINGIFY(BUILD_DATE) << std::endl;
   std::cout << "Written by Jaap Versteegh <jaap.versteegh@damen.com>" << std::endl;
 }
 
