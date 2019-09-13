@@ -161,9 +161,9 @@ new_test(test_processor
   processor.cpp 
   processors/statistics.cpp 
   processors/acceleration_history.cpp 
-  log.cpp datetime.cpp modbus.cpp config.cpp)
+  log.cpp datetime.cpp modbus.cpp)
 new_test(test_datetime datetime.cpp log.cpp)
-new_test(test_modbus modbus.cpp log.cpp config.cpp)
+new_test(test_modbus modbus.cpp log.cpp)
 
 new_test(test_xsens usb.cpp device.cpp log.cpp datetime.cpp types.cpp)
 new_test(test_xsens_impl datetime.cpp log.cpp types.cpp)

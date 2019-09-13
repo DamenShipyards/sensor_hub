@@ -15,6 +15,7 @@
 #define TOOLS_H_
 
 #include <type_traits>
+#include <algorithm>
 #include <iostream>
 
 #include "version.h"
@@ -59,51 +60,71 @@ constexpr inline auto get_enum_trait() {
   return Tr<e>::value();
 }
 
-/**
- * Sub sequence matcher
- *
- * Returns the location of sub_container's sequence in container
- * or -1 one when container doesn't contain a copy of sub_container
- */
+
+template <class Container, typename Items>
+struct contains_checker {
+  int operator() (const Container& container, const Items& items) const {
+    auto c_iter = container.cbegin();
+    auto sc_iter = items.cbegin();
+    int i = 0;
+    do {
+      if (sc_iter == items.cend()) {
+        return i;
+      }
+      if (c_iter == container.cend())
+        return -1;
+      if (*c_iter++ == *sc_iter) {
+        auto cc_iter = c_iter;
+        ++sc_iter;
+        do  {
+          if (sc_iter == items.cend()) {
+            return i;
+          }
+          if (cc_iter == container.cend())
+            return -1;
+          if (*cc_iter++ != *sc_iter++) {
+            sc_iter = items.cbegin();
+            break;
+          }
+        } while (true);
+      }
+      ++i;
+    } while (true);
+    return -1;
+  }
+};
+
+
 template <class Container>
-int contains_at(const Container& container, const Container& sub_container) {
-  auto c_iter = container.cbegin();
-  auto sc_iter = sub_container.cbegin();
-  int i = 0;
-  do {
-    if (sc_iter == sub_container.cend())
-      return i;
-    if (c_iter == container.cend())
+struct contains_checker<Container, typename Container::value_type> {
+  int operator() (const Container& container, const typename Container::value_type& item) const {
+    auto it = std::find(container.cbegin(), container.cend(), item);
+    if (it == container.cend()) {
       return -1;
-    if (*c_iter++ == *sc_iter) {
-      auto cc_iter = c_iter;
-      ++sc_iter;
-      do  {
-        if (sc_iter == sub_container.cend())
-          return i;
-        if (cc_iter == container.cend())
-          return -1;
-        if (*cc_iter++ != *sc_iter++) {
-          sc_iter = sub_container.cbegin();
-          break;
-        }
-      } while (true);
     }
-    ++i;
-  } while (true);
-  return -1;
+    else {
+      return std::distance(container.cbegin(), it);
+    }
+  }
+};
+
+
+template <class Container, typename Items>
+inline int contains_at(const Container& container, const Items& items) {
+  return contains_checker<Container, Items>()(container, items);
 }
 
 
 /**
  * Sub sequence match
  *
- * Returns whether sub_container's sequence is present in container
+ * Returns whether item or items are present in container
  */
-template <class Container>
-bool contains(const Container& container, const Container& sub_container) {
-  return contains_at(container, sub_container) >= 0;
+template <class Container, typename Items>
+inline bool contains(const Container& container, const Items& items) {
+  return contains_at<Container, Items>(container, items) >= 0;
 }
+
 
 
 inline double sqr(const double value) {

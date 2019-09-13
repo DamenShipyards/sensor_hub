@@ -15,7 +15,6 @@
 #include "quantities.h"
 #include "version.h"
 #include "tools.h"
-#include "config.h"
 #include "log.h"
 
 #include <cmath>
@@ -26,16 +25,6 @@ static Stamped_value zero = {};
 static constexpr int base_base_address = 0;
 static constexpr int plain_base_address = 10000;
 static constexpr int processor_base_address = 20000;
-
-
-Base_scale::Base_scale(): scale_() {
-  auto config = get_config();
-  for (Quantity_iter qi = Quantity_iter::begin(); qi != Quantity_iter::end(); ++qi) {
-    double min = config.get(fmt::format("modbus.{}_min", get_quantity_name(*qi)), -32.768);
-    double max = config.get(fmt::format("modbus.{}_max", get_quantity_name(*qi)), 32.768);
-    scale_[*qi] = {min, max - min};
-  }
-}
 
 
 void Modbus_handler::plain_map(const Device& device, 
@@ -63,7 +52,6 @@ void Modbus_handler::plain_map(const Device& device,
 
 void Modbus_handler::base_map(const Device& device, 
     int reg_index, const int count, response::read_input_registers& resp) {
-  static Base_scale base_scale;
 
   for (int index = 0; index < count; ++index) {
     Quantity q;
@@ -85,7 +73,7 @@ void Modbus_handler::base_map(const Device& device,
       case 2: 
         q = Quantity::ut;
         if (device.get_value(q, value)) {
-          uint32_t t = base_scale.scale_to_u32(q, value);
+          uint32_t t = scaler_.scale_to_u32(q, value);
           resp.values[index] = reg_index == 1 ? t >> 16 : t & 0xFFFF;
         }
         break;
@@ -93,7 +81,7 @@ void Modbus_handler::base_map(const Device& device,
       case 4: 
         q = Quantity::la;
         if (device.get_value(q, value)) {
-          uint32_t v = base_scale.scale_to_u32(q, value);
+          uint32_t v = scaler_.scale_to_u32(q, value);
           resp.values[index] = reg_index == 3 ? v >> 16 : v & 0xFFFF;
         }
         break;
@@ -101,14 +89,14 @@ void Modbus_handler::base_map(const Device& device,
       case 6:
         q = Quantity::lo;
         if (device.get_value(q, value)) {
-          uint32_t v = base_scale.scale_to_u32(q, value);
+          uint32_t v = scaler_.scale_to_u32(q, value);
           resp.values[index] = reg_index == 5 ? v >> 16 : v & 0xFFFF;
         }
         break;
       default: 
         q = static_cast<Quantity>(reg_index - 4);
         if (device.get_value(q, value)) {
-          resp.values[index] = base_scale.scale_to_u16(q, value);
+          resp.values[index] = scaler_.scale_to_u16(q, value);
         }
     }
     ++reg_index;
@@ -118,7 +106,7 @@ void Modbus_handler::base_map(const Device& device,
 void Modbus_handler::processor_map(const Processor& processor,
     int reg_index, const int count, response::read_input_registers& resp) {
   for (int i = 0; i < count; ++i) {
-    resp.values[i] = processor.get_modbus_reg(i + reg_index);
+    resp.values[i] = processor.get_modbus_reg(i + reg_index, scaler_);
   }
 }
 

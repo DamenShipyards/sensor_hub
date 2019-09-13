@@ -2,6 +2,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "../src/modbus.h" 
 #include "../src/device.h" 
@@ -9,6 +10,7 @@
 #include "../3rdparty/modbus/include/modbus/client.hpp"
 
 namespace asio = boost::asio;
+namespace prtr = boost::property_tree;
 
 
 static int result1 = 0;
@@ -52,7 +54,8 @@ BOOST_AUTO_TEST_CASE(talk_test) {
   Client client{ctx};
   Devices devices;
   Processors processors;
-  auto handler = boost::make_shared<Modbus_handler>(devices, processors);
+  prtr::ptree cfg{};
+  auto handler = boost::make_shared<Modbus_handler>(devices, processors, cfg);
   Modbus_server server{ctx, handler, 1502};
 
   client.connect("localhost", 1502, boost::bind(&Client::on_connect, &client, _1));

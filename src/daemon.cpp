@@ -35,7 +35,7 @@ namespace fs = boost::filesystem;
 
 void print_usage(po::options_description& options_description) {
   std::cout << "Usage: sensor_hub <options> [start|stop|restart]" << std::endl;
-  std::cout << "Start or stop the Damen Sensor Hub daemon." << std::endl;
+  std::cout << "Start, stop or restart the Damen Sensor Hub daemon." << std::endl;
   std::cout << std::endl;
   std::cout << "  start                 start a daemon" << std::endl;
   std::cout << "  stop                  stop a running daemon" << std::endl;
@@ -87,6 +87,13 @@ private:
 };
 
 
+po::variables_map vm;
+
+const po::variables_map& get_program_options() {
+  return vm;
+}
+
+
 int main(int argc, char* argv[])
 {
   try {
@@ -114,7 +121,6 @@ int main(int argc, char* argv[])
     po::options_description command_line;
     command_line.add(desc_args).add(command_args);
 
-    po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).
         options(command_line).positional(pos_args).run(), vm);
     po::notify(vm);
@@ -126,9 +132,9 @@ int main(int argc, char* argv[])
     bool stop = false;
     if (vm.count("commands") > 0) {
       auto commands = vm["commands"].as<std::vector<std::string> >();
-      start = std::find(commands.begin(), commands.end(), "start") != commands.end();
-      stop = std::find(commands.begin(), commands.end(), "stop") != commands.end();
-      if (std::find(commands.begin(), commands.end(), "restart") != commands.end()) {
+      start = contains(commands, std::string("start"));
+      stop = contains(commands, std::string("stop"));
+      if (contains(commands, std::string("restart"))) {
         start = stop = true;
       }
     }

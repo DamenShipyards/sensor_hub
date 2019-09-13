@@ -139,7 +139,7 @@ struct Statistics: public Processor {
   }
 
   std::string get_json() const override;
-  uint16_t get_modbus_reg(size_t index) const override;
+  uint16_t get_modbus_reg(size_t index, const Base_scale& scaler) const override;
 
   size_t size() override {
     return Statistic::size() * static_cast<size_t>(Quantity::end);

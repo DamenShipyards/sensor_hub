@@ -378,12 +378,36 @@ exit:
 }
 
 
+po::variables_map vm;
+
+const po::variables_map& get_program_options() {
+  return vm;
+}
 
 int _tmain (int argc, TCHAR *argv[])
 {
   int ret = ERROR_SUCCESS;
 
-  ServiceSetupEventLogging();
+
+  po::options_description desc_args{"Options"};
+  desc_args.add_options()
+    ("help,h", "display this help and exit")
+    ("version,v", "display version info and exit")
+    ("update-config", "update the configuration file");
+
+  po::options_description command_args{"Commands"};
+  command_args.add_options()
+    ("command", po::value<std::string>(), "install|uninstall");
+
+  po::positional_options_description pos_args;
+  pos_args.add("command", -1);
+
+  po::options_description command_line;
+  command_line.add(desc_args).add(command_args);
+
+  po::store(po::command_line_parser(argc, argv).
+      options(command_line).positional(pos_args).run(), vm);
+  po::notify(vm);
 
   // TCHAR* to utf8 char* converter
   utf_converter conv_utf8;
@@ -393,6 +417,7 @@ int _tmain (int argc, TCHAR *argv[])
   p.make_preferred();
   log(level::info, "Starting % version %", p, STRINGIFY(VERSION));
 
+  ServiceSetupEventLogging();
   SERVICE_TABLE_ENTRY ServiceTable[] =
   {
     {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},

@@ -101,7 +101,7 @@ struct Acceleration_history: public Processor {
   }
 
   std::string get_json() const override;
-  uint16_t get_modbus_reg(size_t index) const override;
+  uint16_t get_modbus_reg(size_t index, const Base_scale& scaler) const override;
 
   size_t size() override {
     return Acceleration_peak::size() * peaks_.size();

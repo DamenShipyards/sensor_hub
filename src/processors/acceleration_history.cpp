@@ -39,9 +39,7 @@ std::string Acceleration_history::get_json() const {
   return sb.GetString();
 }
 
-uint16_t Acceleration_history::get_modbus_reg(size_t index) const {
-  static Base_scale base_scale;
-
+uint16_t Acceleration_history::get_modbus_reg(size_t index, const Base_scale& scaler) const {
   size_t i = index / (Acceleration_peak::size() + 1);
   size_t m = index % (Acceleration_peak::size() + 1);
   if (i >= peaks_.size())
@@ -49,13 +47,13 @@ uint16_t Acceleration_history::get_modbus_reg(size_t index) const {
   const Acceleration_peak& peak = peaks_[i];
   switch (m) {
     case Acceleration_peak::f_start:
-      return static_cast<uint16_t>(base_scale.scale_to_u32(Quantity::ut, peak.start) >> 16);
+      return static_cast<uint16_t>(scaler.scale_to_u32(Quantity::ut, peak.start) >> 16);
     case Acceleration_peak::f_start + 1:
-      return static_cast<uint16_t>(base_scale.scale_to_u32(Quantity::ut, peak.start) && 0xFFFF);
+      return static_cast<uint16_t>(scaler.scale_to_u32(Quantity::ut, peak.start) && 0xFFFF);
     case Acceleration_peak::f_duration + 1:
-      return base_scale.scale_to_u16(Quantity::du, peak.duration);
+      return scaler.scale_to_u16(Quantity::du, peak.duration);
     default:
-      return base_scale.scale_to_u16(Quantity::ax, peak[m - 1]);
+      return scaler.scale_to_u16(Quantity::ax, peak[m - 1]);
   }
 }
 

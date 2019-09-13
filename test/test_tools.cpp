@@ -32,6 +32,8 @@ BOOST_AUTO_TEST_CASE(test_contains) {
   cbytes_t c9{};
   cbytes_t c10{0x01};
   cbytes_t c11{0x01, 0x03};
+  cbyte_t c13 = 0x03;
+  cbyte_t c14 = 0x05;
   BOOST_TEST(contains(c1, c1));
   BOOST_TEST(contains(c1, c2));
   BOOST_TEST(contains(c1, c3));
@@ -44,6 +46,8 @@ BOOST_AUTO_TEST_CASE(test_contains) {
   BOOST_TEST(!contains(c9, c10));
   BOOST_TEST(contains(c10, c9));
   BOOST_TEST(!contains(c1, c11));
+  BOOST_TEST(contains(c1, c13));
+  BOOST_TEST(!contains(c1, c14));
   BOOST_TEST(contains_at(c1, c2) == 0);
   BOOST_TEST(contains_at(c1, c3) == 1);
   BOOST_TEST(contains_at(c1, c4) == 2);

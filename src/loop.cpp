@@ -96,9 +96,10 @@ struct Service {
   /**
    * Start built-in modbus server
    */
-  void start_modbus_server(const int port) {
+  void start_modbus_server(const prtr::ptree cfg) {
+    int port = cfg.get("port", 502);
     log(level::info, "Starting Modbus server on port %", port);
-    auto handler = boost::make_shared<Modbus_handler>(devices_, processors_);
+    auto handler = boost::make_shared<Modbus_handler>(devices_, processors_, cfg);
     modbus_server_ = std::make_unique<Modbus_server>(ctx_, handler, port);
   }
 
@@ -133,7 +134,7 @@ struct Service {
   /**
    * Setup the service device list from provided configuration
    */
-  void setup_devices(boost::property_tree::ptree& cfg) {
+  void setup_devices(prtr::ptree& cfg) {
 #ifdef DEBUG
     using namespace std::chrono_literals;
     // Allow the debugger some time to connect
@@ -160,7 +161,7 @@ struct Service {
   /**
    * Setup the service processor list from provided configuration
    */
-  void setup_processors(boost::property_tree::ptree& cfg) {
+  void setup_processors(prtr::ptree& cfg) {
     int processor_count = cfg.get("processors.count", 0);
     for (int i = 0; i < processor_count; ++i) {
       std::string processor_section = fmt::format("processor{:d}", i);
@@ -326,7 +327,7 @@ private:
 int enter_loop() {
   int result = 0;
 
-  boost::property_tree::ptree& cfg = get_config();
+  prtr::ptree& cfg = get_config();
   set_log_level(cfg.get("logging.level", "info"));
   log(level::debug, "Debug logging enabled");
   set_device_log_dir(cfg.get("logging.device_log_dir", ""));
@@ -339,7 +340,7 @@ int enter_loop() {
   }
 
   if (cfg.get("modbus.enabled", false)) {
-    service.start_modbus_server(cfg.get("modbus.port", 502));
+    service.start_modbus_server(cfg.get_child("modbus"));
   }
 
   service.setup_devices(cfg);

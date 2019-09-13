@@ -22,5 +22,4 @@
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-
-
+const po::variables_map& get_program_options();

@@ -16,6 +16,7 @@
 #include "config.h"
 #include "log.h"
 #include "loop.h"
+#include "main.h"
 
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem.hpp>
@@ -36,18 +37,20 @@ struct Config {
     static Config instance; 
     return instance;
   }
+
   prtr::ptree& get_config() {
     return config_;
   }
+
 private:
-  Config(bool update=false): config_() {
+  Config(): config_() {
     fs::path config_file = get_config_file();
     log(level::info, "Using configuration file: %", config_file);
     if (fs::exists(config_file)) {
       load(config_file);
     }
     set_defaults();
-    if (update)
+    if (get_program_options().count("update-config"))
       save(config_file);
   }
 

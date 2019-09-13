@@ -24,6 +24,56 @@
 #include <set>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+namespace prtr = boost::property_tree;
+
+
+struct Scale {
+  double min;
+  double range;
+};
+
+
+struct Base_scale {
+
+  Base_scale(const prtr::ptree& config): scale_() {
+    for (Quantity_iter qi = Quantity_iter::begin(); qi != Quantity_iter::end(); ++qi) {
+      double min = config.get(fmt::format("{}_min", get_quantity_name(*qi)), -32.768);
+      double max = config.get(fmt::format("{}_max", get_quantity_name(*qi)),  32.768);
+      scale_[*qi] = {min, max - min};
+    }
+  }
+
+  uint16_t scale_to_u16(Quantity quantity, double value) const {
+    try {
+      const Scale& scale = scale_.at(quantity);
+      value -= scale.min;
+      value /= scale.range;
+      value *= 0x10000;
+      return static_cast<uint16_t>(value);
+    }
+    catch (...) {
+      return 0;
+    }
+  }
+
+  uint32_t scale_to_u32(Quantity quantity, double value) const {
+    try {
+      const Scale& scale = scale_.at(quantity);
+      value -= scale.min;
+      value /= scale.range;
+      value *= 0x100000000;
+      return static_cast<uint32_t>(value);
+    }
+    catch (...) {
+      return 0;
+    }
+  }
+
+private:
+  std::map<Quantity, Scale> scale_;
+};
 
 
 struct Processor {
@@ -36,7 +86,7 @@ struct Processor {
     return 0;
   }
 
-  virtual uint16_t get_modbus_reg(size_t) const {
+  virtual uint16_t get_modbus_reg(size_t, const Base_scale&) const {
     return 0;
   }
 
