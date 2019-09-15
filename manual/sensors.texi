@@ -47,4 +47,28 @@ Y pointing to starboard and Z pointing down for ship bound coordinates.
 @item @code{fay} @tab 33 @tab Y component of free acceleration, acceleration with respect to earth surface
 @item @code{faz} @tab 34 @tab Z component of free acceleration, acceleration with respect to earth surface
 @item @code{du}  @tab 35 @tab Duration, time interval
+@item @code{hacc} @tab 36 @tab Horizontal position accuracy
+@item @code{vacc} @tab 37 @tab Vertical position accuracy
+@item @code{sacc} @tab 38 @tab Speed accuracy
+@item @code{cacc} @tab 39 @tab Course accuracy
+@item @code{racc} @tab 40 @tab Roll accuracy
+@item @code{pacc} @tab 41 @tab Pitch accuraty
+@item @code{yacc} @tab 42 @tab Yaw accuraty
+@item @code{hdac} @tab 43 @tab Heading accuracy
+@item @code{rax} @tab 44 @tab Raw measurement of X component of acceleration
+@item @code{ray} @tab 45 @tab Raw measurement of Y component of acceleration
+@item @code{raz} @tab 46 @tab Raw measurement of Z component of acceleration
+@item @code{rrr} @tab 47 @tab Raw measurement of Roll rate, angular velocity about X axis
+@item @code{rpr} @tab 48 @tab Raw measurement of Pitch rate, angular velocity about Y axis
+@item @code{ryr} @tab 49 @tab Raw measurement of Yaw rate, angular velocity about Z axis
+@item @code{rmx} @tab 50 @tab Raw measurement of X component of magnetic flux vector
+@item @code{rmy} @tab 51 @tab Raw measurement of Y component of magnetic flux vector
+@item @code{rmz} @tab 52 @tab Raw measurement of Z component of magnetic flux vector
+@item @code{gtmp} @tab 53 @tab Gyroscope temperature
+@item @code{stmp} @tab 54 @tab Sensor temperature
+@item @code{wtmp} @tab 55 @tab Water temperature
+@item @code{atmp} @tab 56 @tab Air temperature
+@item @code{etmp} @tab 57 @tab Exhaust temperature
+@item @code{otmp} @tab 58 @tab Oil temperature
+
 @end multitable
