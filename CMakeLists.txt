@@ -82,6 +82,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/devices/ublox.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/statistics.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/acceleration_history.cpp
+  ${SENSORHUB_SOURCE_DIR}/processors/fusion.cpp
 )
 
 
@@ -161,6 +162,7 @@ new_test(test_processor
   processor.cpp 
   processors/statistics.cpp 
   processors/acceleration_history.cpp 
+  processors/fusion.cpp 
   log.cpp datetime.cpp modbus.cpp)
 new_test(test_datetime datetime.cpp log.cpp)
 new_test(test_modbus modbus.cpp log.cpp)
