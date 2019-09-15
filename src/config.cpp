@@ -114,14 +114,14 @@ private:
     set_default("modbus.du_max", 0.001 * 0x100000000);
 
     set_default("modbus.la_min", -M_PI);
-    set_default("modbus.la_max", M_PI);
+    set_default("modbus.la_max",  M_PI);
     set_default("modbus.lo_min", -M_PI);
-    set_default("modbus.lo_max", M_PI);
+    set_default("modbus.lo_max",  M_PI);
 
     set_default("modbus.h1_min", -327.68);
-    set_default("modbus.h1_max", 327.68);
+    set_default("modbus.h1_max",  327.68);
     set_default("modbus.h2_min", -327.68);
-    set_default("modbus.h2_max", 327.68);
+    set_default("modbus.h2_max",  327.68);
 
     set_default("modbus.hdg_min", 0);
     set_default("modbus.hdg_max", 2 * M_PI);
@@ -129,37 +129,109 @@ private:
     set_default("modbus.crs_max", 2 * M_PI);
 
     set_default("modbus.mx_min", -0.00032768);
-    set_default("modbus.mx_max", 0.00032768);
+    set_default("modbus.mx_max",  0.00032768);
     set_default("modbus.my_min", -0.00032768);
-    set_default("modbus.my_max", 0.00032768);
+    set_default("modbus.my_max",  0.00032768);
     set_default("modbus.mz_min", -0.00032768);
-    set_default("modbus.mz_max", 0.00032768);
+    set_default("modbus.mz_max",  0.00032768);
 
     set_default("modbus.ax_min", -32.768);
-    set_default("modbus.ax_max", 32.768);
+    set_default("modbus.ax_max",  32.768);
     set_default("modbus.ay_min", -32.768);
-    set_default("modbus.ay_max", 32.768);
+    set_default("modbus.ay_max",  32.768);
     set_default("modbus.az_min", -32.768);
-    set_default("modbus.az_max", 32.768);
+    set_default("modbus.az_max",  32.768);
     set_default("modbus.vx_min", -32.768);
-    set_default("modbus.vx_max", 32.768);
+    set_default("modbus.vx_max",  32.768);
     set_default("modbus.vy_min", -32.768);
-    set_default("modbus.vy_max", 32.768);
+    set_default("modbus.vy_max",  32.768);
     set_default("modbus.vz_min", -32.768);
-    set_default("modbus.vz_max", 32.768);
+    set_default("modbus.vz_max",  32.768);
 
     set_default("modbus.ro_min", -M_PI);
-    set_default("modbus.ro_max", M_PI);
+    set_default("modbus.ro_max",  M_PI);
     set_default("modbus.pi_min", -M_PI);
-    set_default("modbus.pi_max", M_PI);
+    set_default("modbus.pi_max",  M_PI);
     set_default("modbus.ya_min", -M_PI);
-    set_default("modbus.ya_max", M_PI);
+    set_default("modbus.ya_max",  M_PI);
+
+    set_default("modbus.q1.min", -1.0);
+    set_default("modbus.q1.max",  1.0);
+    set_default("modbus.q2.min", -1.0);
+    set_default("modbus.q2.max",  1.0);
+    set_default("modbus.q3.min", -1.0);
+    set_default("modbus.q3.max",  1.0);
+    set_default("modbus.q4.min", -1.0);
+    set_default("modbus.q4.max",  1.0);
+
     set_default("modbus.rr_min", -M_PI);
-    set_default("modbus.rr_max", M_PI);
+    set_default("modbus.rr_max",  M_PI);
     set_default("modbus.pr_min", -M_PI);
-    set_default("modbus.pr_max", M_PI);
+    set_default("modbus.pr_max",  M_PI);
     set_default("modbus.yr_min", -M_PI);
-    set_default("modbus.yr_max", M_PI);
+    set_default("modbus.yr_max",  M_PI);
+
+    set_default("modbus.fax_min", -32.768);
+    set_default("modbus.fax_max",  32.768);
+    set_default("modbus.fay_min", -32.768);
+    set_default("modbus.fay_max",  32.768);
+    set_default("modbus.faz_min", -32.768);
+    set_default("modbus.faz_max",  32.768);
+
+    set_default("modbus.du_min", 0.0);
+    set_default("modbus.du_max", 6553.6);
+
+    set_default("modbus.hacc_min", 0.0);
+    set_default("modbus.hacc_max", 655.36);
+    set_default("modbus.vacc_min", 0.0);
+    set_default("modbus.vacc_max", 655.36);
+    set_default("modbus.sacc_min", 0.0);
+    set_default("modbus.sacc_max", 655.36);
+    set_default("modbus.cacc_min", 0.0);
+    set_default("modbus.cacc_max", 655.36);
+    set_default("modbus.racc_min", 0.0);
+    set_default("modbus.racc_max", 655.36);
+    set_default("modbus.pacc_min", 0.0);
+    set_default("modbus.pacc_max", 655.36);
+    set_default("modbus.yacc_min", 0.0);
+    set_default("modbus.yacc_max", 655.36);
+    set_default("modbus.hdac_min", 0.0);
+    set_default("modbus.hdac_max", 655.36);
+
+    set_default("modbus.rax_min", -32.768);
+    set_default("modbus.rax_max",  32.768);
+    set_default("modbus.ray_min", -32.768);
+    set_default("modbus.ray_max",  32.768);
+    set_default("modbus.raz_min", -32.768);
+    set_default("modbus.raz_max",  32.768);
+
+    set_default("modbus.rrr_min", -M_PI);
+    set_default("modbus.rrr_max",  M_PI);
+    set_default("modbus.rpr_min", -M_PI);
+    set_default("modbus.rpr_max",  M_PI);
+    set_default("modbus.ryr_min", -M_PI);
+    set_default("modbus.ryr_max",  M_PI);
+
+    set_default("modbus.rmx_min", -0.00032768);
+    set_default("modbus.rmx_max",  0.00032768);
+    set_default("modbus.rmy_min", -0.00032768);
+    set_default("modbus.rmy_max",  0.00032768);
+    set_default("modbus.rmz_min", -0.00032768);
+    set_default("modbus.rmz_max",  0.00032768);
+
+    set_default("modbus.gtmp_min", 0.0);
+    set_default("modbus.gtmp_max", 655.36);
+    set_default("modbus.stmp_min", 0.0);
+    set_default("modbus.stmp_max", 655.36);
+    set_default("modbus.wtmp_min", 0.0);
+    set_default("modbus.wtmp_max", 655.36);
+    set_default("modbus.atmp_min", 0.0);
+    set_default("modbus.atmp_max", 655.36);
+    set_default("modbus.etmp_min", 0.0);
+    set_default("modbus.etmp_max", 6553.6);
+    set_default("modbus.otmp_min", 0.0);
+    set_default("modbus.otmp_max", 655.36);
+
 
     set_default("devices.count", 2);
 
@@ -169,6 +241,7 @@ private:
     set_default("device0.connection_string", "auto");
     set_default("device0.enable_logging", false);
     set_default("device0.use_as_time_source", false);
+    set_default("device0.options", "{}");
 
     set_default("device1.type", "ublox_neo_m8u_serial");
     set_default("device1.name", "Ublox-NEO-M8U");
@@ -176,6 +249,7 @@ private:
     set_default("device1.connection_string", "auto");
     set_default("device1.enable_logging", false);
     set_default("device1.use_as_time_source", false);
+    set_default("device1.options", "{ \"dyn_model\": \"sea\", \"gnss_type\": \"glonass\" }");
 
     set_default("processors.count", 5);
 

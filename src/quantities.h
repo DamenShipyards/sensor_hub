@@ -100,6 +100,11 @@ enum class Quantity {
   rmy, ///< 51: Raw measurement of Y component of magnetic flux vector
   rmz, ///< 52: Raw measurement of Z component of magnetic flux vector
   gtmp,///< 53: Gyroscope temperature
+  stmp,///< 54: Sensor temperature
+  wtmp,///< 55: Water temperature
+  atmp,///< 56: Air temperature
+  etmp,///< 57: Exhaust temperature
+  otmp,///< 58: Oil temperature
   end, ///< Enumeration end marker. Do not use
 };
 
@@ -165,6 +170,11 @@ QUANTITY_NAME(rmx);
 QUANTITY_NAME(rmy);
 QUANTITY_NAME(rmz);
 QUANTITY_NAME(gtmp);
+QUANTITY_NAME(stmp);
+QUANTITY_NAME(wtmp);
+QUANTITY_NAME(atmp);
+QUANTITY_NAME(etmp);
+QUANTITY_NAME(otmp);
 QUANTITY_NAME(du);
 #undef QUANTITY_NAME
 
