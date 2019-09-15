@@ -25,6 +25,8 @@
 #include <boost/bind.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 
 #ifdef DEBUG
 #include <thread>
@@ -142,17 +144,20 @@ struct Service {
 #endif
     int device_count = cfg.get("devices.count", 0);
     for (int i = 0; i < device_count; ++i) {
-      std::string device_section = fmt::format("device{:d}", i);
-      std::string device_type = cfg.get(fmt::format("{:s}.type", device_section), "missing_device_type");
+      prtr::ptree& device_cfg = cfg.get_child(fmt::format("device{:d}", i));
+      std::string device_type = device_cfg.get("type", "missing_device_type");
       Device_ptr device = create_device(device_type);
-      device->set_name(cfg.get(fmt::format("{:s}.name", device_section), "missing_device_name"));
-      device->set_enabled(cfg.get(fmt::format("{:s}.enabled", device_section), false));
-      std::string connection_string = cfg.get(fmt::format("{:s}.connection_string", device_section), "missing_connection_string");
+      device->set_name(device_cfg.get("name", "missing_device_name"));
+      device->set_enabled(device_cfg.get("enabled", false));
+      std::string connection_string = device_cfg.get("connection_string", "missing_connection_string");
       auto usb_address = get_usb_address(connection_string);
       check_install_usb_driver(usb_address.first, usb_address.second);
       device->set_connection_string(connection_string);
-      device->enable_logging(cfg.get(fmt::format("{:s}.enable_logging", device_section), false));
-      device->use_as_time_source(cfg.get(fmt::format("{:s}.use_as_time_source", device_section), false));
+      prtr::ptree options{}; 
+      prtr::read_json(device_cfg.get("options", "{}"), options);
+      device->set_options(options);
+      device->enable_logging(device_cfg.get("enable_logging", false));
+      device->use_as_time_source(device_cfg.get("use_as_time_source", false));
       devices_.push_back(std::move(device));
     }
   }

@@ -169,6 +169,9 @@ struct Device: public Named_object {
   }
 
 
+  virtual void set_options(const prtr::ptree&) {}
+
+
   const std::string get_connection_string() const {
     if (connection_string_ == "auto") {
       return this->get_auto_connection_string();
@@ -182,6 +185,8 @@ struct Device: public Named_object {
   void set_connection_string(const std::string& connection_string) {
     connection_string_ = connection_string;
   }
+
+
 
 
   void enable_logging(const bool value) {
