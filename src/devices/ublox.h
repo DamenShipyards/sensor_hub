@@ -528,7 +528,8 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
     beidou,
   };
 
-  NEO_M8U(): Ublox<Port, ContextProvider>() {
+
+  NEO_M8U(): Ublox<Port, ContextProvider>(), dyn_model_(portable), gnss_type_(glonass) {
     log(level::info, "Constructing Ublox_NEO_M8U");
   }
 
