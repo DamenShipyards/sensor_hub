@@ -510,6 +510,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
   enum dyn_model {  
     portable,
+    unused,
     stationary,
     pedestrian,
     automotive,
@@ -636,6 +637,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
     log(level::info, "Ublox NEO M8U setup GNSS");
     bytes_t payload = command::cfg::nav5_payload;
     payload[2] = static_cast<byte_t>(dyn_model_);
+    log(level::info, "Ublox NEO M8U dynamic model: %", static_cast<int>(dyn_model_));
     bytes_t cfg_nav5 = parser::Data_packet(command::cls_cfg, command::cfg::nav5, payload).get_packet();
     return this->exec_command(cfg_nav5, response::ack, response::nak, yield) 
         && gnss_type_ == glonass ? use_glonass(yield):
