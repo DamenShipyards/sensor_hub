@@ -307,7 +307,8 @@ struct Port_device: public Device {
       log(level::info, "Connected device port: %", connection_string);
     }
     catch (std::exception& e) {
-      log(level::error, "Failed to connect using \"%\" error \"%\"", connection_string, e.what());
+      log(level::error, "Failed to connect \"%\" using \"%\": \"%\"", 
+          this->get_name(), connection_string, e.what());
       return;	
     }
 
