@@ -154,7 +154,8 @@ struct Service {
       check_install_usb_driver(usb_address.first, usb_address.second);
       device->set_connection_string(connection_string);
       prtr::ptree options{}; 
-      prtr::read_json(device_cfg.get("options", "{}"), options);
+      std::stringstream option_stream(device_cfg.get("options", "{}"));
+      prtr::read_json(option_stream, options);
       device->set_options(options);
       device->enable_logging(device_cfg.get("enable_logging", false));
       device->use_as_time_source(device_cfg.get("use_as_time_source", false));
