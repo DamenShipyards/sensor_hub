@@ -20,8 +20,17 @@
 #include <boost/endian/conversion.hpp>
 
 #include "tools.h"
+#include "config.h"
+
+#ifdef HAVE_EIGEN
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#endif
 
 namespace endian = boost::endian;
+
+//! Storage type for internal values
+using Value_type = double;
 
 // Data types for data communicated with the sensors
 using byte_t = unsigned char;
@@ -83,6 +92,21 @@ Bytes operator<<(cbytes_t& data, const C& tail) {
   result << data << tail;
   return result;
 }
+
+
+#ifdef HAVE_EIGEN
+using Vector = Eigen::Matrix<Value_type, 3, 1>;
+using Quaternion = Eigen::Quaternion<Value_type>;
+
+struct Stamped_vector: public Vector {
+  double stamp;
+};
+
+struct Stamped_quaternion: public Quaternion {
+  double stamp;
+};
+
+#endif
 
 
 #endif  // define TYPES_H_

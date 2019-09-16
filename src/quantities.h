@@ -24,10 +24,9 @@
 #include <math.h>
 
 #include "tools.h"
+#include "types.h"
 #include "datetime.h"
 
-//! Storage type for quantity values
-using Value_type = double;
 
 //! Exception to be thrown when a quantity is not available or supported
 struct Quantity_not_available: public std::exception {
