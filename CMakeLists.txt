@@ -3,15 +3,18 @@ cmake_minimum_required(VERSION 3.12)
 project(SensorHub)
 
 # Use compilers on the path, not /usr/bin/(g++|gcc) perse. cmake is stupid that way
-execute_process(COMMAND which gcc OUTPUT_VARIABLE CMAKE_C_COMPILER)
-execute_process(COMMAND which g++ OUTPUT_VARIABLE CMAKE_CXX_COMPILER)
+# Apparently, we shouldn't do this, because it's too late set CC en CXX environment variables instead
+#execute_process(COMMAND which gcc OUTPUT_VARIABLE CMAKE_C_COMPILER)
+#execute_process(COMMAND which g++ OUTPUT_VARIABLE CMAKE_CXX_COMPILER)
 execute_process(COMMAND awk -F= "/Version/ { print $2 }" ${CMAKE_CURRENT_SOURCE_DIR}/version.ini OUTPUT_VARIABLE VERSION)
 execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE GITREV)
 execute_process(COMMAND date +%Y OUTPUT_VARIABLE YEAR)
 execute_process(COMMAND date +%Y-%m-%d OUTPUT_VARIABLE DATE)
+execute_process(COMMAND sh -c "\"${CMAKE_CXX_COMPILER}\" --version | head -n 1" OUTPUT_VARIABLE CXX_VERSION)
 
-string(STRIP ${CMAKE_C_COMPILER} CMAKE_C_COMPILER)
-string(STRIP ${CMAKE_CXX_COMPILER} CMAKE_CXX_COMPILER)
+#string(STRIP ${CMAKE_C_COMPILER} CMAKE_C_COMPILER)
+#string(STRIP ${CMAKE_CXX_COMPILER} CMAKE_CXX_COMPILER)
+string(STRIP ${CXX_VERSION} CXX_VERSION)
 string(STRIP ${VERSION} VERSION)
 string(STRIP ${GITREV} GITREV)
 string(STRIP ${YEAR} YEAR)
@@ -41,7 +44,7 @@ add_definitions(
 endif()
 
 find_package(Boost 1.70.0 REQUIRED 
-  system date_time filesystem log log_setup unit_test_framework thread regex coroutine chrono program_options
+  system date_time filesystem log log_setup unit_test_framework regex coroutine chrono program_options
 )
 
 find_package(libusb-1.0 1.0.22 REQUIRED)
@@ -50,9 +53,14 @@ find_package(Threads REQUIRED)
 find_package(Doxygen)
 find_program(BUILD_MANUAL texi2dvi)
 
+# Optional
+find_package(Eigen3)
+set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
+find_package(CGAL)
+
 set (CMAKE_CXX_STANDARD 17)
-set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic -Wno-psabi -Wno-write-strings -Wextra -Werror -Wfatal-errors")
-set (CMAKE_CXX_FLAGS_RELEASE  "-O3 -Wno-psabi -Wno-write-strings -Wfatal-errors")
+set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic -Wno-psabi -Wno-write-strings -Wextra -Werror -Wfatal-errors -DDEBUG")
+set (CMAKE_CXX_FLAGS_RELEASE  "-O3 -Wno-psabi -Wno-write-strings -Wfatal-errors -DNDEBUG")
 
 set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")
@@ -62,8 +70,24 @@ set(MODBUS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/modbus/include")
 set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rapidjson/include")
 
 set(VERSION_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in)
+set(CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in)
 set(VERSION_H ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h)
+set(CONFIG_H ${CMAKE_CURRENT_SOURCE_DIR}/src/config.h)
+
+message(STATUS "C++: ${CXX_VERSION}")
+message(STATUS "Boost: ${Boost_VERSION_STRING}")
+if(EIGEN3_FOUND)
+  message(STATUS "Eigen: ${Eigen3_VERSION}")
+else()
+  message(STATUS "Eigen: Not found")
+endif()
+if(CGAL_FOUND)
+  message(STATUS "CGAL: ${CGAL_VERSION}")
+else()
+  message(STATUS "CGAL: Not found")
+endif()
 configure_file(${VERSION_H_IN} ${VERSION_H} @ONLY)
+configure_file(${CONFIG_H_IN} ${CONFIG_H} @ONLY)
 
 enable_testing()
 

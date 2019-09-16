@@ -1,0 +1,28 @@
+/**
+ * \file config.h
+ * \brief Provide program compilation configuration
+ *
+ * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
+ * \copyright
+ * (C) 2019 Damen Shipyards. All rights reserved.
+ * \license
+ * This software is proprietary. Any use without written
+ * permission from the copyright holder is strictly
+ * forbidden.
+ */
+
+#cmakedefine CXX_VERSION "@CXX_VERSION@"
+
+#define BOOST_VERSION "@Boost_VERSION_STRING@"
+
+#cmakedefine EIGEN3_FOUND
+#ifdef EIGEN3_FOUND
+#define HAVE_EIGEN 1
+#define EIGEN_VERSION "@Eigen3_VERSION@"
+#endif
+
+#cmakedefine CGAL_FOUND
+#ifdef CGAL_FOUND
+#define HAVE_CGAL 1
+#define CGAL_VERSION "@CGAL_VERSION@"
+#endif
