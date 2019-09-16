@@ -236,7 +236,7 @@ private:
     set_default("devices.count", 2);
 
     set_default("device0.type", "xsens_mti_g_710_usb");
-    set_default("device0.name", "Xsens-MTi-G-710");
+    set_default("device0.name", "MTi-G-710");
     set_default("device0.enabled", false);
     set_default("device0.connection_string", "auto");
     set_default("device0.enable_logging", false);
@@ -244,42 +244,47 @@ private:
     set_default("device0.options", "{}");
 
     set_default("device1.type", "ublox_neo_m8u_serial");
-    set_default("device1.name", "Ublox-NEO-M8U");
+    set_default("device1.name", "NEO-M8U");
     set_default("device1.enabled", false);
     set_default("device1.connection_string", "auto");
     set_default("device1.enable_logging", false);
     set_default("device1.use_as_time_source", false);
     set_default("device1.options", "{ \"dyn_model\": \"sea\", \"gnss_type\": \"glonass\" }");
 
-    set_default("processors.count", 5);
+    set_default("processors.count", 6);
 
     set_default("processor0.type", "acceleration_history");
     set_default("processor0.name", "Xsens-Acceleration-Peaks");
     set_default("processor0.parameters", "value_threshold=0.4,duration_threshold=0.5,item_count=5,direction=3");
-    set_default("processor0.device", "Xsens-MTi-G-710");
+    set_default("processor0.device", "MTi-G-710");
 
     set_default("processor1.type", "statistics");
     set_default("processor1.name", "Xsens-1-Sec-Statistics");
     set_default("processor1.parameters", "period=1.0");
-    set_default("processor1.device", "Xsens-MTi-G-710");
+    set_default("processor1.device", "MTi-G-710");
 
     set_default("processor2.type", "statistics");
     set_default("processor2.name", "Xsens-10-Sec-Statistics");
     set_default("processor2.parameters", "period=10");
-    set_default("processor2.device", "Xsens-MTi-G-710");
-    set_default("processor2.filter", "h2,ro,pi,ya,vy,vz");
+    set_default("processor2.device", "MTi-G-710");
+    set_default("processor2.filter", "hmsl,ro,pi,ya,vy,vz");
 
     set_default("processor3.type", "statistics");
     set_default("processor3.name", "Xsens-1-Min-Statistics");
     set_default("processor3.parameters", "period=60");
-    set_default("processor3.device", "Xsens-MTi-G-710");
-    set_default("processor3.filter", "h2,ro,pi,ya,vy,vz");
+    set_default("processor3.device", "MTi-G-710");
+    set_default("processor3.filter", "hmsl,ro,pi,ya,vy,vz");
 
     set_default("processor4.type", "statistics");
     set_default("processor4.name", "Xsens-10-Min-Statistics");
     set_default("processor4.parameters", "period=600");
-    set_default("processor4.device", "Xsens-MTi-G-710");
-    set_default("processor4.filter", "h2,ro,pi,ya,vy,vz");
+    set_default("processor4.device", "MTi-G-710");
+    set_default("processor4.filter", "hmsl,ro,pi,ya,vy,vz");
+
+    set_default("processor5.type", "fusion");
+    set_default("processor5.name", "Ublox-Fusion");
+    set_default("processor5.parameters", "period=0.2");
+    set_default("processor5.device", "NEO-M8U");
   }
 };
 
