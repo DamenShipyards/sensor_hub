@@ -176,11 +176,20 @@ struct Service {
       processor->set_name(cfg.get(fmt::format("{:s}.name", processor_section), "missing_processor_name"));
       processor->set_params(cfg.get(fmt::format("{:s}.parameters", processor_section), ""));
       processor->set_filter(cfg.get(fmt::format("{:s}.filter", processor_section), ""));
-      std::string device_name = cfg.get(fmt::format("{:s}.device", processor_section), "missing_processor_device");
-      for (auto&& device: devices_) {
-        if (device->get_name() == device_name) {
-          device->add_processor(processor);
+      std::string device_names_string = cfg.get(fmt::format("{:s}.device", processor_section), "missing_processor_device");
+      std::vector<std::string> device_names;
+      boost::split(device_names, device_names_string, [](char c) { return c == ','; });
+      bool device_set = false;
+      for (auto& device_name: device_names) {
+        for (auto&& device: devices_) {
+          if (device->get_name() == device_name) {
+            device->add_processor(processor);
+            device_set = true;
+          }
         }
+      }
+      if (!device_set) {
+        log(level::warning, "Processor: % was not added to any device", processor->get_name());
       }
       processors_.push_back(processor);
     }
