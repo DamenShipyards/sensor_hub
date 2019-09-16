@@ -14,7 +14,7 @@
 #include "loop.h"
 #include "log.h"
 #include "http.h"
-#include "config.h"
+#include "configuration.h"
 #include "modbus.h"
 #include "device.h"
 #include "processor.h"

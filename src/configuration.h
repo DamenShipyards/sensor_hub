@@ -1,5 +1,5 @@
 /**
- * \file config.h
+ * \file configuration.h
  * \brief Provide application configuration interface
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
@@ -11,8 +11,8 @@
  * forbidden.
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef CONFIGURATION_H_
+#define CONFIGURATION_H_
 
 #include <string>
 #include <boost/property_tree/ptree.hpp>
@@ -20,6 +20,6 @@
 extern boost::property_tree::ptree& get_config();
 extern void update_config();
 
-#endif  // ifndef CONFIG_H_
+#endif  // ifndef CONFIGURATION_H_
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

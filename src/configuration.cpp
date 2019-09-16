@@ -1,5 +1,5 @@
 /**
- * \file config.cpp
+ * \file configuration.cpp
  * \brief Provide application configuration implementation
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
@@ -13,7 +13,7 @@
 
 #define _USE_MATH_DEFINES
 
-#include "config.h"
+#include "configuration.h"
 #include "log.h"
 #include "loop.h"
 

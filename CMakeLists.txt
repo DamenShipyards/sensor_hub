@@ -74,7 +74,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/usb.cpp
   ${SENSORHUB_SOURCE_DIR}/http.cpp
   ${SENSORHUB_SOURCE_DIR}/log.cpp
-  ${SENSORHUB_SOURCE_DIR}/config.cpp
+  ${SENSORHUB_SOURCE_DIR}/configuration.cpp
   ${SENSORHUB_SOURCE_DIR}/modbus.cpp
   ${SENSORHUB_SOURCE_DIR}/processor.cpp
   ${SENSORHUB_SOURCE_DIR}/types.cpp
