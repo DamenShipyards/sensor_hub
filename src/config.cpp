@@ -118,10 +118,10 @@ private:
     set_default("modbus.lo_min", -M_PI);
     set_default("modbus.lo_max",  M_PI);
 
-    set_default("modbus.h1_min", -327.68);
-    set_default("modbus.h1_max",  327.68);
-    set_default("modbus.h2_min", -327.68);
-    set_default("modbus.h2_max",  327.68);
+    set_default("modbus.hg84_min", -327.68);
+    set_default("modbus.hg84_max",  327.68);
+    set_default("modbus.hmsl_min", -327.68);
+    set_default("modbus.hmsl_max",  327.68);
 
     set_default("modbus.hdg_min", 0);
     set_default("modbus.hdg_max", 2 * M_PI);

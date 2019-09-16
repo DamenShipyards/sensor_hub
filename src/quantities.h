@@ -49,8 +49,8 @@ enum class Quantity {
   ut,  ///<  0: Unix/POSIX time
   la,  ///<  1: Latitude with respect to WGS84 ellipsoid (GPS)
   lo,  ///<  2: Longitude with respect to WGS84 ellipsoid (GPS)
-  h1,  ///<  3: Height with respect to WGS84 ellipsoid (GPS)
-  h2,  ///<  4: Height with respect to MSL/EGM2008
+  hg84,///<  3: Height with respect to WGS84 ellipsoid (GPS)
+  hmsl,///<  4: Height with respect to MSL/EGM2008
   vog, ///<  5: Absolute value of speed vector over ground
   vtw, ///<  6: Absolute value of speed vector through water
   hdg, ///<  7: Heading, angle of plain through X axes and vertical with respect to true north
@@ -120,8 +120,8 @@ template <Quantity quantity> struct Quantity_name { };
 QUANTITY_NAME(ut);
 QUANTITY_NAME(la);
 QUANTITY_NAME(lo);
-QUANTITY_NAME(h1);
-QUANTITY_NAME(h2);
+QUANTITY_NAME(hg84);
+QUANTITY_NAME(hmsl);
 QUANTITY_NAME(vog);
 QUANTITY_NAME(vtw);
 QUANTITY_NAME(hdg);

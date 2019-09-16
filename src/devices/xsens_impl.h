@@ -319,8 +319,8 @@ using Rate_of_turn = Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFl
 using Lat_lon = Data_value<XDI_LatLon, XDI_CoordSysEnu, XDI_SubFormatDouble, 2, Quantity::la, RadConverter>;
 using Magnetic_flux = Data_value<XDI_MagneticField, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::mx, TeslaConverter>;
 using Velocity = Data_value<XDI_VelocityXYZ, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::vx>;
-using Altitude_ellipsoid = Data_value<XDI_AltitudeEllipsoid, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::h1>;
-using Altitude_msl = Data_value<XDI_AltitudeMsl, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::h2>;
+using Altitude_ellipsoid = Data_value<XDI_AltitudeEllipsoid, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::hg84>;
+using Altitude_msl = Data_value<XDI_AltitudeMsl, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::hmsl>;
 using Euler_angles = Data_value<XDI_EulerAngles, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ro, RadConverter>;
 using Quaternion = Data_value<XDI_Quaternion, XDI_CoordSysEnu, XDI_SubFormatFloat, 4, Quantity::q1>;
 

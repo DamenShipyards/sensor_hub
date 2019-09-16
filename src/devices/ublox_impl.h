@@ -104,8 +104,8 @@ struct Position_data {
   }
 
   bool add_values_vertical(Stamped_quantities& values) const {
-    values.push_back({ height * 1E-3, 0.0, Quantity::h1 });
-    values.push_back({ hmsl * 1E-3, 0.0, Quantity::h2 });
+    values.push_back({ height * 1E-3, 0.0, Quantity::hg84 });
+    values.push_back({ hmsl * 1E-3, 0.0, Quantity::hmsl });
     values.push_back({ vacc * 1E-3, 0.0, Quantity::vacc });
     return true;
   }

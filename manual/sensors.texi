@@ -14,8 +14,8 @@ Y pointing to starboard and Z pointing down for ship bound coordinates.
 @item @code{ut}  @tab  0 @tab Unix/POSIX time (UTC seconds since 1-1-1970 00:00:00 ignoring leap seconds)
 @item @code{la}  @tab  1 @tab Latitude with respect to WGS84 ellipsoid (GPS)
 @item @code{lo}  @tab  2 @tab Longitude with respect to WGS84 ellipsoid (GPS)
-@item @code{h1}  @tab  3 @tab Altitude with respect to WGS84 ellipsoid (GPS)
-@item @code{h2}  @tab  4 @tab Altitude with respect to MSL/EGM2008
+@item @code{hg84} @tab  3 @tab Altitude with respect to WGS84 ellipsoid (GPS)
+@item @code{hmsl} @tab  4 @tab Altitude with respect to MSL/EGM2008
 @item @code{vog} @tab  5 @tab Absolute value of speed vector over ground
 @item @code{vtw} @tab  6 @tab Absolute value of speed vector through water
 @item @code{hdg} @tab  7 @tab Heading, angle of plain through X axes and vertical with respect to true north
