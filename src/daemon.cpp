@@ -111,7 +111,6 @@ int main(int argc, char* argv[])
         options(command_line).positional(pos_args).run(), vm);
     po::notify(vm);
 
-
     bool show_help = vm.count("help") != 0;
     bool show_version = vm.count("version") != 0;
     bool start = false;
@@ -132,7 +131,7 @@ int main(int argc, char* argv[])
       return PROGRAM_SUCCESS;
     }
 
-    if (show_help || (!start && !stop)) {
+    if (show_help || argc == 1) {
       print_usage(desc_args);
       return show_help ? PROGRAM_SUCCESS : INVALID_COMMAND_LINE; 
     }
@@ -173,18 +172,17 @@ int main(int argc, char* argv[])
         return FORK_FAILURE;
       }
       else if (pid != 0) {
-        // We're the parent -> exit, but wait a little
+        // We're the grand parent -> exit, but wait a little
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
         if (fs::exists(pid_file_name)) {
           // Parent -> exit
           return PROGRAM_SUCCESS;
         } else {
-          std::cerr << "Daemon failed to start." << std::endl;
+          std::cerr << "Failed to start daemon." << std::endl;
           return DAEMON_START_FAILURE;
         }
       }
-        return PROGRAM_SUCCESS;
 
       // Child continues here: become session leader
       setsid();
@@ -199,11 +197,13 @@ int main(int argc, char* argv[])
         return FORK_FAILURE;
       }
       else if (pid != 0) {
+        // We're the parent -> exit
         return PROGRAM_SUCCESS;
       }
     }
 
     {
+      // Only grand child gets to here: now running as daemon !
       // Redirect standard file descriptors
       close(STDIN_FILENO);
       close(STDOUT_FILENO);
