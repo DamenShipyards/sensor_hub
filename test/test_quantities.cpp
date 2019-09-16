@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(iteration_test)
     ++count;
   }
 
-  BOOST_TEST(count == 54);
+  BOOST_TEST(count == 59);
   BOOST_TEST(qs[34] == "faz");
   constexpr const char* const qn = Quantity_name<Quantity::yr>::value();
   std::string s(qn);
