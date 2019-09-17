@@ -54,9 +54,9 @@ find_package(Doxygen)
 find_program(BUILD_MANUAL texi2dvi)
 
 # Optional
-find_package(Eigen3)
+find_package(Eigen3 QUIET)
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
-find_package(CGAL)
+find_package(CGAL QUIET)
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic -Wno-psabi -Wno-write-strings -Wextra -Werror -Wfatal-errors -DDEBUG")
@@ -78,6 +78,7 @@ message(STATUS "C++: ${CXX_VERSION}")
 message(STATUS "Boost: ${Boost_VERSION_STRING}")
 if(EIGEN3_FOUND)
   message(STATUS "Eigen: ${Eigen3_VERSION}")
+  set(USE_EIGEN Eigen3::Eigen)
 else()
   message(STATUS "Eigen: Not found")
 endif()
@@ -117,6 +118,7 @@ include_directories(
   ${XSENS_INCLUDE_DIR}
   ${MODBUS_INCLUDE_DIR}
   ${RAPIDJSON_INCLUDE_DIR}
+  ${Eigen3_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -136,6 +138,7 @@ link_libraries(
   Boost::thread
   Boost::chrono
   Boost::coroutine
+  ${USE_EIGEN}
 )
 
 
