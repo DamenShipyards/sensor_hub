@@ -11,18 +11,18 @@
  * forbidden.
  */
 
-#cmakedefine CXX_VERSION "@CXX_VERSION@"
+#cmakedefine CXX_VER "@CXX_VERSION@"
 
-#define BOOST_VERSION "@Boost_VERSION_STRING@"
+#define BOOST_VER "@Boost_VERSION_STRING@"
 
 #cmakedefine EIGEN3_FOUND
 #ifdef EIGEN3_FOUND
 #define HAVE_EIGEN 1
-#define EIGEN_VERSION "@Eigen3_VERSION@"
+#define EIGEN_VER "@EIGEN3_VERSION_STRING@"
 #endif
 
 #cmakedefine CGAL_FOUND
 #ifdef CGAL_FOUND
 #define HAVE_CGAL 1
-#define CGAL_VERSION "@CGAL_VERSION@"
+#define CGAL_VER "@CGAL_VERSION@"
 #endif

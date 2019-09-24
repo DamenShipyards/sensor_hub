@@ -17,6 +17,24 @@
 
 #include "../processor.h"
 
+#ifdef HAVE_VECTOR
+
+struct AssembledVector: public Stamped_vector {
+  AssembledVector(const Value_type x, const Value_type y, const Value_type z):
+      Stamped_vector(x, y, z), index_bits_((1 << 2) + (1 << 1) + (1 << 0)) {
+  }
+  AssembledVector(): Stamped_vector(), index_bits_() {
+  }
+  AssembledVector& set_value(const int index, const Value_type value) {
+    this->operator[](index) = value;
+    index_bits_ |= 1 << index;
+    return *this;
+  }
+private:
+  byte_t index_bits_;
+};
+
+#endif
 
 struct Fusion: public Processor {
   Fusion(): Processor() {}

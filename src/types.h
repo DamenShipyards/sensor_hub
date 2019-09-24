@@ -95,10 +95,13 @@ Bytes operator<<(cbytes_t& data, const C& tail) {
 
 
 #ifdef HAVE_EIGEN
+#define HAVE_VECTOR
 using Vector = Eigen::Matrix<Value_type, 3, 1>;
+#define HAVE_QUATERNION
 using Quaternion = Eigen::Quaternion<Value_type>;
 
 struct Stamped_vector: public Vector {
+  using Vector::Vector;
   double stamp;
 };
 
