@@ -4,12 +4,17 @@ import sys
 import pymodbus.client.sync
 import json
 
-if len(sys.argv) > 1:
+if len(sys.argv) > 2:
+    host = sys.argv[1]
+    port = int(sys.argv[2])
+elif len(sys.argv) > 1:
+    host = 'localhost'
     port = int(sys.argv[1])
 else:
+    host = 'localhost'
     port = 16502
 
-client = pymodbus.client.sync.ModbusTcpClient('127.0.0.1', port)
+client = pymodbus.client.sync.ModbusTcpClient(host, port)
 
 def print_device(device):
     print()
