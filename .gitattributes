@@ -14,3 +14,9 @@ winservice.cpp eol=crlf
 *.md text eol=auto
 *.ini text eol=auto
 *.txt text eol=auto
+
+# Github linguist hints
+doc/* linguist-documentation
+manual/* linguist-documentation
+info/* linguist-documentation
+3rdparty/* linguist-vendored
