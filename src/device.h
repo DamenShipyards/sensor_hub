@@ -106,7 +106,8 @@ private:
 struct Device: public Named_object {
 
   Device(): Named_object(fmt::format("id_{:d}", seq_), fmt::format("device_{:d}", seq_)),
-            connected_(false), data_(), enable_logging_(false), device_log_initialized_(false), processors_() {
+            connected_(false), data_(), enable_logging_(false), device_log_initialized_(false),
+            processors_() {
     log(level::debug, "Constructing Device");
     ++seq_;
   }
@@ -194,8 +195,6 @@ struct Device: public Named_object {
   void set_connection_string(const std::string& connection_string) {
     connection_string_ = connection_string;
   }
-
-
 
 
   void enable_logging(const bool value) {
@@ -316,7 +315,7 @@ struct Port_device: public Device {
       log(level::info, "Connected device port: %", connection_string);
     }
     catch (std::exception& e) {
-      log(level::error, "Failed to connect \"%\" using \"%\": \"%\"", 
+      log(level::error, "Failed to connect \"%\" using \"%\": \"%\"",
           this->get_name(), connection_string, e.what());
       return;	
     }
@@ -370,7 +369,8 @@ struct Port_device: public Device {
 
     // ... and look for the expected response
     try {
-      // Repeat response reading several times as the response might be cluttered with other data coming in
+      // Repeat response reading several times as the response might be cluttered with
+      // other data coming in
       int repeats = 4;
       bytes_t response;
       int response_found = -1;
@@ -411,7 +411,8 @@ struct Port_device: public Device {
             size_t len_offset_1 = (*data)[0] + response_found;
             size_t len_offset_2  = (data->size() > 1) ? (*data)[1] + response_found: -1;
             len = response.size() > len_offset_1 ? response[len_offset_1] : 0;
-            len += len_offset_2 >= 0 && response.size() > len_offset_2 ? response[len_offset_2] << 8: 0;
+            len += len_offset_2 >= 0 && response.size() > len_offset_2 ?
+              response[len_offset_2] << 8: 0;
             len += static_cast<uint16_t>(std::max(len_offset_1, len_offset_2));
             // ... and indicate whether we have read enough data (i.e. equal to or more than len)
             // starting from the first byte after the offset of the length indicator
@@ -543,7 +544,8 @@ using Device_factory_ptr = std::unique_ptr<Device_factory_base>;
 /**
  * Add a device factory to the global device factory registry
  */
-extern Device_factory_ptr& add_device_factory(const std::string& name, Device_factory_ptr&& device_factory);
+extern Device_factory_ptr& add_device_factory(const std::string& name,
+    Device_factory_ptr&& device_factory);
 
 /**
  * Have a factory from the factory registry create a device instance
