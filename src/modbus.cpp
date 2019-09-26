@@ -31,9 +31,9 @@
 using namespace modbus;
 
 static Stamped_value zero = {};
-static constexpr int base_base_address = 0;
-static constexpr int plain_base_address = 10000;
-static constexpr int processor_base_address = 20000;
+static constexpr uint16_t base_base_address = 0;
+static constexpr uint16_t plain_base_address = 10000;
+static constexpr uint16_t processor_base_address = 20000;
 
 
 void Modbus_handler::plain_map(const Device& device, 
@@ -139,7 +139,8 @@ response::read_input_registers Modbus_handler::handle(uint8_t unit_id, const req
     if (req.address >= plain_base_address) {
       plain_map(device, req.address - plain_base_address, req.count, resp);
     }
-    else if (req.address >= base_base_address) {
+    // Cast to swallow compiler warning
+    else if ((long)req.address >= (long)base_base_address) {
       base_map(device, req.address - base_base_address, req.count, resp);
     }
   }
