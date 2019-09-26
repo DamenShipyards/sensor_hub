@@ -83,4 +83,5 @@ inline std::string timestamp_to_string(const double& stamp) {
 }
 
 #endif
+
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

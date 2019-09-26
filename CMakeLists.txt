@@ -6,11 +6,13 @@ project(SensorHub)
 # Apparently, we shouldn't do this, because it's too late set CC en CXX environment variables instead
 #execute_process(COMMAND which gcc OUTPUT_VARIABLE CMAKE_C_COMPILER)
 #execute_process(COMMAND which g++ OUTPUT_VARIABLE CMAKE_CXX_COMPILER)
-execute_process(COMMAND awk -F= "/Version/ { print $2 }" ${CMAKE_CURRENT_SOURCE_DIR}/version.ini OUTPUT_VARIABLE VERSION)
+execute_process(COMMAND awk -F= "/Version/ { print $2 }"
+  ${CMAKE_CURRENT_SOURCE_DIR}/version.ini OUTPUT_VARIABLE VERSION)
 execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE GITREV)
 execute_process(COMMAND date +%Y OUTPUT_VARIABLE YEAR)
 execute_process(COMMAND date +%Y-%m-%d OUTPUT_VARIABLE DATE)
-execute_process(COMMAND sh -c "\"${CMAKE_CXX_COMPILER}\" --version | head -n 1" OUTPUT_VARIABLE CXX_VERSION)
+execute_process(COMMAND sh -c "\"${CMAKE_CXX_COMPILER}\" --version | head -n 1"
+  OUTPUT_VARIABLE CXX_VERSION)
 
 #string(STRIP ${CMAKE_C_COMPILER} CMAKE_C_COMPILER)
 #string(STRIP ${CMAKE_CXX_COMPILER} CMAKE_CXX_COMPILER)
@@ -43,8 +45,9 @@ add_definitions(
 )
 endif()
 
-find_package(Boost 1.70.0 REQUIRED 
-  system date_time filesystem log log_setup unit_test_framework regex coroutine chrono program_options
+find_package(Boost 1.70.0 REQUIRED
+  system date_time filesystem log log_setup unit_test_framework regex coroutine chrono
+  program_options
 )
 
 find_package(libusb-1.0 1.0.22 REQUIRED)
@@ -104,6 +107,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/processor.cpp
   ${SENSORHUB_SOURCE_DIR}/types.cpp
   ${SENSORHUB_SOURCE_DIR}/devices/xsens.cpp
+  ${SENSORHUB_SOURCE_DIR}/devices/dummy.cpp
   ${SENSORHUB_SOURCE_DIR}/devices/ublox.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/statistics.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/acceleration_history.cpp
@@ -154,16 +158,16 @@ set_target_properties(sensor_hub PROPERTIES
 macro(new_test NEW_TEST)
   set(TEST_SOURCES ${ARGN})
   list(TRANSFORM TEST_SOURCES PREPEND ${SENSORHUB_SOURCE_DIR}/ )
-  add_executable(${NEW_TEST} 
+  add_executable(${NEW_TEST}
     ${SENSORHUB_TEST_DIR}/${NEW_TEST}.cpp
     ${TEST_SOURCES}
   )
-  set_target_properties(${NEW_TEST} PROPERTIES 
+  set_target_properties(${NEW_TEST} PROPERTIES
     LINK_FLAGS "-Wl,--no-as-needed"
     RUNTIME_OUTPUT_DIRECTORY test
   )
-  target_link_libraries(${NEW_TEST} 
-    Boost::system 
+  target_link_libraries(${NEW_TEST}
+    Boost::system
     Boost::date_time
     Boost::filesystem
     Boost::log
@@ -185,11 +189,11 @@ new_test(test_tools)
 new_test(test_spirit)
 new_test(test_usb log.cpp usb.cpp)
 new_test(test_device log.cpp device.cpp datetime.cpp)
-new_test(test_processor 
-  processor.cpp 
-  processors/statistics.cpp 
-  processors/acceleration_history.cpp 
-  processors/fusion.cpp 
+new_test(test_processor
+  processor.cpp
+  processors/statistics.cpp
+  processors/acceleration_history.cpp
+  processors/fusion.cpp
   log.cpp datetime.cpp modbus.cpp)
 new_test(test_datetime datetime.cpp log.cpp)
 new_test(test_modbus modbus.cpp log.cpp)

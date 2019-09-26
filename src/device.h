@@ -98,6 +98,7 @@ private:
   bool enabled_;
 };
 
+
 /**
  * Base class for all sensor devices
  *
@@ -153,7 +154,7 @@ struct Device: public Named_object {
   virtual void connect(asio::yield_context yield) {
     bool initialized = initialize(yield);
     if (initialized)
-      set_connected(initialized);
+      this->set_connected(initialized);
     else
       throw Device_exception("Failed to initialize device");
   }
@@ -164,13 +165,18 @@ struct Device: public Named_object {
   }
 
 
+  virtual bool reset(asio::yield_context) {
+    return true;
+  }
+
+
   virtual bool is_connected() const {
     return connected_;
   }
 
 
   virtual void disconnect() {
-    set_connected(false);
+    this->set_connected(false);
   }
 
 
@@ -227,6 +233,7 @@ struct Device: public Named_object {
     }
   }
 
+
 protected:
 
   void setup_device_log() {
@@ -274,6 +281,7 @@ protected:
     connected_ = connected;
   }
 
+
 private:
   static int seq_;
   bool connected_;
@@ -283,6 +291,22 @@ private:
   bool device_log_initialized_;
   bool use_as_time_source_;
   Processors processors_;
+
+};
+
+
+template<class ContextProvider>
+struct Context_device: public Device {
+
+  void wait(int milli_seconds, asio::yield_context yield) {
+    asio::deadline_timer waiter(ContextProvider::get_context(), pt::milliseconds(milli_seconds));
+    waiter.async_wait(yield);
+  }
+
+  auto get_executor() {
+    return ContextProvider::get_context().get_executor();
+  }
+
 };
 
 
@@ -290,10 +314,10 @@ private:
  * Device that controls an IO port supporting asio's basic_io_object interface
  */
 template <typename Port, class ContextProvider>
-struct Port_device: public Device {
+struct Port_device: public Context_device<ContextProvider> {
 
   Port_device()
-      : Device(),
+      : Context_device<ContextProvider>(),
         port_(ContextProvider::get_context()){}
 
   ~Port_device() {
@@ -303,13 +327,13 @@ struct Port_device: public Device {
   typedef Port port_type;
 
   void connect(asio::yield_context yield) override {
-    if (is_connected()) {
+    if (this->is_connected()) {
       log(level::warning, "Connecting device % that is already connected", this->get_name());
       return;
     }
 
 
-    std::string connection_string = get_connection_string();
+    std::string connection_string = this->get_connection_string();
     try {
       port_.open(connection_string);
       log(level::info, "Connected device port: %", connection_string);
@@ -322,7 +346,7 @@ struct Port_device: public Device {
 
 
     try {
-      Device::connect(yield);
+      Context_device<ContextProvider>::connect(yield);
     }
     catch (std::exception& e) {
       log(level::error, "Failed to connect \"%\": %", this->get_name(), e.what());
@@ -332,8 +356,8 @@ struct Port_device: public Device {
 
 
   void disconnect() override {
-    if (is_connected())
-      set_connected(false);
+    if (this->is_connected())
+      this->set_connected(false);
     port_.close();
   }
 
@@ -444,15 +468,8 @@ struct Port_device: public Device {
     }
   }
 
-
-  void wait(int milli_seconds, asio::yield_context yield) {
-    asio::deadline_timer waiter(ContextProvider::get_context(), pt::milliseconds(milli_seconds));
-    waiter.async_wait(yield);
-  }
-
-
-  virtual bool reset(asio::yield_context) {
-    return true;
+  auto get_executor() {
+    return this->get_port().get_executor();
   }
 
 protected:
@@ -460,10 +477,12 @@ protected:
 
 };
 
+
+
 template <class DeviceClass>
 struct Polling_mixin {
   virtual void start_polling() {
-    auto executor = get_device()->get_port().get_executor();
+    auto executor = this->get_device()->get_executor();
     asio::post(
         executor,
         [executor, this]() {
@@ -472,14 +491,28 @@ struct Polling_mixin {
     );
   }
 
-  void poll_data(asio::yield_context yield) {
-    log(level::debug, "Polling %", get_device()->get_name());
+  virtual void poll_data(asio::yield_context yield) = 0;
+
+protected:
+  DeviceClass* get_device() {
+    return dynamic_cast<DeviceClass*>(this);
+  }
+
+};  // struct Polling_mixin
+
+
+
+template <class DeviceClass>
+struct Port_polling_mixin: public Polling_mixin<DeviceClass> {
+
+  void poll_data(asio::yield_context yield) override {
+    log(level::debug, "Polling %", this->get_device()->get_name());
     asio::streambuf buf;
-    while (get_device()->is_connected()) {
+    while (this->get_device()->is_connected()) {
       try {
-        auto bytes_read = get_device()->get_port().async_read_some(buf.prepare(512), yield);
+        auto bytes_read = this->get_device()->get_port().async_read_some(buf.prepare(512), yield);
         double stamp = get_time();
-        log(level::debug, "% read % bytes", get_device()->get_name(), bytes_read);
+        log(level::debug, "% read % bytes", this->get_device()->get_name(), bytes_read);
         if (bytes_read > 0) {
           buf.commit(bytes_read);
           auto buf_begin = asio::buffers_begin(buf.data());
@@ -488,24 +521,19 @@ struct Polling_mixin {
           cbytes_t data(buf_begin, buf_end);
           std::stringstream ss;
           ss << data;
-          log(level::debug, "% received: %", get_device()->get_name(), ss.str());
+          log(level::debug, "% received: %", this->get_device()->get_name(), ss.str());
 #endif
-          get_device()->handle_data(stamp, buf_begin, buf_end);
+          this->get_device()->handle_data(stamp, buf_begin, buf_end);
           buf.consume(bytes_read);
         }
       }
       catch (std::exception& e) {
-        log(level::error, "Error while polling %: %", get_device()->get_name(), e.what());
-        get_device()->disconnect();
+        log(level::error, "Error while polling %: %", this->get_device()->get_name(), e.what());
+        this->get_device()->disconnect();
       }
     }
   }
-
-private:
-  DeviceClass* get_device() {
-    return dynamic_cast<DeviceClass*>(this);
-  }
-};
+};  // struct Port_polling_mixin
 
 
 //! Unique pointer to a device

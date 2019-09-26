@@ -351,7 +351,8 @@ struct Stamped_quantity: public Stamped_value, Data_quantity {
   using Stamped_value::operator==;
   using Data_quantity::operator==;
   double operator[](const int index) const {
-    return index == 0 ? value : index == 1 ? stamp : index == 2 ? static_cast<double>(quantity) : 0.0;
+    return index == 0 ? value : index == 1 ? stamp : index == 2 ? 
+      static_cast<double>(quantity) : 0.0;
   }
   bool operator==(const Stamped_quantity& other) const {
     return Data_quantity::operator==(other) 

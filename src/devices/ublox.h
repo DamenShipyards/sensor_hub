@@ -393,7 +393,7 @@ struct Ublox_parser: public Packet_parser {
   std::unique_ptr<Payload_visitor> visitor;
 
   void parse(const double& stamp) override;
-  Stamped_queue& get_values() override; 
+  Stamped_queue& get_values() override;
 };
 
 }  // namespace parser
@@ -460,7 +460,8 @@ cbytes_t sec_uniqid = { command::sync_1, command::sync_2, command::cls_sec, comm
 
 
 template <typename Port, typename ContextProvider>
-struct Ublox: public Port_device<Port, ContextProvider>, public Polling_mixin<Ublox<Port, ContextProvider> > {
+struct Ublox: public Port_device<Port, ContextProvider>,
+    public Port_polling_mixin<Ublox<Port, ContextProvider> > {
 
   template <typename Iterator>
   void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
@@ -517,7 +518,7 @@ private:
 template <typename Port, typename ContextProvider>
 struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
-  enum dyn_model {  
+  enum dyn_model {
     portable,
     unused,
     stationary,
@@ -549,7 +550,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
   void set_options(const prtr::ptree& options) {
     std::string s = options.get("dyn_model", "portable");
-    dyn_model_ = 
+    dyn_model_ =
       s == "portable" ? portable :
       s == "stationary" ? stationary :
       s == "pedestrian" ? pedestrian :
@@ -570,7 +571,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
   bool setup_ports(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup ports");
-    return this->exec_command(command::cfg_prt_usb, response::ack, response::nak, yield) 
+    return this->exec_command(command::cfg_prt_usb, response::ack, response::nak, yield)
         && this->exec_command(command::cfg_prt_uart, response::ack, response::nak, yield);
   }
 
@@ -649,7 +650,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
     payload[2] = static_cast<byte_t>(dyn_model_);
     log(level::info, "Ublox NEO M8U dynamic model: %", static_cast<int>(dyn_model_));
     bytes_t cfg_nav5 = parser::Data_packet(command::cls_cfg, command::cfg::nav5, payload).get_packet();
-    return this->exec_command(cfg_nav5, response::ack, response::nak, yield) 
+    return this->exec_command(cfg_nav5, response::ack, response::nak, yield)
         && gnss_type_ == glonass ? use_glonass(yield):
            gnss_type_ == galileo ? use_galileo(yield):
            gnss_type_ == beidou ? use_beidou(yield): false;  // Use GPS + Glonass by default
@@ -658,14 +659,14 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
   bool setup_navigation_rate(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup navigation rate");
-    return this->exec_command(command::cfg_rate, response::ack, response::nak, yield) 
+    return this->exec_command(command::cfg_rate, response::ack, response::nak, yield)
         && this->exec_command(command::cfg_hnr, response::ack, response::nak, yield);
   }
 
 
   bool setup_messages(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup messages");
-    return this->exec_command(command::cfg_msg_nav_pvt, response::ack, response::nak, yield) 
+    return this->exec_command(command::cfg_msg_nav_pvt, response::ack, response::nak, yield)
         && this->exec_command(command::cfg_msg_nav_att, response::ack, response::nak, yield)
         && this->exec_command(command::cfg_msg_esf_ins, response::ack, response::nak, yield)
         && this->exec_command(command::cfg_msg_esf_raw, response::ack, response::nak, yield);

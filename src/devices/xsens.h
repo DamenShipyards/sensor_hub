@@ -112,7 +112,8 @@ struct Xsens_parser: public Packet_parser {
 
 
 template <typename Port, typename ContextProvider>
-struct Xsens: public Port_device<Port, ContextProvider>, public Polling_mixin<Xsens<Port, ContextProvider> > {
+struct Xsens: public Port_device<Port, ContextProvider>,
+    public Port_polling_mixin<Xsens<Port, ContextProvider> > {
 
   template <typename Iterator>
   void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
@@ -315,7 +316,7 @@ struct MTi_G_710: public Xsens<Port, ContextProvider> {
   bool get_output_configuration(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens GetOutputConfiguration");
-    return this->exec_command(command::get_output_configuration, 
+    return this->exec_command(command::get_output_configuration,
         command::get_output_configuration_ack, command::error_resp, yield);
   }
 
@@ -323,7 +324,7 @@ struct MTi_G_710: public Xsens<Port, ContextProvider> {
   bool set_output_configuration(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetOutputConfiguration");
-    return this->exec_command(command::set_output_configuration, 
+    return this->exec_command(command::set_output_configuration,
         command::output_configuration_ack, command::error_resp, yield);
   }
 
@@ -331,7 +332,7 @@ struct MTi_G_710: public Xsens<Port, ContextProvider> {
   bool set_option_flags(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetOptionFlags");
-    return this->exec_command(command::set_option_flags, 
+    return this->exec_command(command::set_option_flags,
         command::option_flags_ack, command::error_resp, yield);
   }
 
@@ -339,7 +340,7 @@ struct MTi_G_710: public Xsens<Port, ContextProvider> {
   bool set_string_output_type(asio::yield_context yield) override {
     this->wait(50, yield);
     log(level::info, "Xsens SetStringOutputType");
-    return this->exec_command(command::set_string_output_type, 
+    return this->exec_command(command::set_string_output_type,
         command::string_output_type_ack, command::error_resp, yield);
   }
 
