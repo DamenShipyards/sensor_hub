@@ -25,6 +25,7 @@
 #define ACCELERATION_HISTORY_H_
 
 #include "../processor.h"
+#include "../functions.h"
 
 
 struct Acceleration_peak {

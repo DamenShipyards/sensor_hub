@@ -135,12 +135,6 @@ inline bool contains(const Container& container, const Items& items) {
 }
 
 
-
-inline double sqr(const double value) {
-  return value * value;
-}
-
-
 inline void print_version() {
   std::cout << "Damen Sensor Hub " << STRINGIFY(VERSION) << std::endl;
   std::cout << "   Git revision  : " << STRINGIFY(GITREV) << std::endl;

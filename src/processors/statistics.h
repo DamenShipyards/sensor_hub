@@ -25,6 +25,7 @@
 
 
 #include "../processor.h"
+#include "../functions.h"
 
 
 struct Statistic {

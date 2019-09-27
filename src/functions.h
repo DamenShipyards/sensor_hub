@@ -35,6 +35,10 @@
 
 namespace gregorian = boost::gregorian;
 
+constexpr Value_type earth_pol_radius = 6356752.3;
+constexpr Value_type earth_eq_radius = 6378137.0;
+constexpr Value_type earth_gravity = 9.80665;
+
 inline double compose_time_value(
     const int year, const int month, const int day,
     const int hour, const int minute, const int second,
@@ -55,6 +59,41 @@ inline Quantity_value compose_time_quantity(
   // Return a Unix Time quantity value
   return Quantity_value{compose_time_value(year, month, day, hour, minute, second, nanosecond),
                         Quantity::ut};
+}
+
+
+constexpr Value_type sqr(const Value_type value) {
+  return value * value;
+}
+
+
+constexpr Value_type deg_to_rad(const Value_type value) {
+  return value * M_PI / 180.0;
+}
+
+
+constexpr Value_type rad_to_deg(const Value_type value) {
+  return value * 180.0 / M_PI;
+}
+
+
+constexpr Value_type get_dx_dla(const Value_type la) {
+  Value_type phi = atan(earth_pol_radius / earth_eq_radius * tan(la));
+  return earth_eq_radius * cos(phi);
+}
+
+
+constexpr Value_type get_dy_dlo(const Value_type la) {
+  Value_type phi = atan(earth_pol_radius / earth_eq_radius * tan(la));
+  Value_type result = sqrt(sqr(earth_eq_radius) * sqr(sin(phi)) + sqr(earth_pol_radius) * sqr(cos(phi)));
+  result *= earth_eq_radius * earth_pol_radius /
+            ((sqr(earth_eq_radius) - sqr(earth_pol_radius)) * sqr(cos(la))+ sqr(earth_pol_radius));
+  return result;
+}
+
+constexpr Value_type get_earth_gravity(const Value_type la) {
+  // WGS84 earth gravity
+  return 9.7803253359 * ((1 + 0.00193185265241 * sqr(sin(la))) / sqrt(1 - 0.00669437999013 * sqr(sin(la))));
 }
 
 #endif
