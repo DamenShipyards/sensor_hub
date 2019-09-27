@@ -83,8 +83,8 @@ const po::variables_map& get_program_options() {
 int main(int argc, char* argv[])
 {
   try {
-    fs::path p{argv[0]};
-    p = fs::canonical(p);
+    fs::path program_exe{argv[0]};
+    program_exe = fs::canonical(program_exe);
 
     const std::string pid_file_default = "/var/run/sensor_hub.pid";
 
@@ -227,7 +227,8 @@ int main(int argc, char* argv[])
 
     {
       Pid_file pid_file{pid_file_name};
-      log(level::info, "Daemon started: % version %", p, STRINGIFY(VERSION));
+      log(level::info, "Daemon started: % version %, build type: %", 
+          program_exe, STRINGIFY(VERSION), STRINGIFY(BUILD_TYPE));
       int result = enter_loop();
       log(level::info, "Daemon stopped: result %", result);
       return result;

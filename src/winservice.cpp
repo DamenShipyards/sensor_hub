@@ -415,9 +415,9 @@ int run_service() {
 
 int _tmain (int argc, TCHAR *argv[])
 {
-  fs::path p{ argv[0] };
-  p = fs::canonical(p);
-  p.make_preferred();
+  fs::path program_exe{ argv[0] };
+  program_exe = fs::canonical(program_exe);
+  program_exe.make_preferred();
 
   int ret = ERROR_SUCCESS;
 
@@ -488,7 +488,8 @@ int _tmain (int argc, TCHAR *argv[])
       return ret;
     }
     else if (vm["command"].as<std::string>() == "service") {
-      log(level::info, "Starting % version %", p, STRINGIFY(VERSION));
+      log(level::info, "Starting %, version %, build type: %", 
+          program_exe, STRINGIFY(VERSION), STRINGIFY(BUILD_TYPE));
       ret = run_service();
       log(level::info, "Exiting main: %", ret);
       return ret;

@@ -13,6 +13,8 @@ var product = "Unknown"
 var gitrevfile = FSO.OpenTextFile(CD + "\\gitrev.txt", ForReading);
 var gitrev = gitrevfile.ReadAll();
 var today = new Date();
+// On windows only release versions are being build
+var build_type = "Release"
 
 var dd = today.getDate()
 if (dd < 10)
@@ -49,6 +51,7 @@ StdOut.WriteLine("Found product: " + product);
 StdOut.WriteLine("Found version: " + version);
 StdOut.WriteLine("Git revision : " + gitrev);
 StdOut.WriteLine("Build date   : " + date);
+StdOut.WriteLine("Build type   : " + build_type);
 
 var verdigits = version.split(".");
 var shortver = verdigits[0] + "." + verdigits[1] + "." + verdigits[2];
@@ -89,4 +92,5 @@ outfile = FSO.OpenTextFile(CD + "\\..\\src\\version.h", ForWriting, true, 0);
 outfile.WriteLine("#define GITREV " + gitrev);
 outfile.WriteLine("#define VERSION " + version);
 outfile.WriteLine("#define BUILD_DATE " + date);
+outfile.WriteLine("#define BUILD_TYPE " + build_type);
 outfile.close();

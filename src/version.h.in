@@ -1,4 +1,4 @@
 #define GITREV @GITREV@
 #define VERSION @VERSION@
 #define BUILD_DATE @DATE@
-
+#define BUILD_TYPE @CMAKE_BUILD_TYPE@
