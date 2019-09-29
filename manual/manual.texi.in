@@ -41,6 +41,7 @@ This manual is for Sensor Hub version @VERSION@
 * Processors:: Processors
 * HTTP:: HTTP
 * Modbus:: Modbus
+* Quantities:: Quantities
 * Index:: Index
 * References:: References
 @end menu
@@ -68,6 +69,10 @@ This manual is for Sensor Hub version @VERSION@
 @node Modbus
 @chapter Modbus
 @include modbus.texi
+
+@node Quantities
+@chapter Quantities
+@include quantities.texi
 
 @node Index
 @unnumbered Index

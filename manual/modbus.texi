@@ -23,7 +23,7 @@ The register layout for modus is as follows:
 A specific sensor or processor can be accessed by providing a unit/slave id.
 
 Sample values for quantities are scaled from a double value to a 16 bit unsigned value. This scaling
-is done by means of a minumum and maximum value. So the 16 bit value becomes:
+is done by means of a minimum and maximum value. So the 16 bit value becomes:
 
 @code{u16_value = (double_value - min) / (max - min) * 0x10000}
 
