@@ -40,27 +40,46 @@ namespace prtr = boost::property_tree;
 
 struct Scale {
   double min;
+  double max;
   double range;
+  double scale;
 };
 
 
 struct Base_scale {
 
-  Base_scale(const prtr::ptree& config): scale_() {
+  Base_scale(const prtr::ptree& config): scale_(), signed_(false) {
+    signed_ = config.get("signed", false);
     for (Quantity_iter qi = Quantity_iter::begin(); qi != Quantity_iter::end(); ++qi) {
-      double min = config.get(fmt::format("{}_min", get_quantity_name(*qi)), -32.768);
-      double max = config.get(fmt::format("{}_max", get_quantity_name(*qi)),  32.768);
-      scale_[*qi] = {min, max - min};
+      std::string quant = get_quantity_name(*qi);
+      double min = config.get(fmt::format("{}_min", quant), -32768.0);
+      double max = config.get(fmt::format("{}_max", quant),  32768.0);
+      double range = config.get(fmt::format("{}_range", quant),  max - min);
+      double scale = config.get(fmt::format("{}_scale", quant),  1.0);
+      scale_[*qi] = {min, max, range, scale};
     }
   }
 
   uint16_t scale_to_u16(Quantity quantity, double value) const {
     try {
       const Scale& scale = scale_.at(quantity);
-      value -= scale.min;
-      value /= scale.range;
-      value *= 0x10000;
-      return static_cast<uint16_t>(value);
+      uint16_t result = 0;
+      if (signed_) {
+        value *= scale.scale;
+        value = value > INT16_MAX ? INT16_MAX : value;
+        value = value < INT16_MIN ? INT16_MIN : value;
+        int16_t sresult = static_cast<int16_t>(value);
+        memcpy(&result, &sresult, sizeof(result));
+      }
+      else {
+        value = std::max(scale.min, value);
+        value = std::min(scale.max, value);
+        value -= scale.min;
+        value /= scale.range;
+        value *= 0x10000;
+        result = static_cast<uint16_t>(value);
+      }
+      return result;
     }
     catch (...) {
       return 0;
@@ -70,10 +89,23 @@ struct Base_scale {
   uint32_t scale_to_u32(Quantity quantity, double value) const {
     try {
       const Scale& scale = scale_.at(quantity);
-      value -= scale.min;
-      value /= scale.range;
-      value *= 0x100000000;
-      return static_cast<uint32_t>(value);
+      uint32_t result = 0;
+      if (signed_) {
+        value *= scale.scale;
+        value = value > INT32_MAX ? INT32_MAX : value;
+        value = value < INT32_MIN ? INT32_MIN : value;
+        int32_t sresult = static_cast<int32_t>(value);
+        memcpy(&result, &sresult, sizeof(result));
+      }
+      else {
+        value = std::max(scale.min, value);
+        value = std::min(scale.max, value);
+        value -= scale.min;
+        value /= scale.range;
+        value *= 0x100000000;
+        result = static_cast<uint32_t>(value);
+      }
+      return result;
     }
     catch (...) {
       return 0;
@@ -82,6 +114,7 @@ struct Base_scale {
 
 private:
   std::map<Quantity, Scale> scale_;
+  bool signed_;
 };
 
 
