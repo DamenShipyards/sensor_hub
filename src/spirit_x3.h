@@ -54,24 +54,32 @@ template<> struct is_endian_reversible<double>: std::integral_constant<bool, tru
 }
 
 template<> inline float endian_reverse<float>(float x) BOOST_NOEXCEPT {
+  float result;
+  uint32_t iresult;
+  memcpy(&iresult, &x, sizeof(iresult));
 #ifdef BOOST_ENDIAN_NO_INTRINSICS
-  uint32_t step16 = x << 16 | x >> 16;
-  uint32_t result = ((step16 << 8) & 0xff00ff00) | ((step16 >> 8) & 0x00ff00ff);
+  iresult = iresult << 16 | iresult >> 16;
+  iresult = ((iresult << 8) & 0xff00ff00) | ((iresult >> 8) & 0x00ff00ff);
 #else
-  uint32_t result = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_4(*reinterpret_cast<uint32_t*>(&x));
-  return *reinterpret_cast<float*>(&result);
+  iresult = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_4(iresult);
 #endif
+  memcpy(&result, &iresult, sizeof(result));
+  return result;
 }
 
 template<> inline double endian_reverse<double>(double x) BOOST_NOEXCEPT {
+  double result;
+  uint64_t iresult;
+  memcpy(&iresult, &x, sizeof(iresult));
 #ifdef BOOST_ENDIAN_NO_INTRINSICS
-  uint64_t step32 = x << 32 | x >> 32;
-  uint64_t step16 = (step32 & 0x0000FFFF0000FFFFULL) << 16 | (step32 & 0xFFFF0000FFFF0000ULL) >> 16;
-  uint64_t result = (step16 & 0x00FF00FF00FF00FFULL) << 8 | (step16 & 0xFF00FF00FF00FF00ULL) >> 8;
+  iresult = iresult << 32 | iresult >> 32;
+  iresult = (iresult & 0x0000ffff0000ffffULL) << 16 | (iresult & 0xffff0000ffff0000ULL) >> 16;
+  iresult = (iresult & 0x00ff00ff00ff00ffULL) << 8 | (iresult & 0xff00ff00ff00ff00ULL) >> 8;
 #else
-  uint64_t result = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_8(*reinterpret_cast<uint64_t*>(&x));
+  iresult = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_8(iresult);
 #endif
-  return *reinterpret_cast<double*>(&result);
+  memcpy(&result, &iresult, sizeof(result));
+  return result;
 }
 
 }}
