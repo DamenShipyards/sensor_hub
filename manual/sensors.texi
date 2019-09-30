@@ -9,9 +9,10 @@
 
 MRU devices by @url{https://www.xsens.com/, Xsens}
 
-@subsection MTi 700/710
+@subsection MTi-G700/710
 
 Motion reference unit with built-in GPS capability. @bibcite{XSENS_MTLL}
+Device USB vendor:product is 2639:0017
 
 
 @node Ublox
@@ -24,3 +25,4 @@ GNSS devices by @url{https://www.ublox.com/, Ublox}
 This is a GNSS device with dead-reckoning. It combines an M8 GPS/GLONASS/Beidou/Galileo capable GNSS chip with an accelerometer and gyro that enables the chip to update its position even during short periods of signal loss as well as provide the orientation of a vehicle. 
 Orientation values provided by this device are with respect to the vehicle and therefore require the sensor to have been fixed to the vehicle in a fixed position for some time for these values to be reasonably well calibrated. Alternatively, use a fusion processor to get the orientation with respect to the principle axes of the sensor itself.
 @bibcite{UBLOX_COMM}
+Device USB vendor:product is 1546:01A8
