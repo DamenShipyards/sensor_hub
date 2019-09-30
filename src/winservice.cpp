@@ -27,6 +27,7 @@
 #include <codecvt>
 
 #include "main.h"
+#include "configuration.h"
 
 #include <Windows.h>
 
@@ -58,9 +59,10 @@ void print_usage(const po::options_description& desc_args)
 {
   std::cout << "Usage: sensor_hub [options] [<command>]" << std::endl
             << "Install or remove service" << std::endl
-            << "Commands:" << std::endl
+            << "Command:" << std::endl
             << "  install               Install the service" << std::endl
             << "  uninstall             Remove the service" << std::endl
+            << "  update_config         Update configuration file" << std::endl
             << desc_args << std::endl;
 }
 
@@ -425,12 +427,11 @@ int _tmain (int argc, TCHAR *argv[])
     po::options_description desc_args{ "Options" };
     desc_args.add_options()
       ("help,h", "display this help and exit")
-      ("version,v", "display version info and exit")
-      ("update-config", "update the configuration file");
+      ("version,v", "display version info and exit");
 
     po::options_description command_args{ "Commands" };
     command_args.add_options()
-      ("command", po::value<std::string>(), "install|uninstall");
+      ("command", po::value<std::string>(), "install|uninstall|update_config");
 
     po::positional_options_description pos_args;
     pos_args.add("command", -1);
@@ -450,7 +451,6 @@ int _tmain (int argc, TCHAR *argv[])
 
     bool help = vm.count("help") > 0;
     bool version = vm.count("version") > 0;
-    bool update_config = vm.count("update-config") > 0;
 
     if (version) {
       print_version();
@@ -462,6 +462,11 @@ int _tmain (int argc, TCHAR *argv[])
     }
     else if (vm.count("command") == 0) {
       std::cerr << "Missing command." << std::endl;
+      print_usage(desc_args);
+      return INVALID_COMMAND_LINE + 0x4000;
+    }
+    else if (vm.count("command") > 1) {
+      std::cerr << "Too many commands." << std::endl;
       print_usage(desc_args);
       return INVALID_COMMAND_LINE + 0x4000;
     }
@@ -486,6 +491,11 @@ int _tmain (int argc, TCHAR *argv[])
         std::cout << "Service removed." << std::endl;
       }
       return ret;
+    }
+    else if (vm["command"].as<std::string>() == "update_config") {
+      update_config();
+      std::cout << "Configuration updated." << std::endl;
+      return PROGRAM_SUCCESS;
     }
     else if (vm["command"].as<std::string>() == "service") {
       log(level::info, "Starting %, version %, build type: %", 

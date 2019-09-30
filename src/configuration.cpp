@@ -27,46 +27,25 @@
 #include "loop.h"
 
 #include <boost/property_tree/ini_parser.hpp>
-#include <boost/filesystem.hpp>
 
 #ifdef _WIN32
 #include <shlobj.h>
 #include <objbase.h>
 #endif
 
+
 namespace prtr = boost::property_tree;
 namespace fs = boost::filesystem;
 
-struct Config {
-  Config(Config const&) = delete;
-  void operator=(Config const&) = delete;
 
-  static Config& get_instance() {
-    static Config instance; 
+struct Config_file {
+
+  static Config_file& get_instance() {
+    static Config_file instance{}; 
     return instance;
   }
 
-  prtr::ptree& get_config() {
-    return config_;
-  }
-
-  void save_config() {
-    save(get_config_file());
-  }
-
-private:
-  Config(): config_() {
-    fs::path config_file = get_config_file();
-    log(level::info, "Using configuration file: %", config_file);
-    if (fs::exists(config_file)) {
-      load(config_file);
-    }
-    set_defaults();      
-  }
-
-  prtr::ptree config_;
-
-  fs::path get_config_dir() {
+  fs::path get_dir() {
 #   ifdef _WIN32
     PWSTR szPath = nullptr;
     SHGetKnownFolderPath(FOLDERID_ProgramData, NULL, 0, &szPath);
@@ -88,22 +67,90 @@ private:
     return p;
   }
 
-  fs::path get_config_file() {
-    return  get_config_dir() / "sensor_hub.conf";
+
+  fs::path get() {
+    if (file_ != "") {
+      return file_;
+    }
+    else {
+      return  get_dir() / "sensor_hub.conf";
+    }
   }
+
+  void set(const fs::path& config_file) {
+    file_ = config_file;
+  }
+
+
+private:
+  fs::path file_;
+
+};
+
+
+struct Config {
+
+  Config(Config const&) = delete;
+  void operator=(Config const&) = delete;
+
+
+  static Config& get_instance() {
+    static Config instance{}; 
+    return instance;
+  }
+
+
+  prtr::ptree& get() {
+    return config_;
+  }
+
+
+  void load() {
+    load(Config_file::get_instance().get());
+  }
+
+
+  void save() {
+    save(Config_file::get_instance().get());
+  }
+
+
+private:
+  prtr::ptree config_;
+  fs::path loaded_;
+
+  Config(): config_(), loaded_() {
+    load();
+  }
+
 
   void load(const fs::path& p) {
-    prtr::read_ini(p.string(), config_);
+    if (p != loaded_) {
+      log(level::info, "Using configuration file: %", p);
+
+      if (fs::exists(p)) {
+        prtr::read_ini(p.string(), config_);
+      }
+      else {
+        log(level::warning, "Configuration file % doesn't exist", p);
+      }
+      set_defaults();      
+      loaded_ = p;
+    }
   }
 
+
   void save(const fs::path& p) {
+    log(level::info, "Writing configuration to: %", p);
     prtr::write_ini(p.string(), config_);
   }
+
 
   template <typename Value>
   void set_default(const std::string& key, Value def) {
     config_.put(key, config_.get(key, def));
   }
+
 
   void set_defaults() {
     set_default("logging.level", "info");
@@ -116,11 +163,10 @@ private:
 
     set_default("modbus.enabled", true);
     set_default("modbus.port", 16502);
+    set_default("modbus.signed", false);
 
     set_default("modbus.ut_min", 0.0);
     set_default("modbus.ut_max", 1.0 * 0x100000000);
-    set_default("modbus.du_min", 0.0);
-    set_default("modbus.du_max", 0.001 * 0x100000000);
 
     set_default("modbus.la_min", -M_PI);
     set_default("modbus.la_max",  M_PI);
@@ -164,14 +210,14 @@ private:
     set_default("modbus.ya_min", -M_PI);
     set_default("modbus.ya_max",  M_PI);
 
-    set_default("modbus.q1.min", -1.0);
-    set_default("modbus.q1.max",  1.0);
-    set_default("modbus.q2.min", -1.0);
-    set_default("modbus.q2.max",  1.0);
-    set_default("modbus.q3.min", -1.0);
-    set_default("modbus.q3.max",  1.0);
-    set_default("modbus.q4.min", -1.0);
-    set_default("modbus.q4.max",  1.0);
+    set_default("modbus.q1_min", -1.0);
+    set_default("modbus.q1_max",  1.0);
+    set_default("modbus.q2_min", -1.0);
+    set_default("modbus.q2_max",  1.0);
+    set_default("modbus.q3_min", -1.0);
+    set_default("modbus.q3_max",  1.0);
+    set_default("modbus.q4_min", -1.0);
+    set_default("modbus.q4_max",  1.0);
 
     set_default("modbus.rr_min", -M_PI);
     set_default("modbus.rr_max",  M_PI);
@@ -241,7 +287,6 @@ private:
     set_default("modbus.otmp_min", 0.0);
     set_default("modbus.otmp_max", 655.36);
 
-
     set_default("devices.count", 2);
 
     set_default("device0.type", "xsens_mti_g_710_usb");
@@ -299,11 +344,25 @@ private:
 
 
 prtr::ptree& get_config() {
-  return Config::get_instance().get_config();
+  return Config::get_instance().get();
 }
 
+
 void update_config() {
-  return Config::get_instance().save_config();
+  return Config::get_instance().save();
+}
+
+
+fs::path get_config_file() {
+  return Config_file::get_instance().get();
+}
+
+
+void set_config_file(const fs::path config_file, bool reload) {
+  Config_file::get_instance().set(config_file);
+  if (reload) {
+    Config::get_instance().load();
+  }
 }
 
 

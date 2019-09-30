@@ -15,17 +15,20 @@
 #include <sys/file.h>
 
 #include "main.h"
+#include "configuration.h"
 
 namespace fs = boost::filesystem;
 
 
 void print_usage(po::options_description& options_description) {
-  std::cout << "Usage: sensor_hub <options> [start|stop|restart]" << std::endl;
+  std::cout << "Usage: sensor_hub [<options>] <command>" << std::endl;
   std::cout << "Start, stop or restart the Damen Sensor Hub daemon." << std::endl;
   std::cout << std::endl;
+  std::cout << "Command:" << std::endl;
   std::cout << "  start                 start a daemon" << std::endl;
   std::cout << "  stop                  stop a running daemon" << std::endl;
   std::cout << "  restart               restart a running daemon" << std::endl;
+  std::cout << "  update_config         update the configuration file" << std::endl;
   std::cout << std::endl;
   std::cout << options_description << std::endl;
 }
@@ -90,19 +93,21 @@ int main(int argc, char* argv[])
 
     po::options_description desc_args{"Options"};
     desc_args.add_options()
+      ("configuration,c", 
+           po::value<std::string>()->default_value(get_config_file().string()), 
+           "configuration file")
       ("help,h", "display this help and exit")
-      ("version,v", "display version info and exit")
       ("pidfile,p", 
            po::value<std::string>()->default_value(pid_file_default), 
            "alternative to default pid file")
-      ("update-config", "update the configuration file");
+      ("version,v", "display version info and exit");
 
-    po::options_description command_args{"Commands"};
+    po::options_description command_args{"Command"};
     command_args.add_options()
-      ("commands", po::value<std::vector<std::string> >(), "stop|start|restart daemon");
+      ("command", po::value<std::vector<std::string> >(), "start|stop|restart|update_config");
 
     po::positional_options_description pos_args;
-    pos_args.add("commands", -1);
+    pos_args.add("command", -1);
 
     po::options_description command_line;
     command_line.add(desc_args).add(command_args);
@@ -111,29 +116,33 @@ int main(int argc, char* argv[])
         options(command_line).positional(pos_args).run(), vm);
     po::notify(vm);
 
-    bool show_help = vm.count("help") != 0;
-    bool show_version = vm.count("version") != 0;
     bool start = false;
     bool stop = false;
-    if (vm.count("commands") > 0) {
-      auto commands = vm["commands"].as<std::vector<std::string> >();
-      start = contains(commands, std::string("start"));
-      stop = contains(commands, std::string("stop"));
-      if (contains(commands, std::string("restart"))) {
+    bool update_conf = false;
+    if (vm.count("command") > 0) {
+      if (vm.count("command") > 1) {
+        std::cerr << "More than one command given" << std::endl;
+        return INVALID_COMMAND_LINE;
+      }
+      auto command = vm["command"].as<std::vector<std::string> >();
+      start = contains(command, std::string("start"));
+      stop = contains(command, std::string("stop"));
+      if (contains(command, std::string("restart"))) {
         start = stop = true;
       }
+      update_conf = contains(command, std::string("update_config"));
     }
 
     fs::path pid_file_name = vm["pidfile"].as<std::string>();
 
-    if (show_version) {
+    if (vm.count("version") != 0) {
       print_version();
       return PROGRAM_SUCCESS;
     }
 
-    if (show_help || argc == 1) {
+    if (vm.count("help") != 0 || argc == 1) {
       print_usage(desc_args);
-      return show_help ? PROGRAM_SUCCESS : INVALID_COMMAND_LINE; 
+      return vm.count("help") != 0 ? PROGRAM_SUCCESS : INVALID_COMMAND_LINE; 
     }
 
     if (stop) {
@@ -159,8 +168,20 @@ int main(int argc, char* argv[])
       }
     }
 
+    if (vm.count("configuration") != 0) {
+      set_config_file(vm["configuration"].as<std::string>());
+    }
+
+    if (update_conf) {
+      update_config();
+      return PROGRAM_SUCCESS;
+    }
+
     if (!start) {
-      std::cerr << "Invalid command." << std::endl;
+      if (vm.count("command") > 0)
+        std::cerr << "Invalid command." << std::endl;
+      else
+        std::cerr << "Missing command." << std::endl;
       return INVALID_COMMAND_LINE;
     }
 

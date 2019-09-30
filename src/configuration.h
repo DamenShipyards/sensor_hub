@@ -25,9 +25,12 @@
 
 #include <string>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/filesystem/path.hpp>
 
 extern boost::property_tree::ptree& get_config();
 extern void update_config();
+extern boost::filesystem::path get_config_file();
+extern void set_config_file(const boost::filesystem::path config_file, bool reload=false);
 
 #endif  // ifndef CONFIGURATION_H_
 
