@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Graphical modbus viewer
+Graphical sensor viewer
 """
 
 __author__ = "J.R. Versteegh"
@@ -21,10 +21,9 @@ __license__ = """
  along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import os
 import sys
 
-from modbus_viewer.gui.main_window import run_main
+from sensor_viewer.gui.main_window import run_main
 
 if __name__ == '__main__':
     run_main(sys.argv)

@@ -3,4 +3,4 @@ __pycache__
 /build/
 /dist/
 /venv/
-/modbus_viewer.spec
+/sensor_viewer.spec

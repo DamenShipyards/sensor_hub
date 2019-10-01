@@ -19,7 +19,7 @@ VSVersionInfo(
         StringStruct(u'FileDescription', u'Modbus register data viewer'),
         StringStruct(u'InternalName', u'SensorHub'),
         StringStruct(u'LegalCopyright', u'© 2019 Damen Shipyards'),
-        StringStruct(u'OriginalFilename', u'modbus_viewer.exe'),
+        StringStruct(u'OriginalFilename', u'sensor_viewer.exe'),
         StringStruct(u'Comments', u'Graph modbus register values'),
         StringStruct(u'ProductName', u'Sensor Hub Modbus Viewer'),
         StringStruct(u'ProductVersion', u'0.4.5.0'),
