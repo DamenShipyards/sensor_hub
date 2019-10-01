@@ -36,11 +36,11 @@ struct Dummy_device: public Context_device<ContextProvider>,
   // 51°49'57.0"N 4°56'14.4"E
   static constexpr Value_type la = deg_to_rad(51.83250);
   static constexpr Value_type lo = deg_to_rad(4.93733);
-  static constexpr Value_type dla_dx = 1 / get_dx_dla(la);
-  static constexpr Value_type dlo_dy = 1 / get_dy_dlo(la);
-  static constexpr Value_type radius = 500.0;
-  static constexpr Value_type freq = 2 * M_PI / 60.0;
-  static constexpr Value_type velocity = freq * radius;
+  static CONSTRET Value_type dla_dx = 1 / get_dx_dla(la);
+  static CONSTRET Value_type dlo_dy = 1 / get_dy_dlo(la);
+  static CONSTRET Value_type radius = 500.0;
+  static CONSTRET Value_type freq = 2 * M_PI / 60.0;
+  static CONSTRET Value_type velocity = freq * radius;
 
   bool initialize(asio::yield_context yield) override {
     bool result = true;

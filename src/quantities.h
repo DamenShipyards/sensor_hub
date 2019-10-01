@@ -23,14 +23,15 @@
 #ifndef QUANTITIES_H_
 #define QUANTITIES_H_
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <cmath>
 #include <exception>
 #include <sstream>
 #include <utility>
 #include <map>
 #include <deque>
 #include <list>
-#define _USE_MATH_DEFINES
-#include <math.h>
 
 #include "tools.h"
 #include "types.h"

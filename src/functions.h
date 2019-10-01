@@ -23,9 +23,9 @@
 #ifndef FUNCTIONS_H_
 #define FUNCTIONS_H_
 
+#include "quantities.h"
 #include "tools.h"
 #include "types.h"
-#include "quantities.h"
 
 #include <string>
 
@@ -76,14 +76,19 @@ constexpr Value_type rad_to_deg(const Value_type value) {
   return value * 180.0 / M_PI;
 }
 
+#ifdef _MSC_VER
+#define CONSTRET inline const
+#else
+#define CONSTRET constexpr
+#endif
 
-constexpr Value_type get_dx_dla(const Value_type la) {
+CONSTRET Value_type get_dx_dla(const Value_type la) {
   Value_type phi = atan(earth_pol_radius / earth_eq_radius * tan(la));
   return earth_eq_radius * cos(phi);
 }
 
 
-constexpr Value_type get_dy_dlo(const Value_type la) {
+CONSTRET Value_type get_dy_dlo(const Value_type la) {
   Value_type phi = atan(earth_pol_radius / earth_eq_radius * tan(la));
   Value_type result = sqrt(sqr(earth_eq_radius) * sqr(sin(phi)) + sqr(earth_pol_radius) * sqr(cos(phi)));
   result *= earth_eq_radius * earth_pol_radius /
@@ -91,7 +96,7 @@ constexpr Value_type get_dy_dlo(const Value_type la) {
   return result;
 }
 
-constexpr Value_type get_earth_gravity(const Value_type la) {
+CONSTRET Value_type get_earth_gravity(const Value_type la) {
   // WGS84 earth gravity
   return 9.7803253359 * ((1 + 0.00193185265241 * sqr(sin(la))) / sqrt(1 - 0.00669437999013 * sqr(sin(la))));
 }

@@ -26,8 +26,6 @@
 #include "ublox.h"
 #include "../functions.h"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
 #include <vector>
 #include <boost/variant.hpp>
 

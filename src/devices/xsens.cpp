@@ -19,9 +19,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-
-#include "xsens.h"
-
 // Implementation is put in a separate header for inclusion in tests
 #include "xsens_impl.h"
 
