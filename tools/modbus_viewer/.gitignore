@@ -1,0 +1,6 @@
+__pycache__
+/.idea/workspace.xml
+/build/
+/dist/
+/venv/
+/modbus_viewer.spec
