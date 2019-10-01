@@ -1,0 +1,15 @@
+/**
+ * \file config.h
+ * \brief Provide program compilation configuration
+ *
+ * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
+ * \copyright
+ * (C) 2019 Damen Shipyards. All rights reserved.
+ * \license
+ * This software is proprietary. Any use without written
+ * permission from the copyright holder is strictly
+ * forbidden.
+ */
+
+#define CXX_VER "19.16.27031.1"
+#define BOOST_VER "1.70.0"
