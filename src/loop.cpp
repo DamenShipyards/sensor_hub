@@ -359,7 +359,7 @@ int enter_loop() {
   Service& service = Service::get_instance();
 
   if (cfg.get("http.enabled", false)) {
-    service.start_http_server(cfg.get("http.address", "localhost"), cfg.get("http.port", 12080));
+    service.start_http_server(cfg.get("http.address", "localhost"), cfg.get("http.port", 80));
     service.get_http_server().set_css(cfg.get("http.css", ""));
   }
 
