@@ -21,13 +21,19 @@ else:
     slave_id = 0
 
 if len(sys.argv) > 4:
-    regs = sys.argv[4].split(',')
+    sregs = sys.argv[4].split(',')
+    for i in range(len(sregs) - 1, -1, -1):
+        sreg = sregs[i]
+        if '-' in sreg:
+            lo, hi = sreg.split('-')
+        sregs[i:i+1] = [str(j) for j in range(int(lo), int(hi) + 1)]
+    regs = [int(i) for i in sregs]
 else:
     regs = [0]
 
    
 def clear():
-    _ = call('clear' if os.name =='posix' else 'cls')
+    _ = os.system('clear' if os.name =='posix' else 'cls')
 
 client = ModbusClient(ip, port)
 
