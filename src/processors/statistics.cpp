@@ -62,7 +62,7 @@ uint16_t Statistics::get_modbus_reg(size_t index, const Base_scale& scaler) cons
     case Statistic::f_time:
       return static_cast<uint16_t>(scaler.scale_to_u32(Quantity::ut, stat.time) >> 16);
     case Statistic::f_time + 1:
-      return static_cast<uint16_t>(scaler.scale_to_u32(Quantity::ut, stat.time) && 0xFFFF);
+      return static_cast<uint16_t>(scaler.scale_to_u32(Quantity::ut, stat.time) & 0xFFFF);
     case Statistic::f_n + 1:
       return static_cast<uint16_t>(stat.n);
     case Statistic::f_mean + 1:
