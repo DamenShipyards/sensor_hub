@@ -5,15 +5,31 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
-## [0.3.6] - Unreleased
+## [0.4.8] - Unreleased
 
+## [0.4.6] - 2019-10-02
+
+### Fixed
+- Modbus issues
+
+### Added
+- Dummy devices for testing
+
+## [0.4.4] - 2019-09-12
+
+### Changed
+- Some refactors
+
+## [0.4.2] - 2019-09-10
+
+### Added
+- Add ublox device
 
 ## [0.3.4] - 2018-10-19
 
 ### Fixed
 - Take device out of NMEA mode on initialization
 
-### Added
 - Somewhat extended logging
 
 
