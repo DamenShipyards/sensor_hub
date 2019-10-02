@@ -38,9 +38,9 @@ struct Dummy_device: public Context_device<ContextProvider>,
   static constexpr Value_type lo = deg_to_rad(4.93733);
   static CONSTRET Value_type dla_dx = 1 / get_dx_dla(la);
   static CONSTRET Value_type dlo_dy = 1 / get_dy_dlo(la);
-  static CONSTRET Value_type radius = 500.0;
-  static CONSTRET Value_type freq = 2 * M_PI / 60.0;
-  static CONSTRET Value_type velocity = freq * radius;
+  static constexpr Value_type radius = 500.0;
+  static constexpr Value_type freq = 2 * M_PI / 60.0;
+  static constexpr Value_type velocity = freq * radius;
 
   bool initialize(asio::yield_context yield) override {
     bool result = true;
@@ -105,11 +105,13 @@ struct Dummy_imu: public Dummy_device<ContextProvider> {
   using dev::radius;
   using dev::freq;
   using dev::velocity;
+  static constexpr Value_type centripetal = velocity * freq;
 
   void insert_acc_and_rot() {
+    Value_type centripetal = sqr(velocity) / radius;
     double t = get_time();
-    this->insert_value(Stamped_quantity(sqr(velocity) * -cos(freq * t), t, Quantity::ax));
-    this->insert_value(Stamped_quantity(sqr(velocity) * -sin(freq * t), t, Quantity::ay));
+    this->insert_value(Stamped_quantity(centripetal * -cos(freq * t), t, Quantity::ax));
+    this->insert_value(Stamped_quantity(centripetal * -sin(freq * t), t, Quantity::ay));
     this->insert_value(Stamped_quantity(-get_earth_gravity(la), t, Quantity::az));
     this->insert_value(Stamped_quantity(0.1 * sin(t), t, Quantity::rr));
     this->insert_value(Stamped_quantity(0.1 * sin(0.61803399 * t), t, Quantity::pr));
@@ -129,10 +131,18 @@ struct Dummy_imu: public Dummy_device<ContextProvider> {
 template <class ContextProvider>
 struct Dummy_mru: public Dummy_imu<ContextProvider> {
 
+  using dev = Dummy_imu<ContextProvider>;
+  using dev::freq;
+  using dev::centripetal;
+
   void poll_data(asio::yield_context yield) override {
     while (this->is_connected()) {
       this->wait(100, yield);
       this->insert_acc_and_rot();
+      double t = get_time();
+      this->insert_value(Stamped_quantity(centripetal * -cos(freq * t), t, Quantity::fax));
+      this->insert_value(Stamped_quantity(centripetal * -sin(freq * t), t, Quantity::fay));
+      this->insert_value(Stamped_quantity(0, t, Quantity::faz));
     }
   }
 
