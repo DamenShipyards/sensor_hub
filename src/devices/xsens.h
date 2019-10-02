@@ -19,6 +19,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef XSENS_H_
+#define XSENS_H_
 
 #include "../spirit_x3.h"
 #include "../types.h"
@@ -347,5 +349,7 @@ struct MTi_G_710: public Xsens<Port, ContextProvider> {
 };
 
 }  // namespace xsens
+
+#endif  // XSENS_H_
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
