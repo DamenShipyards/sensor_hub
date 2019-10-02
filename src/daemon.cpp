@@ -248,8 +248,8 @@ int main(int argc, char* argv[])
 
     {
       Pid_file pid_file{pid_file_name};
-      log(level::info, "Daemon started: % version %, build type: %", 
-          program_exe, STRINGIFY(VERSION), STRINGIFY(BUILD_TYPE));
+      log(level::info, "Daemon started: %", program_exe);
+      log(level::info, "Version %, build type: %", STRINGIFY(VERSION), STRINGIFY(BUILD_TYPE));
       int result = enter_loop();
       log(level::info, "Daemon stopped: result %", result);
       return result;

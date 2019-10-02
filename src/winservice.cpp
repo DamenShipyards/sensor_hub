@@ -498,8 +498,8 @@ int _tmain (int argc, TCHAR *argv[])
       return PROGRAM_SUCCESS;
     }
     else if (vm["command"].as<std::string>() == "service") {
-      log(level::info, "Starting %, version %, build type: %", 
-          program_exe, STRINGIFY(VERSION), STRINGIFY(BUILD_TYPE));
+      log(level::info, "Starting %", program_exe);
+      log(level::info, "Version %, build type: %", STRINGIFY(VERSION), STRINGIFY(BUILD_TYPE));
       ret = run_service();
       log(level::info, "Exiting main: %", ret);
       return ret;

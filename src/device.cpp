@@ -47,10 +47,11 @@ Device_factory_ptr& add_device_factory(const std::string& name, Device_factory_p
 Device_ptr create_device(const std::string& name) {
   try {
     decltype(auto) factory = get_device_factory_map().at(name);
+    log(level::error, "Created device with type \"%\"", name);
     return factory->get_instance();
   }
   catch (std::out_of_range&) {
-    log(level::error, "Device with name % does not appear to be registered", name);
+    log(level::error, "Device with type \"%\" does not appear to be registered", name);
     throw;
   }
 }
