@@ -52,7 +52,7 @@ struct Dummy_device: public Context_device<ContextProvider>,
     else {
       log(level::error, "Failed to initialize %", this->get_name());
       if (this->reset(yield)) {
-        log(level::info, "Successfully dummy %", this->get_name());
+        log(level::info, "Successfully reset %", this->get_name());
       }
     }
 
