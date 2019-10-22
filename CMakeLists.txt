@@ -66,11 +66,11 @@ set (CMAKE_CXX_FLAGS_DEBUG  "-ggdb -Wall -pedantic -Wno-psabi -Wno-write-strings
 set (CMAKE_CXX_FLAGS_RELEASE  "-O3 -Wno-psabi -Wno-write-strings -Wfatal-errors -DNDEBUG")
 
 set(SENSORHUB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/fmt/include")
+set(FMTLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/depends/fmt/include")
 set(SENSORHUB_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/test")
-set(XSENS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/xsens/include")
-set(MODBUS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/modbus/include")
-set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rapidjson/include")
+set(XSENS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/depends/xsens/include")
+set(MODBUS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/depends/modbus/include")
+set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/depends/rapidjson/include")
 
 set(VERSION_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in)
 set(CONFIG_H_IN ${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in)

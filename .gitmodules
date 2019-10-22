@@ -1,9 +1,9 @@
-[submodule "3rdparty/fmt"]
-	path = 3rdparty/fmt
+[submodule "depends/fmt"]
+	path = depends/fmt
 	url = https://github.com/orca-software/fmt.git
-[submodule "3rdparty/modbus"]
-	path = 3rdparty/modbus
+[submodule "depends/modbus"]
+	path = depends/modbus
 	url = https://github.com/orca-software/modbus.git
-[submodule "3rdparty/rapidjson"]
-	path = 3rdparty/rapidjson
+[submodule "depends/rapidjson"]
+	path = depends/rapidjson
 	url = https://github.com/orca-software/rapidjson

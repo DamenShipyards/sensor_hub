@@ -33,7 +33,7 @@ rem Sign the executable
 %SIGNTOOL% sign /sha1 %SIGNSHA1% /d %DESCRIPTION% /du %URL% /t http://timestamp.globalsign.com/scripts/timestamp.dll %FULLEXE%
 @if errorlevel 1 goto error
 
-@copy ..\3rdparty\libusb\lib\libusb-1.0.dll %BUILDDIR%\\
+@copy ..\depends\libusb\lib\libusb-1.0.dll %BUILDDIR%\\
 
 goto success
 

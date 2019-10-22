@@ -47,7 +47,7 @@
 		<File Id="restart_elevated.bat" Source="restart_elevated.bat" />
       </Component>
 	  <Component Id="Libraries" Guid="{5cdd4138-b5d4-11e8-85c2-077f20dccfae}">
-	    <File Id="libusb.dll" Source="..\3rdparty\libusb\lib\libusb-1.0.dll" />
+	    <File Id="libusb.dll" Source="..\depends\libusb\lib\libusb-1.0.dll" />
 	  </Component>
 	  <Merge Id="VCRuntime" SourceFile=".\files\Microsoft_VC141_CRT_x64.msm"  DiskId="1" Language="1033"/>
     </DirectoryRef>

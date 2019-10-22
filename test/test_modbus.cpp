@@ -7,7 +7,7 @@
 #include "../src/modbus.h" 
 #include "../src/device.h" 
 #include "../src/processor.h"
-#include "../3rdparty/modbus/include/modbus/client.hpp"
+#include "../depends/modbus/include/modbus/client.hpp"
 
 namespace asio = boost::asio;
 namespace prtr = boost::property_tree;

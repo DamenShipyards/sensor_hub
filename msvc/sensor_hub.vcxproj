@@ -34,8 +34,8 @@
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>sensor_hub</TargetName>
-    <IncludePath>..\3rdparty\fmt\include;..\3rdparty\libusb\include;..\3rdparty\libwdi\include;..\3rdparty\rapidjson\include;..\3rdparty\modbus\include;..\3rdparty\xsens\include;C:\boost;$(IncludePath)</IncludePath>
-    <LibraryPath>..\3rdparty\libusb\lib;..\3rdparty\libwdi\lib;C:\boost\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\depends\fmt\include;..\depends\libusb\include;..\depends\libwdi\include;..\depends\rapidjson\include;..\depends\modbus\include;..\depends\xsens\include;C:\boost;$(IncludePath)</IncludePath>
+    <LibraryPath>..\depends\libusb\lib;..\depends\libwdi\lib;C:\boost\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -60,8 +60,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\3rdparty\fmt\src\format.cc" />
-    <ClCompile Include="..\3rdparty\fmt\src\posix.cc" />
+    <ClCompile Include="..\depends\fmt\src\format.cc" />
+    <ClCompile Include="..\depends\fmt\src\posix.cc" />
     <ClCompile Include="..\src\configuration.cpp" />
     <ClCompile Include="..\src\datetime.cpp" />
     <ClCompile Include="..\src\device.cpp" />
