@@ -282,6 +282,7 @@ protected:
   }
 
 
+
 private:
   static int seq_;
   bool connected_;
@@ -493,10 +494,21 @@ struct Polling_mixin {
 
   virtual void poll_data(asio::yield_context yield) = 0;
 
+  void set_poll_size(size_t poll_size) {
+    poll_size_ = poll_size;
+  }
+
 protected:
   DeviceClass* get_device() {
     return dynamic_cast<DeviceClass*>(this);
   }
+
+  size_t get_poll_size() {
+    return poll_size_;
+  }
+
+private:
+  size_t poll_size_ = 0x200;
 
 };  // struct Polling_mixin
 
@@ -510,7 +522,8 @@ struct Port_polling_mixin: public Polling_mixin<DeviceClass> {
     asio::streambuf buf;
     while (this->get_device()->is_connected()) {
       try {
-        auto bytes_read = this->get_device()->get_port().async_read_some(buf.prepare(512), yield);
+        auto bytes_read = this->get_device()->get_port().async_read_some(
+            buf.prepare(this->get_poll_size()), yield);
         double stamp = get_time();
         log(level::debug, "% read % bytes", this->get_device()->get_name(), bytes_read);
         if (bytes_read > 0) {

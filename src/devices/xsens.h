@@ -84,6 +84,7 @@ extern cbytes_t set_output_configuration;
 extern cbytes_t output_configuration_ack;
 
 extern cbytes_t set_string_output_type;
+extern cbytes_t set_string_output_type6;
 extern cbytes_t string_output_type_ack;
 
 extern cbytes_t error_resp;
@@ -154,6 +155,8 @@ struct Xsens: public Port_device<Port, ContextProvider>,
         // This device will spit out its configuration, which we will just swallow
         port.async_read_some(read_buf.prepare(0x1000), yield[ec]);
         this->wait(500, yield);
+      } else {
+        this->wait(50, yield);
       }
     }
     // Always return true as we don't really care about how this was handled
@@ -303,17 +306,7 @@ private:
 
 
 template <typename Port, class ContextProvider>
-struct MTi_G_710: public Xsens<Port, ContextProvider> {
-
-  MTi_G_710(): Xsens<Port, ContextProvider>() {
-    log(level::info, "Constructing Xsens_MTi_G_710");
-  }
-
-
-  ~MTi_G_710() override {
-    log(level::info, "Destroying Xsens_MTi_G_710");
-  }
-
+struct MTi_GPS_based: public Xsens<Port, ContextProvider> {
 
   bool get_output_configuration(asio::yield_context yield) override {
     this->wait(50, yield);
@@ -344,6 +337,42 @@ struct MTi_G_710: public Xsens<Port, ContextProvider> {
     log(level::info, "Xsens SetStringOutputType");
     return this->exec_command(command::set_string_output_type,
         command::string_output_type_ack, command::error_resp, yield);
+  }
+
+};
+
+
+template <typename Port, class ContextProvider>
+struct MTi_G_710: public MTi_GPS_based<Port, ContextProvider> {
+
+  MTi_G_710(): MTi_GPS_based<Port, ContextProvider>() {
+    log(level::info, "Constructing Xsens_MTi_G_710");
+  }
+
+
+  ~MTi_G_710() override {
+    log(level::info, "Destroying Xsens_MTi_G_710");
+  }
+
+};
+
+template <typename Port, class ContextProvider>
+struct MTi_670: public MTi_GPS_based<Port, ContextProvider> {
+
+  bool set_string_output_type(asio::yield_context yield) override {
+    this->wait(50, yield);
+    log(level::info, "Xsens SetStringOutputType 6xx");
+    return this->exec_command(command::set_string_output_type6,
+        command::string_output_type_ack, command::error_resp, yield);
+  }
+
+  MTi_670(): MTi_GPS_based<Port, ContextProvider>() {
+    log(level::info, "Constructing Xsens_MTi_670");
+  }
+
+
+  ~MTi_670() override {
+    log(level::info, "Destroying Xsens_MTi_670");
   }
 
 };

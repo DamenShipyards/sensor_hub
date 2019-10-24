@@ -1,13 +1,18 @@
 # Set group "plugdev" for USB Devices
 # XSens
 SUBSYSTEM=="usb", ATTRS{idVendor}=="2639", ACTION=="add", GROUP="plugdev", MODE="0660"
-
+# Ublox
 SUBSYSTEM=="usb", ATTRS{idVendor}=="1546", ACTION=="add", GROUP="plugdev", MODE="0660"
 
 # Create symlink in /dev/sensor_hub for serial devices
+# Start by skipping anything that is not an addition of a serial device
 ACTION=="remove", GOTO="serial_end"
 SUBSYSTEM!="tty", GOTO="serial_end"
 KERNEL!="ttyUSB[0-9]*|ttyACM[0-9]*", GOTO="serial_end"
+
+# XSens MTi serial to USB (ftdi)
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="2639", ATTRS{idProduct}=="0300", SYMLINK+="sensor_hub/xsens_mti_usb_serial-$kernel"
+
 # UBlox NEO M8U
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a8", SYMLINK+="sensor_hub/ublox_neo_m8u-$kernel"
 

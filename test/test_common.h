@@ -55,12 +55,17 @@ tt::assertion_result usb_available(ut::test_unit_id) {
 }
 
 
-tt::assertion_result xsens_available(ut::test_unit_id) {
+tt::assertion_result xsens_g_710_available(ut::test_unit_id) {
   usb_device = "2639:0017";
 
   return usb_dev_available();
 }
 
+tt::assertion_result xsens_670_available(ut::test_unit_id) {
+  usb_device = "2639:0300";
+
+  return usb_dev_available();
+}
 
 tt::assertion_result ublox_available(ut::test_unit_id) {
   usb_device = "1546:01a8";

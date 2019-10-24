@@ -139,7 +139,7 @@ inline std::string get_serial_connection_string(boost::asio::io_context& ctx,
   std::string service_key = "SYSTEM\\CurrentControlSet\\Services\\" + service + "\\Enum";
   std::string serial_key = "HARDWARE\\DEVICEMAP\\SERIALCOMM";
 
-  // Get the ublox driver service instance count
+  // Get the driver service instance count
   ret = RegGetValueA(HKEY_LOCAL_MACHINE, service_key.c_str(), "Count", RRF_RT_DWORD, NULL, &count, &size);
   if (ret != ERROR_SUCCESS) {
     log(level::info, "Couldn't read registry value: %\\Count, error %", service_key, ret);

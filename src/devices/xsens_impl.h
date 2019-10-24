@@ -83,6 +83,12 @@ cbytes_t set_string_output_type = {packet_start, sys_command, XMID_SetStringOutp
   0x02,
   0x00, 0x00,
   0x71};
+cbytes_t set_string_output_type6 = {packet_start, sys_command, XMID_SetStringOutputType,
+  0x06,
+  0x00, 0x00,
+  0x00, 0x00,
+  0x00, 0x00,
+  0x6D};
 cbytes_t string_output_type_ack = {packet_start, sys_command, XMID_SetStringOutputTypeAck};
 
 
