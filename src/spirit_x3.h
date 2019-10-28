@@ -70,7 +70,7 @@ It also provides and additional is_endian_reversible, which looks like
 doing the same thing twice. .. but we can specialize that.
 Seems like the BOOST_STATIC_ASSERTS should check that and not std::integral.
 */
-#error  "Shouldn't get here"
+
 #include <boost/endian/conversion.hpp>
 
 namespace boost { namespace endian {
