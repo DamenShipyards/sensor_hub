@@ -108,10 +108,11 @@ struct Xsens_parser: public Packet_parser {
 
   void parse(const double& stamp) override;
   Stamped_queue& get_values() override;
+private:
+  bool parse_single(const double& stamp);
 };
 
 } //parser
-
 
 
 template <typename Port, typename ContextProvider>
@@ -135,6 +136,15 @@ struct Xsens: public Port_device<Port, ContextProvider>,
     boost::system::error_code ec;
     bytes_t response{};
     log(level::info, "Xsens LookForWakeup");
+
+    // Set a timeout for the command to complete
+    asio::deadline_timer timeout_timer(ContextProvider::get_context(), pt::milliseconds(2000));
+    timeout_timer.async_wait(
+        [&](const boost::system::error_code& error) {
+          if (!error)
+            port.cancel();
+        });
+
     size_t bytes_read = port.async_read_some(read_buf.prepare(0x100), yield[ec]);
     if (!ec) {
       read_buf.commit(bytes_read);
@@ -232,11 +242,12 @@ struct Xsens: public Port_device<Port, ContextProvider>,
     bytes_t response;
     bool result = this->exec_command(command::req_device_id, command::device_id_resp, command::error_resp, yield, &response);
     if (result && response.size() >= (command::data_offset + 4)) {
+      size_t offset = response[command::size_offset] - 4;
       std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}",
-          static_cast<uint8_t>(response[command::data_offset + 0]),
-          static_cast<uint8_t>(response[command::data_offset + 1]),
-          static_cast<uint8_t>(response[command::data_offset + 2]),
-          static_cast<uint8_t>(response[command::data_offset + 3])
+          static_cast<uint8_t>(response[command::data_offset + offset + 0]),
+          static_cast<uint8_t>(response[command::data_offset + offset + 1]),
+          static_cast<uint8_t>(response[command::data_offset + offset + 2]),
+          static_cast<uint8_t>(response[command::data_offset + offset + 3])
       );
       log(level::info, "Xsens device serial#: %", serial_no);
       this->set_id("xsens_" + serial_no);

@@ -2,13 +2,16 @@
 #include "../src/devices/xsens.h" 
 #include "../src/devices/xsens_impl.h" 
 #include "../src/usb.h" 
+#include "../src/log.h" 
 #include "../src/serial.h" 
 
 #include "test_common.h"
 
 #include <memory>
+#include <boost/filesystem.hpp>
 
 using namespace xsens;
+namespace fs = boost::filesystem;
 
 
 BOOST_AUTO_TEST_CASE(construction_test) {
@@ -17,45 +20,62 @@ BOOST_AUTO_TEST_CASE(construction_test) {
 
 BOOST_AUTO_TEST_CASE(connection_test_g_710, *ut::precondition(xsens_g_710_available)) {
   asio::io_context& ctx = Ctx::get_context();
-  MTi_G_710<Usb, Ctx> xsens;
+  MTi_G_710<Usb, Ctx> mti_g_710;
   asio::deadline_timer tmr(ctx, pt::milliseconds(3000));
   tmr.async_wait(
-      [&ctx](boost::system::error_code) {
+      [&](boost::system::error_code) {
+        BOOST_TEST(mti_g_710.is_connected());
+        log(level::info, "Disconnecting MTi G 710");
+        mti_g_710.disconnect();
+        log(level::info, "Stopping IO context");
         ctx.stop();
       }
   );
 
-  xsens.set_name("xsens-g_710-test");
-  xsens.set_connection_string("2639:0017");
-  BOOST_TEST(!xsens.is_connected());
+  mti_g_710.set_name("xsens-g_710-test");
+  mti_g_710.set_connection_string("2639:0017");
+  BOOST_TEST(!mti_g_710.is_connected());
   asio::spawn(ctx, 
       [&](asio::yield_context yield) {
-        xsens.connect(yield);
+        mti_g_710.connect(yield);
       }
   );
   ctx.run();
-  BOOST_TEST(xsens.is_connected());
+  ctx.restart();
 }
 
 BOOST_AUTO_TEST_CASE(connection_test_670, *ut::precondition(xsens_670_available)) {
   asio::io_context& ctx = Ctx::get_context();
-  MTi_670<Serial, Ctx> xsens;
+  MTi_670<Serial, Ctx> mti_670;
+  //MTi_670<Usb, Ctx> mti_670;
+
   asio::deadline_timer tmr(ctx, pt::milliseconds(3000));
   tmr.async_wait(
-      [&ctx](boost::system::error_code) {
+      [&](boost::system::error_code) {
+        BOOST_TEST(mti_670.is_connected());
+        log(level::info, "Disconnecting MTi 670");
+        mti_670.disconnect();
+        log(level::info, "Stopping IO context");
         ctx.stop();
       }
   );
 
-  xsens.set_name("xsens-670-test");
-  xsens.set_connection_string("/dev/sensor_hub/xsens_mti_usb_serial-ttyUSB0:921600");
-  BOOST_TEST(!xsens.is_connected());
+  mti_670.set_name("xsens-670-test");
+  fs::path p = "/dev/sensor_hub/xsens_mti_usb_serial-ttyUSB0";
+  if (!fs::exists(p)) {
+    p = "/dev/sensor_hub/xsens_mti_usb_serial-ttyUSB1";
+  }
+  BOOST_TEST(fs::exists(p));
+  //mti_670.set_connection_string(p.string() + ":921600");
+  mti_670.set_connection_string(p.string() + ":115200");
+  //mti_670.set_connection_string("2639:0300");
+  BOOST_TEST(!mti_670.is_connected());
   asio::spawn(ctx, 
       [&](asio::yield_context yield) {
-        xsens.set_poll_size(0x80);
-        xsens.connect(yield);
+        mti_670.set_poll_size(0x80);
+        mti_670.connect(yield);
       }
   );
   ctx.run();
-  BOOST_TEST(xsens.is_connected());
+  ctx.restart();
 }

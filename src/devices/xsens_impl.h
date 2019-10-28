@@ -436,7 +436,7 @@ Xsens_parser::~Xsens_parser() {
 }
 
 
-void Xsens_parser::parse(const double& stamp) {
+bool Xsens_parser::parse_single(const double& stamp) {
   uint8_t mid = 0;
   int len = 0;
   std::vector<uint8_t> data;
@@ -466,9 +466,9 @@ void Xsens_parser::parse(const double& stamp) {
 
   cur = queue.begin();
   //! Look for messages in the queue
-  while (cur != queue.end() && x3::parse(cur, queue.end(), packet_rule)) {
+  if (x3::parse(cur, queue.end(), packet_rule)) {
     //! Consume the message from the queue
-    cur = queue.erase(queue.begin(), cur);
+    queue.erase(queue.begin(), cur);
     //! Verify the checksum is 0
     if (sum == 0) {
       //! The content of the message is now in "data"
@@ -482,14 +482,23 @@ void Xsens_parser::parse(const double& stamp) {
             boost::apply_visitor(*visitor, data_packet);
           }
         }
+        log(level::debug, "Successfully parsed packet: %", data);
       }
     }
     else {
-      log(level::error, "Xsens checksum error");
+      log(level::error, "Xsens checksum error: %", sum);
     }
     //! Reset message content
     data_packets->clear();
+    return true;
   }
+  else {
+    return false;
+  }
+}
+
+void Xsens_parser::parse(const double& stamp) {
+  while (parse_single(stamp)) {}
 }
 
 

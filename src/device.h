@@ -357,9 +357,10 @@ struct Port_device: public Context_device<ContextProvider> {
 
 
   void disconnect() override {
-    if (this->is_connected())
+    if (this->is_connected()) {
       this->set_connected(false);
-    port_.close();
+      port_.close();
+    }
   }
 
 
@@ -518,7 +519,7 @@ template <class DeviceClass>
 struct Port_polling_mixin: public Polling_mixin<DeviceClass> {
 
   void poll_data(asio::yield_context yield) override {
-    log(level::debug, "Polling %", this->get_device()->get_name());
+    log(level::debug, "Start polling %", this->get_device()->get_name());
     asio::streambuf buf;
     while (this->get_device()->is_connected()) {
       try {
@@ -545,6 +546,7 @@ struct Port_polling_mixin: public Polling_mixin<DeviceClass> {
         this->get_device()->disconnect();
       }
     }
+    log(level::debug, "Stopped polling %", this->get_device()->get_name());
   }
 };  // struct Port_polling_mixin
 

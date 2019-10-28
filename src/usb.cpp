@@ -28,9 +28,11 @@
 #include <cstdlib>
 #include <functional>
 
-#include <boost/thread/thread.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#ifndef DEBUG
+#include <boost/thread/thread.hpp>
+#endif
 
 
 namespace asio = boost::asio;
@@ -183,27 +185,39 @@ struct Lib_usb::Usb_descriptors {
     std::string manufacturer = get_string_descriptor(descriptor_.iManufacturer);
     std::string product = get_string_descriptor(descriptor_.iProduct);
     std::string serial = get_string_descriptor(descriptor_.iSerialNumber);
-    log(level::info, "USB device: Manufacturer: %, Product: %, Serial: %, Configs: %, Class: %, SubClass: %, Protocol: %",
+    log(level::info, 
+        "USB device: Manufacturer: %, Product: %, Serial: %, Configs: %, " \
+        "Class: %, SubClass: %, Protocol: %",
         manufacturer, product, serial, static_cast<int>(descriptor_.bNumConfigurations),
-        get_usb_class_string(descriptor_.bDeviceClass),static_cast<int>(descriptor_.bDeviceSubClass),
+        get_usb_class_string(descriptor_.bDeviceClass), 
+        static_cast<int>(descriptor_.bDeviceSubClass),
         static_cast<int>(descriptor_.bDeviceProtocol));
     std::string config_name = get_string_descriptor(active_config_->iConfiguration);
     log(level::info, "  Device configuration: %, Attributes %, Interfaces: %",
-        config_name, static_cast<int>(active_config_->bmAttributes), static_cast<int>(active_config_->bNumInterfaces));
+        config_name, 
+        static_cast<int>(active_config_->bmAttributes), 
+        static_cast<int>(active_config_->bNumInterfaces));
     for (int i = 0; i < active_config_->bNumInterfaces; ++i) {
       libusb_interface iface = active_config_->interface[i];
       for (int j = 0; j < iface.num_altsetting; ++j) {
         libusb_interface_descriptor iface_desc = iface.altsetting[j];
         std::string iface_name = get_string_descriptor(iface_desc.iInterface);
-        log(level::info, "    Interface: %, %, Endpoints: %, Class: %, SubClass: %, Protocol: %",
-            static_cast<int>(iface_desc.bInterfaceNumber), iface_name, static_cast<int>(iface_desc.bNumEndpoints),
-            get_usb_class_string(iface_desc.bInterfaceClass),static_cast<int>(iface_desc.bInterfaceSubClass),
+        log(level::info, "    Interface: %, %, Endpoints: %, Class: %, SubClass: %, " \
+            "Protocol: %",
+            static_cast<int>(iface_desc.bInterfaceNumber), 
+            iface_name, 
+            static_cast<int>(iface_desc.bNumEndpoints),
+            get_usb_class_string(iface_desc.bInterfaceClass),
+            static_cast<int>(iface_desc.bInterfaceSubClass),
             static_cast<int>(iface_desc.bInterfaceProtocol));
         for (int k = 0; k < iface_desc.bNumEndpoints; ++k) {
           libusb_endpoint_descriptor endpoint = iface_desc.endpoint[k];
-          log(level::info, "      Endpoint: %, Addresss: %, Attributes: %, Max packet size: %, Poll interval: %",
-              k, static_cast<int>(endpoint.bEndpointAddress), static_cast<int>(endpoint.bmAttributes),
-              static_cast<int>(endpoint.wMaxPacketSize), static_cast<int>(endpoint.bInterval));
+          log(level::info, "      Endpoint: %, Addresss: %, Attributes: %, " \
+              "Max packet size: %, Poll interval: %",
+              k, static_cast<int>(endpoint.bEndpointAddress),
+              static_cast<int>(endpoint.bmAttributes),
+              static_cast<int>(endpoint.wMaxPacketSize),
+              static_cast<int>(endpoint.bInterval));
         }
       }
     }
@@ -383,9 +397,11 @@ struct Usb::Usb_event_handler {
     if (!handler_ctx_.stopped()) {
       handler_ctx_.stop();
       worker_.join();
+      DEBUGLOG("Joined USB event handling to thread: %", boost::this_thread::get_id());
     }
   }
   void handle_events() {
+    DEBUGLOG("Start USB event handling from thread: %", boost::this_thread::get_id());
     if (usb_ctx_ != nullptr && !handler_ctx_.stopped())
       handler_ctx_.post(boost::bind(&Usb_event_handler::handle_events_, this));
   }
@@ -396,6 +412,7 @@ private:
   boost::thread worker_;
 
   void handle_events_() {
+    DEBUGLOG("Start handling USB events on thread: %", boost::this_thread::get_id());
     timeval tv = timeval{0, 100000};
     while (usb_ctx_ != nullptr) {
       int r = libusb_handle_events_timeout_completed(usb_ctx_, &tv, nullptr);
@@ -403,6 +420,7 @@ private:
         log(level::error, "Failed to handle USB events, error %", r);
       }
     }
+    DEBUGLOG("Done handling USB events on thread: %", boost::this_thread::get_id());
   }
 
 };
@@ -445,9 +463,12 @@ void Usb::close() {
 void Usb::cancel() {
   log(level::info, "Cancelling outstanding USB IO...");
   transfers_.cancel();
-  asio::deadline_timer tmr(io_ctx_, pt::milliseconds(100));
+  // Wait a little bit...
+  asio::deadline_timer tmr(io_ctx_, pt::milliseconds(20));
   tmr.wait();
-  log(level::info, "Cancelled outstanding USB IO");
+  // .. and handle cancelled transfers
+  auto handled = io_ctx_.poll();
+  log(level::info, "Cancelled outstanding USB IO: % events", handled);
 }
 
 

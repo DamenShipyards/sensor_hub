@@ -139,7 +139,6 @@ link_libraries(
   Boost::program_options
   Boost::log
   Boost::log_setup
-  Boost::thread
   Boost::chrono
   Boost::coroutine
   ${USE_EIGEN}
@@ -172,7 +171,6 @@ macro(new_test NEW_TEST)
     Boost::filesystem
     Boost::log
     Boost::log_setup
-    Boost::thread
     Boost::chrono
     Boost::coroutine
     Boost::unit_test_framework

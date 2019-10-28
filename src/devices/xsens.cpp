@@ -45,7 +45,7 @@ using Xsens_MTi_G_710_serial_factory = Device_factory<Xsens_MTi_G_710_serial>;
 
 struct Xsens_MTi_670: public xsens::MTi_670<Serial, Context_provider> {
   Xsens_MTi_670(): xsens::MTi_670<Serial, Context_provider>() {
-    this->set_poll_size(0x80);
+    this->set_poll_size(0x41);
   };
 
   std::string get_auto_connection_string() const override {

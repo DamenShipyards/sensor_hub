@@ -111,6 +111,11 @@ inline void set_log_level(const std::string& slevel) {
 
 extern std::string get_current_log_file();
 
+#ifdef DEBUG
+#define DEBUGLOG(...) log(level::debug, __VA_ARGS__)
+#else
+#define DEBUGLOG(...) void
+#endif
 
 #endif
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

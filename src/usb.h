@@ -29,6 +29,7 @@
 #include <deque>
 #include <exception>
 #include <boost/asio.hpp>
+#include <boost/thread/thread.hpp>
 
 // Avoid warnings from libusb.h which we won't fix
 #ifdef __GNUG__
@@ -101,7 +102,9 @@ struct Transfer_queue {
   void cancel() {
     for (auto&& transfer: transfers_) {
       if (transfer != nullptr) {
-        libusb_cancel_transfer(transfer->get_transfer());
+        auto tr = transfer->get_transfer();
+        log(level::debug, "Cancelling transfer: %", tr);
+        libusb_cancel_transfer(tr);
       }
     }
   }
@@ -155,9 +158,11 @@ struct Operation_context {
     consume_read_data(bytes_transferred);
     Handler handler(handler_);
     Transfer_queue* transfers = transfers_;
+    DEBUGLOG("Posting handler with: % on thread %", ec, boost::this_thread::get_id());
     boost::asio::post(strand_,
         [handler{std::move(handler)}, ec, bytes_transferred, transfers, transfer]() mutable {
            transfers->delete_transfer(transfer);
+           DEBUGLOG("Calling handler with: % on thread %", ec, boost::this_thread::get_id());
            handler(ec, bytes_transferred);
         }
     );
@@ -185,10 +190,10 @@ static void handle_transfer(libusb_transfer* transfer) {
   switch(transfer->status) {
     case LIBUSB_TRANSFER_COMPLETED:
       ec = boost::system::errc::make_error_code(boost::system::errc::success);
-      log(level::debug, "USB transferred % bytes", bytes_transferred);
+      DEBUGLOG("USB transferred % bytes", bytes_transferred);
       break;
     case LIBUSB_TRANSFER_CANCELLED:
-      log(level::info, "USB transfer cancelled");
+      DEBUGLOG("USB transfer cancelled");
       ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
       break;
     case LIBUSB_TRANSFER_NO_DEVICE:
@@ -217,12 +222,14 @@ static void handle_transfer(libusb_transfer* transfer) {
       break;
   }
   if (!ec && bytes_transferred == 0) {
+    DEBUGLOG("Resubmitting transfer: %", transfer);
     int r = libusb_submit_transfer(transfer);
     if (r != 0) {
       log(level::error, "Failed to re-submit USB transfer, error %", r);
     }
   }
   else {
+    DEBUGLOG("Posting transfer result: %, %", transfer, ec);
     operation_context->post(ec, bytes_transferred, transfer);
     delete operation_context;
   }
@@ -274,6 +281,7 @@ struct Usb: public Lib_usb {
         operation_context,
         2000U);
 
+    log(level::debug, "Submittting USB transfer: %", transfer);
     int r = libusb_submit_transfer(transfer);
     if (r != 0) {
       log(level::error, "Failed to submit USB transfer, error %", r);
@@ -292,7 +300,8 @@ struct Usb: public Lib_usb {
   async_read_some(const MutableBufferSequence& buffers,
       BOOST_ASIO_MOVE_ARG(ReadHandler) handler) {
     BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
-    log(level::debug, "Doing Usb::async_read_some for % bytes", boost::asio::buffer_size(buffers));
+    log(level::debug, "Doing Usb::async_read_some for % bytes", 
+        boost::asio::buffer_size(buffers));
 
     typedef boost::asio::async_completion<ReadHandler, void (boost::system::error_code, std::size_t)> Init;
     Init init(handler);
@@ -312,7 +321,8 @@ struct Usb: public Lib_usb {
       BOOST_ASIO_MOVE_ARG(WriteHandler) handler)
   {
     BOOST_ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
-    log(level::debug, "Doing Usb::async_write_some for % bytes", boost::asio::buffer_size(buffers));
+    log(level::debug, "Doing Usb::async_write_some for % bytes", 
+        boost::asio::buffer_size(buffers));
 
     typedef boost::asio::async_completion<WriteHandler, void (boost::system::error_code, std::size_t)> Init;
     Init init(handler);
