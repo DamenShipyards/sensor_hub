@@ -1,9 +1,8 @@
 #define BOOST_TEST_MODULE ublox_test
 #include <boost/test/unit_test.hpp>
 
-#include "../src/types.h"
-#include "../src/devices/ublox.h"
 #include "../src/devices/ublox_impl.h"
+#include "../src/types.h"
 
 #include <iostream>
 #include <ostream>

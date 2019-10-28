@@ -24,11 +24,41 @@
 #define SPIRIT_X3_H_
 
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 #include <boost/config.hpp>
 #include <boost/endian/detail/intrinsic.hpp>
 #include <boost/version.hpp>
+
+inline float rev_endian(float x) {
+  float result;
+  uint32_t iresult;
+  std::memcpy(&iresult, &x, sizeof(iresult));
+#ifdef BOOST_ENDIAN_NO_INTRINSICS
+  iresult = iresult << 16 | iresult >> 16;
+  iresult = ((iresult << 8) & 0xff00ff00) | ((iresult >> 8) & 0x00ff00ff);
+#else
+  iresult = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_4(iresult);
+#endif
+  std::memcpy(&result, &iresult, sizeof(result));
+  return result;
+}
+
+inline double rev_endian(double x) {
+  double result;
+  uint64_t iresult;
+  std::memcpy(&iresult, &x, sizeof(iresult));
+#ifdef BOOST_ENDIAN_NO_INTRINSICS
+  iresult = iresult << 32 | iresult >> 32;
+  iresult = (iresult & 0x0000ffff0000ffffULL) << 16 | (iresult & 0xffff0000ffff0000ULL) >> 16;
+  iresult = (iresult & 0x00ff00ff00ff00ffULL) << 8 | (iresult & 0xff00ff00ff00ff00ULL) >> 8;
+#else
+  iresult = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_8(iresult);
+#endif
+  std::memcpy(&result, &iresult, sizeof(result));
+  return result;
+}
 
 #if BOOST_VERSION >= 107100
 
@@ -40,8 +70,7 @@ It also provides and additional is_endian_reversible, which looks like
 doing the same thing twice. .. but we can specialize that.
 Seems like the BOOST_STATIC_ASSERTS should check that and not std::integral.
 */
-
-
+#error  "Shouldn't get here"
 #include <boost/endian/conversion.hpp>
 
 namespace boost { namespace endian {
@@ -54,64 +83,38 @@ template<> struct is_endian_reversible<double>: std::integral_constant<bool, tru
 }
 
 template<> inline float endian_reverse<float>(float x) BOOST_NOEXCEPT {
-  float result;
-  uint32_t iresult;
-  memcpy(&iresult, &x, sizeof(iresult));
-#ifdef BOOST_ENDIAN_NO_INTRINSICS
-  iresult = iresult << 16 | iresult >> 16;
-  iresult = ((iresult << 8) & 0xff00ff00) | ((iresult >> 8) & 0x00ff00ff);
-#else
-  iresult = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_4(iresult);
-#endif
-  memcpy(&result, &iresult, sizeof(result));
-  return result;
+  return rev_endian(x);
 }
 
 template<> inline double endian_reverse<double>(double x) BOOST_NOEXCEPT {
-  double result;
-  uint64_t iresult;
-  memcpy(&iresult, &x, sizeof(iresult));
-#ifdef BOOST_ENDIAN_NO_INTRINSICS
-  iresult = iresult << 32 | iresult >> 32;
-  iresult = (iresult & 0x0000ffff0000ffffULL) << 16 | (iresult & 0xffff0000ffff0000ULL) >> 16;
-  iresult = (iresult & 0x00ff00ff00ff00ffULL) << 8 | (iresult & 0xff00ff00ff00ff00ULL) >> 8;
-#else
-  iresult = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_8(iresult);
-#endif
-  memcpy(&result, &iresult, sizeof(result));
-  return result;
+  return rev_endian(x);
 }
 
-}}
+}}  // namespace boost::endian
 
-#else
+#else // if BOOST_VERSION >= 107100
 
-// Inject missing endian_reverse into boost::endian namepace so floating point parsing in spirit works
-namespace boost { namespace endian {
-inline float endian_reverse(float x) BOOST_NOEXCEPT {
-#ifdef BOOST_ENDIAN_NO_INTRINSICS
-  uint32_t step16 = x << 16 | x >> 16;
-  uint32_t result = ((step16 << 8) & 0xff00ff00) | ((step16 >> 8) & 0x00ff00ff);
-#else
-  uint32_t result = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_4(*reinterpret_cast<uint32_t*>(&x));
-  return *reinterpret_cast<float*>(&result);
+#ifdef TYPES_H_
+#error "When using boost < 1.71, this file should be included before types.h"
 #endif
+
+// Inject missing endian_reverse into boost::endian namepace 
+// so floating point parsing in spirit works
+namespace boost { namespace endian {
+
+inline float endian_reverse(float x) BOOST_NOEXCEPT {
+  return rev_endian(x);
 }
 
 inline double endian_reverse(double x) BOOST_NOEXCEPT {
-#ifdef BOOST_ENDIAN_NO_INTRINSICS
-  uint64_t step32 = x << 32 | x >> 32;
-  uint64_t step16 = (step32 & 0x0000FFFF0000FFFFULL) << 16 | (step32 & 0xFFFF0000FFFF0000ULL) >> 16;
-  uint64_t result = (step16 & 0x00FF00FF00FF00FFULL) << 8 | (step16 & 0xFF00FF00FF00FF00ULL) >> 8;
-#else
-  uint64_t result = BOOST_ENDIAN_INTRINSIC_BYTE_SWAP_8(*reinterpret_cast<uint64_t*>(&x));
-#endif
-  return *reinterpret_cast<double*>(&result);
+  return rev_endian(x);
 }
-}}
+
+}}  // namespace boost::endian
 
 #include <boost/endian/conversion.hpp>
-#endif // if BOOST_VERSION >= 107100
+
+#endif // if BOOST_VERSION >= 107100 else
 
 #define BOOST_ENDIAN_HAS_FLOATING_POINT
 #include <boost/spirit/home/x3.hpp>

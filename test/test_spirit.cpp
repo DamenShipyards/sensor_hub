@@ -1,8 +1,8 @@
 #define BOOST_TEST_MODULE spirit_test
 #include <boost/test/unit_test.hpp>
 
-#include "../src/types.h" 
 #include "../src/spirit_x3.h" 
+#include "../src/types.h" 
 
 #include <vector>
 #include <iostream>

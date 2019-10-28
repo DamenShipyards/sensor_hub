@@ -23,10 +23,10 @@
 #ifndef UBLOX_H_
 #define UBLOX_H_
 
+#include "../spirit_x3.h"
 #include "../device.h"
 #include "../log.h"
 #include "../tools.h"
-#include "../spirit_x3.h"
 #include "../datetime.h"
 #include "../types.h"
 #include "../parser.h"

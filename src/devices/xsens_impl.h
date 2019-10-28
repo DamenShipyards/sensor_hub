@@ -22,11 +22,8 @@
 #ifndef XSENS_IMPL_H_
 #define XSENS_IMPL_H_
 
-#include "../functions.h"
-#include "../datetime.h"
-#include "../types.h"
-#include "../spirit_x3.h"
 #include "xsens.h"
+#include "../functions.h"
 
 namespace xsens {
 
