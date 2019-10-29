@@ -19,4 +19,4 @@ winservice.cpp eol=crlf
 doc/* linguist-documentation
 manual/* linguist-documentation
 info/* linguist-documentation
-3rdparty/* linguist-vendored
+depends/* linguist-vendored
