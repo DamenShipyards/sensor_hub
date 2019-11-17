@@ -163,7 +163,6 @@ private:
 
     set_default("modbus.enabled", true);
     set_default("modbus.port", 16502);
-    set_default("modbus.signed", false);
 
     set_default("modbus.ut_min", 0.0);
     set_default("modbus.ut_max", 1.0 * 0x100000000);

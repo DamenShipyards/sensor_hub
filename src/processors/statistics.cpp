@@ -60,15 +60,15 @@ uint16_t Statistics::get_modbus_reg(size_t index, const Base_scale& scaler) cons
   const Statistic& stat = qit->second;
   switch (m) {
     case Statistic::f_time:
-      return static_cast<uint16_t>(scaler.scale_to_u32(Quantity::ut, stat.time) >> 16);
+      return static_cast<uint16_t>(scaler.scale_to<uint32_t>(Quantity::ut, stat.time) >> 16);
     case Statistic::f_time + 1:
-      return static_cast<uint16_t>(scaler.scale_to_u32(Quantity::ut, stat.time) & 0xFFFF);
+      return static_cast<uint16_t>(scaler.scale_to<uint32_t>(Quantity::ut, stat.time) & 0xFFFF);
     case Statistic::f_n + 1:
       return static_cast<uint16_t>(stat.n);
     case Statistic::f_mean + 1:
-      return static_cast<uint16_t>(scaler.scale_to_u16(q, stat.mean));
+      return static_cast<uint16_t>(scaler.scale_to<uint16_t>(q, stat.mean));
     case Statistic::f_stddev + 1:
-      return static_cast<uint16_t>(scaler.scale_to_u16(q, sqrt(stat.variance)));
+      return static_cast<uint16_t>(scaler.scale_to<uint16_t>(q, sqrt(stat.variance)));
     default:
       // Shouldn't happen
       return 0;

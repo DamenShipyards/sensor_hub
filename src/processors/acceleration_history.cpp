@@ -56,13 +56,13 @@ uint16_t Acceleration_history::get_modbus_reg(size_t index, const Base_scale& sc
   const Acceleration_peak& peak = peaks_[i];
   switch (m) {
     case Acceleration_peak::f_start:
-      return static_cast<uint16_t>(scaler.scale_to_u32(Quantity::ut, peak.start) >> 16);
+      return static_cast<uint16_t>(scaler.scale_to<uint32_t>(Quantity::ut, peak.start) >> 16);
     case Acceleration_peak::f_start + 1:
-      return static_cast<uint16_t>(scaler.scale_to_u32(Quantity::ut, peak.start) & 0xFFFF);
+      return static_cast<uint16_t>(scaler.scale_to<uint32_t>(Quantity::ut, peak.start) & 0xFFFF);
     case Acceleration_peak::f_duration + 1:
-      return scaler.scale_to_u16(Quantity::du, peak.duration);
+      return scaler.scale_to<uint16_t>(Quantity::du, peak.duration);
     default:
-      return scaler.scale_to_u16(Quantity::ax, peak[m - 1]);
+      return scaler.scale_to<uint16_t>(Quantity::ax, peak[m - 1]);
   }
 }
 

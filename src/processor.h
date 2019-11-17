@@ -31,79 +31,80 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <limits>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 namespace prtr = boost::property_tree;
 
-
 struct Scale {
   double min;
   double max;
-  double range;
-  double scale;
+  double multiplier;
+  double offset;
+  bool overflow;
+  bool signed_type;
 };
 
+template<typename T>
+static T get_def_config(Quantity q, const std::string& type, const T def) {
+  (void)q;
+  (void)type;
+  return def;
+}
+
+template<typename T>
+static constexpr double type_range() {
+  return std::numeric_limits<T>::max() - std::numeric_limits<T>::lowest() + 1;
+}
+
+template<typename T>
+static constexpr T top_bit() {
+  return 1 << (std::numeric_limits<T>::digits - 1);
+}
 
 struct Base_scale {
 
-  Base_scale(const prtr::ptree& config): scale_(), signed_(false) {
-    signed_ = config.get("signed", false);
+  Base_scale(const prtr::ptree& config): scale_() {
     for (Quantity_iter qi = Quantity_iter::begin(); qi != Quantity_iter::end(); ++qi) {
       std::string quant = get_quantity_name(*qi);
-      double min = config.get(fmt::format("{}_min", quant), -32768.0);
-      double max = config.get(fmt::format("{}_max", quant),  32768.0);
-      double range = config.get(fmt::format("{}_range", quant),  max - min);
-      double scale = config.get(fmt::format("{}_scale", quant),  1.0);
-      scale_[*qi] = {min, max, range, scale};
+      double min = config.get(fmt::format("{}_min", quant), get_def_config(*qi, "min", -32768.0));
+      double max = config.get(fmt::format("{}_max", quant), get_def_config(*qi, "max",  32768.0));
+      double multiplier = config.get(fmt::format("{}_scale", quant),  get_def_config(*qi, "scale", 0));
+      double offset = config.get(fmt::format("{}_offset", quant),  get_def_config(*qi, "offset", 0));
+      bool overflow = config.get(fmt::format("{}_overflow", quant), get_def_config(*qi, "overflow", false));
+      bool signed_type = config.get(fmt::format("{}_signed", quant), get_def_config(*qi, "signed", multiplier != 0));
+      scale_[*qi] = {min, max, multiplier, offset, overflow, signed_type};
     }
   }
 
-  uint16_t scale_to_u16(Quantity quantity, double value) const {
+  template<typename T>
+  typename std::enable_if<!std::numeric_limits<T>::is_signed, T>::type scale_to(Quantity quantity, double value) const {
     try {
       const Scale& scale = scale_.at(quantity);
-      uint16_t result = 0;
-      if (signed_) {
-        value *= scale.scale;
-        value = value > INT16_MAX ? INT16_MAX : value;
-        value = value < INT16_MIN ? INT16_MIN : value;
-        int16_t sresult = static_cast<int16_t>(value);
-        memcpy(&result, &sresult, sizeof(result));
-      }
-      else {
-        value = std::max(scale.min, value);
-        value = std::min(scale.max, value);
-        value -= scale.min;
-        value /= scale.range;
-        value *= 0x10000;
-        result = static_cast<uint16_t>(value);
-      }
-      return result;
-    }
-    catch (...) {
-      return 0;
-    }
-  }
+      T result = 0;
 
-  uint32_t scale_to_u32(Quantity quantity, double value) const {
-    try {
-      const Scale& scale = scale_.at(quantity);
-      uint32_t result = 0;
-      if (signed_) {
-        value *= scale.scale;
-        value = value > INT32_MAX ? INT32_MAX : value;
-        value = value < INT32_MIN ? INT32_MIN : value;
-        int32_t sresult = static_cast<int32_t>(value);
-        memcpy(&result, &sresult, sizeof(result));
+      double min = scale.min;
+      double max = scale.max;
+
+      if (scale.multiplier != 0) {
+        double range = type_range<T>() / scale.multiplier;
+        min = scale.offset - range / 2.0;
+        max = scale.offset + range / 2.0;
       }
-      else {
-        value = std::max(scale.min, value);
-        value = std::min(scale.max, value);
-        value -= scale.min;
-        value /= scale.range;
-        value *= 0x100000000;
-        result = static_cast<uint32_t>(value);
+
+      if (!scale.overflow) {
+        value = std::max(min, value);
+        value = std::min(max, value);
+      }
+
+      value -= min;
+      value /= max - min;
+      value *= type_range<T>();
+      result = static_cast<T>(value);
+      if (scale.signed_type) {
+        result ^= top_bit<T>();
       }
       return result;
     }
@@ -114,7 +115,6 @@ struct Base_scale {
 
 private:
   std::map<Quantity, Scale> scale_;
-  bool signed_;
 };
 
 
@@ -140,7 +140,7 @@ struct Processor {
     return 0;
   }
 
-  virtual void set_param(const std::string&, const double&) { 
+  virtual void set_param(const std::string&, const double&) {
   }
 
   virtual void set_filter(const std::string&) {
@@ -169,7 +169,7 @@ struct Processor {
         set_param(keyval[0], val);
       }
       catch (std::exception& e) {
-        log(level::error, "%. Expected floating point argument in processor parameter. Got %.", 
+        log(level::error, "%. Expected floating point argument in processor parameter. Got %.",
             e.what(), keyval[1]);
         continue;
       }
