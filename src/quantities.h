@@ -33,6 +33,10 @@
 #include <deque>
 #include <list>
 
+#include <boost/property_tree/ptree.hpp>
+
+#include <fmt/format.h>
+
 #include "tools.h"
 #include "types.h"
 #include "datetime.h"
@@ -442,6 +446,99 @@ inline std::ostream& operator<<(std::ostream& os, const Stamped_quantity& value)
   return os << static_cast<const Stamped_value&>(value) << ":" << static_cast<const Data_quantity&>(value);
 }
 
+namespace prtr = boost::property_tree;
+
+struct Scale {
+  double min;
+  double max;
+  double multiplier;
+  double offset;
+  bool overflow;
+  bool signed_type;
+};
+
+template<typename T>
+static T get_def_config(Quantity q, const std::string& type, const T def) {
+  (void)q;
+  (void)type;
+  return def;
+}
+
+template<typename T>
+static constexpr double type_range() {
+  return static_cast<double>(std::numeric_limits<T>::max()) - static_cast<double>(std::numeric_limits<T>::lowest()) + 1.0;
+}
+
+template<typename T>
+static constexpr T top_bit() {
+  return 1 << (std::numeric_limits<T>::digits - 1);
+}
+
+struct Base_scale {
+  Base_scale(): scale_() {
+    load(prtr::ptree());
+  }
+
+  Base_scale(const prtr::ptree& config): scale_() {
+    load(config);
+  }
+
+  void load(const prtr::ptree& config) {
+    for (Quantity_iter qi = Quantity_iter::begin(); qi != Quantity_iter::end(); ++qi) {
+      std::string quant = get_quantity_name(*qi);
+      double min = config.get(fmt::format("{}_min", quant), get_def_config(*qi, "min", -32768.0));
+      double max = config.get(fmt::format("{}_max", quant), get_def_config(*qi, "max",  32768.0));
+      double multiplier = config.get(fmt::format("{}_scale", quant),  get_def_config(*qi, "scale", 0));
+      double offset = config.get(fmt::format("{}_offset", quant),  get_def_config(*qi, "offset", 0));
+      bool overflow = config.get(fmt::format("{}_overflow", quant), get_def_config(*qi, "overflow", false));
+      bool signed_type = config.get(fmt::format("{}_signed", quant), get_def_config(*qi, "signed", multiplier != 0));
+      scale_[*qi] = {min, max, multiplier, offset, overflow, signed_type};
+    }
+  }
+
+  template<typename T>
+  typename std::enable_if<!std::numeric_limits<T>::is_signed, T>::type scale_to(Quantity quantity, double value) const {
+    try {
+      const Scale& scale = scale_.at(quantity);
+      T result = 0;
+
+      double min = scale.min;
+      double max = scale.max;
+
+      if (scale.multiplier != 0) {
+        double range = type_range<T>() / scale.multiplier;
+        min = scale.offset - range / 2.0;
+        max = scale.offset + range / 2.0;
+      }
+
+      value -= min;
+      value /= max - min;
+      value *= type_range<T>();
+
+      if (!scale.overflow) {
+        value = value < std::numeric_limits<T>::lowest() ? std::numeric_limits<T>::lowest() : value; 
+        value = value >= std::numeric_limits<T>::max() ? std::numeric_limits<T>::max() : value; 
+      }
+
+      result = static_cast<T>(value);
+
+      if (scale.signed_type) {
+        result ^= top_bit<T>();
+      }
+      return result;
+    }
+    catch (...) {
+      return 0;
+    }
+  }
+
+  template<typename T>
+  T scale_to(const Quantity_value value) const {
+    return scale_to<T>(value.quantity, value.value);
+  }
+private:
+  std::map<Quantity, Scale> scale_;
+};
 #endif
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

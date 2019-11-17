@@ -82,3 +82,54 @@ BOOST_AUTO_TEST_CASE(comparison_test) {
   BOOST_TEST(sq == Quantity::lo);
   BOOST_TEST(sq.simultaneous_with(50.0));
 }
+
+BOOST_AUTO_TEST_CASE(scaler_test) {
+  prtr::ptree pt;
+  Base_scale scaler(pt);
+  Quantity_value vx(8, Quantity::vx);
+  auto u16vx = scaler.scale_to<uint16_t>(vx);
+  BOOST_TEST(u16vx == 8 + 0x8000);
+
+  pt.put("vx_signed", true);
+  scaler.load(pt);
+  u16vx = scaler.scale_to<uint16_t>(vx);
+  BOOST_TEST(u16vx == 8);
+
+  auto u32vx = scaler.scale_to<uint32_t>(vx);
+  BOOST_TEST(u32vx == 8 * 0x10000);
+
+  pt.put("vx_scale", 1);
+  scaler.load(pt);
+  u32vx = scaler.scale_to<uint32_t>(vx);
+  BOOST_TEST(u32vx == 8);
+
+  vx.value = -88;
+  u32vx = scaler.scale_to<uint32_t>(vx);
+  BOOST_TEST(u32vx == -88);
+
+  pt.put("vx_scale", 100);
+  scaler.load(pt);
+  u32vx = scaler.scale_to<uint32_t>(vx);
+  BOOST_TEST(u32vx == -8800);
+
+  pt.put("vx_scale", 0);
+  pt.put("vx_min", -88);
+  pt.put("vx_signed", false);
+  scaler.load(pt);
+  u32vx = scaler.scale_to<uint32_t>(vx);
+  BOOST_TEST(u32vx == 0);
+
+  pt.put("vx_min", -89);
+  pt.put("vx_max", -88);
+  scaler.load(pt);
+  u32vx = scaler.scale_to<uint32_t>(vx);
+  BOOST_TEST(u32vx == 0xFFFFFFFF);
+
+  pt.put("vx_overflow", true);
+  scaler.load(pt);
+  u32vx = scaler.scale_to<uint32_t>(vx);
+  BOOST_TEST(u32vx == 0);
+  vx.value += 4 / (double(0xFFFFFFFF) + 1);
+  u32vx = scaler.scale_to<uint32_t>(vx);
+  BOOST_TEST(u32vx == 4);
+}
