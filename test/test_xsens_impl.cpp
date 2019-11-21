@@ -75,3 +75,22 @@ BOOST_AUTO_TEST_CASE(xsens_parse_bytes_test) {
   BOOST_TEST(values[2].value == -to_float(data.data() + 11));
   BOOST_TEST(values[3].value == 1536569876.3429);
 }
+
+BOOST_AUTO_TEST_CASE(xsens_command_test) {
+  using namespace xsens::command;
+  cbytes_t expected = {packet_start, sys_command, XMID_SetOptionFlags,
+    0x08,
+    0x00, 0x00, 0x00,       // Option flags to set:
+    0x80,                   // EnableInRunCompassCalibration
+    0x00, 0x00, 0x00,       // Option flags to clear
+    0x10,                   // Clear: EnableAHS (apparently doesn't work well with MTi-G-710)
+    0x21                    // Checksum
+  };
+  cbytes_t message {
+    0x00, 0x00, 0x00,       // Option flags to set:
+    0x80,                   // EnableInRunCompassCalibration
+    0x00, 0x00, 0x00,       // Option flags to clear
+    0x10                    // Clear: EnableAHS (apparently doesn't work well with MTi-G-710)
+  };
+  BOOST_TEST(packet(XMID_SetOptionFlags, message) == expected);
+}

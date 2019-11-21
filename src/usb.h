@@ -281,7 +281,7 @@ struct Usb: public Lib_usb {
         operation_context,
         2000U);
 
-    log(level::debug, "Submittting USB transfer: %", transfer);
+    log(level::debug, "Submitting USB transfer: %", transfer);
     int r = libusb_submit_transfer(transfer);
     if (r != 0) {
       log(level::error, "Failed to submit USB transfer, error %", r);

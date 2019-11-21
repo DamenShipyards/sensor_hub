@@ -49,54 +49,42 @@ constexpr byte_t packet_start = 0xFA;
 constexpr byte_t sys_command = 0xFF;
 constexpr byte_t conf_command = 0x01;
 
-extern cbytes_t goto_config;
-extern cbytes_t config_ack;
 
-extern cbytes_t goto_measurement;
-extern cbytes_t measurement_ack;
-
-extern cbytes_t init_mt;
-extern cbytes_t mt_ack;
-
-extern cbytes_t set_option_flags;
-extern cbytes_t option_flags_ack;
-
-extern cbytes_t req_reset;
-extern cbytes_t reset_ack;
-
-extern cbytes_t wakeup;
-extern cbytes_t wakeup_ack;
-
-extern cbytes_t req_product_code;
-extern cbytes_t product_code_resp;
-
-extern cbytes_t req_device_id;
-extern cbytes_t device_id_resp;
-
-extern cbytes_t req_firmware_rev;
-extern cbytes_t firmware_rev_resp;
-
-extern cbytes_t req_utc_time;
-
-extern cbytes_t get_output_configuration;
-extern cbytes_t get_output_configuration_ack;
-extern cbytes_t set_output_configuration;
-extern cbytes_t output_configuration_ack;
-
-extern cbytes_t set_string_output_type;
-extern cbytes_t set_string_output_type6;
-extern cbytes_t string_output_type_ack;
-
+extern cbytes_t option_flags;
+extern cbytes_t string_output_type;
+extern cbytes_t string_output_type6;
+extern cbytes_t output_configuration;
 extern cbytes_t error_resp;
 
 constexpr unsigned size_offset = 3;
 constexpr unsigned data_offset = 4;
 
+byte_t checksum(cbytes_t data) {
+  byte_t result = 0;
+  auto i = data.cbegin();
+  ++i;
+  while (i != data.cend()) {
+    result -= *i++;
+  }
+  return result;
 }
+
+Bytes packet_head(cbyte_t mid) {
+  Bytes result = { packet_start, sys_command };
+  return result << mid;
+}
+
+Bytes packet(cbyte_t mid, cbytes_t command=cbytes_t()) {
+  Bytes result = packet_head(mid);
+  result << static_cast<byte_t>(command.size()) << command;
+  result << checksum(result);
+  return result;
+}
+
+}  // command
 
 
 namespace parser {
-
 
 struct Xsens_parser: public Packet_parser {
   Xsens_parser();
@@ -159,9 +147,9 @@ struct Xsens: public Port_device<Port, ContextProvider>,
       response.insert(response.end(), buf_begin, buf_end);
 
       read_buf.consume(bytes_read);
-      if (contains(response, command::wakeup)) {
+      if (contains(response, command::packet(XMID_Wakeup))) {
         log(level::info, "Received WakeUp from XSens: Acknowledging");
-        asio::async_write(port, asio::buffer(command::wakeup_ack), yield);
+        asio::async_write(port, asio::buffer(command::packet(XMID_WakeupAck)), yield);
         // This device will spit out its configuration, which we will just swallow
         port.async_read_some(read_buf.prepare(0x1000), yield[ec]);
         this->wait(500, yield);
@@ -173,18 +161,59 @@ struct Xsens: public Port_device<Port, ContextProvider>,
     return true;
   }
 
+  bool do_command(cbyte_t mid, cbyte_t ack, asio::yield_context yield,
+        const std::string& message) {
+    this->wait(50, yield);
+    log(level::info, message);
+    return this->exec_command(
+        command::packet(mid), 
+        command::packet(ack), 
+        command::error_resp, yield);
+  }
+
+  bool do_set(cbyte_t mid, cbyte_t ack, asio::yield_context yield,
+        cbytes_t setting, const std::string& message) {
+    this->wait(50, yield);
+    log(level::info, message);
+    return this->exec_command(
+        command::packet(mid, setting),
+        command::packet_head(ack), 
+        command::error_resp, yield);
+  }
+
+  bool do_check(cbyte_t mid, cbyte_t ack, asio::yield_context yield,
+        cbytes_t setting, const std::string& message) {
+    this->wait(50, yield);
+    log(level::info, message);
+    return this->exec_command(
+        command::packet(mid),
+        command::packet(ack, setting), 
+        command::error_resp, yield);
+  }
+
+  bool do_request(cbyte_t mid, cbyte_t ack, asio::yield_context yield, 
+      bytes_t* response, const std::string& message) {
+    this->wait(50, yield);
+    log(level::info, message);
+    return this->exec_command(
+        command::packet(mid), 
+        command::packet_head(ack), 
+        command::error_resp, yield, 
+        response);
+  }
+
+
   bool goto_config(asio::yield_context yield) {
-    log(level::info, "Xsens GotoConfig");
-    return this->exec_command(command::goto_config, command::config_ack, command::error_resp, yield);
+    return do_command(XMID_GotoConfig, XMID_GotoConfigAck, 
+        yield, "Xsens GotoConfig");
   }
 
   bool goto_measurement(asio::yield_context yield) {
-    this->wait(50, yield);
-    log(level::info, "Xsens GotoMeasurement");
-    return this->exec_command(command::goto_measurement, command::measurement_ack, command::error_resp, yield);
+    return do_command(XMID_GotoMeasurement, XMID_GotoMeasurementAck,
+        yield, "Xsens GotoMeasurement");
   }
 
-  virtual bool get_output_configuration(asio::yield_context) {
+  virtual bool check_output_configuration(asio::yield_context) {
     return true;
   }
 
@@ -201,15 +230,12 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   }
 
   bool reset(asio::yield_context yield) override {
-    this->wait(50, yield);
-    log(level::info, "Xsens Reset");
-    return this->exec_command(command::req_reset, command::reset_ack, command::error_resp, yield);
+    return do_command(XMID_Reset, XMID_ResetAck, yield, "Xsens Reset");
   }
 
   bool init_mt(asio::yield_context yield) {
-    this->wait(50, yield);
-    log(level::info, "Xsens InitMT");
-    return this->exec_command(command::init_mt, command::mt_ack, command::error_resp, yield);
+    return do_request(XMID_Initbus, XMID_InitBusResults, yield, 
+        nullptr, "Xsens InitMT");
   }
 
   std::string get_string_from_response(cbytes_t response) {
@@ -225,10 +251,9 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   }
 
   virtual bool request_product_code(asio::yield_context yield) {
-    this->wait(50, yield);
-    log(level::info, "Xsens GetProductCode");
     bytes_t response;
-    bool result = this->exec_command(command::req_product_code, command::product_code_resp, command::error_resp, yield, &response);
+    bool result = do_request(XMID_ReqProductCode, XMID_ProductCode, 
+        yield, &response, "Xsens GetProductCode");
     if (result) {
       std::string data = get_string_from_response(response);
       log(level::info, "Product code: %", data);
@@ -237,10 +262,9 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   }
 
   virtual bool request_identifier(asio::yield_context yield) {
-    this->wait(50, yield);
-    log(level::info, "Xsens GetIdentifier");
     bytes_t response;
-    bool result = this->exec_command(command::req_device_id, command::device_id_resp, command::error_resp, yield, &response);
+    bool result = do_request(XMID_ReqDid, XMID_DeviceId, yield, 
+        &response, "Xsens GetIdentifier");
     if (result && response.size() >= (command::data_offset + 4)) {
       size_t offset = response[command::size_offset] - 4;
       std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}",
@@ -256,11 +280,9 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   }
 
   virtual bool request_firmware(asio::yield_context yield) {
-    this->wait(50, yield);
-    log(level::info, "Xsens GetFirmwareVersion");
-
     bytes_t response;
-    bool result = this->exec_command(command::req_firmware_rev, command::firmware_rev_resp, command::error_resp, yield, &response);
+    bool result = do_request(XMID_ReqFirmwareRevision, XMID_FirmwareRevision,
+        yield, &response, "Xsens GetFirmwareVersion");
     if (result && response.size() >= (command::data_offset + 11)) {
       uint8_t maj = response[command::data_offset + 0];
       uint8_t min = response[command::data_offset + 1];
@@ -283,7 +305,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
         && request_firmware(yield)
         && set_option_flags(yield)
         && set_string_output_type(yield)
-        && (get_output_configuration(yield)
+        && (check_output_configuration(yield)
             || (set_output_configuration(yield) && init_mt(yield)))
         && goto_measurement(yield);
 
@@ -319,35 +341,29 @@ private:
 template <typename Port, class ContextProvider>
 struct MTi_GPS_based: public Xsens<Port, ContextProvider> {
 
-  bool get_output_configuration(asio::yield_context yield) override {
-    this->wait(50, yield);
-    log(level::info, "Xsens GetOutputConfiguration");
-    return this->exec_command(command::get_output_configuration,
-        command::get_output_configuration_ack, command::error_resp, yield);
+  bool check_output_configuration(asio::yield_context yield) override {
+    return this->do_check(
+        XMID_ReqOutputConfiguration, XMID_ReqOutputConfigurationAck, 
+        yield, command::output_configuration, "Xsens ReqOutputConfiguration");
   }
 
 
   bool set_output_configuration(asio::yield_context yield) override {
-    this->wait(50, yield);
-    log(level::info, "Xsens SetOutputConfiguration");
-    return this->exec_command(command::set_output_configuration,
-        command::output_configuration_ack, command::error_resp, yield);
+    return this->do_set(
+        XMID_SetOutputConfiguration, XMID_SetOutputConfigurationAck,
+        yield, command::output_configuration, "Xsens SetOutputConfiguration");
   }
 
 
   bool set_option_flags(asio::yield_context yield) override {
-    this->wait(50, yield);
-    log(level::info, "Xsens SetOptionFlags");
-    return this->exec_command(command::set_option_flags,
-        command::option_flags_ack, command::error_resp, yield);
+    return this->do_set(XMID_SetOptionFlags, XMID_SetOptionFlagsAck,
+        yield, command::option_flags, "Xsens SetOptionFlags");
   }
 
 
   bool set_string_output_type(asio::yield_context yield) override {
-    this->wait(50, yield);
-    log(level::info, "Xsens SetStringOutputType");
-    return this->exec_command(command::set_string_output_type,
-        command::string_output_type_ack, command::error_resp, yield);
+    return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck, 
+        yield, command::string_output_type, "Xsens SetStringOutputType");
   }
 
 };
@@ -370,13 +386,6 @@ struct MTi_G_710: public MTi_GPS_based<Port, ContextProvider> {
 template <typename Port, class ContextProvider>
 struct MTi_670: public MTi_GPS_based<Port, ContextProvider> {
 
-  bool set_string_output_type(asio::yield_context yield) override {
-    this->wait(50, yield);
-    log(level::info, "Xsens SetStringOutputType 6xx");
-    return this->exec_command(command::set_string_output_type6,
-        command::string_output_type_ack, command::error_resp, yield);
-  }
-
   MTi_670(): MTi_GPS_based<Port, ContextProvider>() {
     log(level::info, "Constructing Xsens_MTi_670");
   }
@@ -384,6 +393,11 @@ struct MTi_670: public MTi_GPS_based<Port, ContextProvider> {
 
   ~MTi_670() override {
     log(level::info, "Destroying Xsens_MTi_670");
+  }
+
+  bool set_string_output_type(asio::yield_context yield) override {
+    return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck, 
+        yield, command::string_output_type6, "Xsens SetStringOutputType 6xx");
   }
 
 };

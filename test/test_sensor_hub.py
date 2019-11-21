@@ -22,6 +22,9 @@ def print_device(device):
     resp = client.read_input_registers(0, 40, unit=device)
     for reg in resp.registers:
         print(reg)
+    resp = client.read_input_registers(20000, 40, unit=device)
+    for reg in resp.registers:
+        print(reg)
 
 print_device(0)
 print_device(1)

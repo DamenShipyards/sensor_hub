@@ -29,21 +29,13 @@ namespace xsens {
 
 namespace command {
 
-// TODO: Should be reworked to avoid duplication and add automatic checksum
-cbytes_t goto_config = {packet_start, sys_command, XMID_GotoConfig, 0x00, 0xD1};
-cbytes_t config_ack = {packet_start, sys_command, XMID_GotoConfigAck};
-
-cbytes_t goto_measurement = {packet_start, sys_command, XMID_GotoMeasurement, 0x00, 0xF1};
-cbytes_t measurement_ack = {packet_start, sys_command, XMID_GotoMeasurementAck};
-
-cbytes_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
-  0x08,
+cbytes_t option_flags = { 
   0x00, 0x00, 0x00,       // Option flags to set:
   0x00 |
   // 0x01 |               // Disable auto store
   ///0x02 |               // Disable auto measurement
   // 0x04 |               // EnableBeidou (instead of GLONASS)
-  //0x10 |                  // EnableAHS (relate Yaw only, no heading)
+  // 0x10 |               // EnableAHS (relative Yaw only, no heading)
   0x80 |                  // EnableInRunCompassCalibration
   0x00,
   0x00, 0x00, 0x00,       // Option flags to clear
@@ -51,49 +43,21 @@ cbytes_t set_option_flags = {packet_start, sys_command, XMID_SetOptionFlags,
   // 0x02 |               // Clear: Disable auto measurement
   0x10 |                  // Clear: EnableAHS (apparently doesn't work well with MTi-G-710)
                           //        see: https://base.xsens.com/hc/en-us/requests/1182
-  0x00,
-  0x21                    // Checksum
+  0x00
 };
-cbytes_t option_flags_ack = {packet_start, sys_command, XMID_SetOptionFlagsAck};
-
-cbytes_t req_reset = {packet_start, sys_command, XMID_Reset, 0x00, 0xC1};
-cbytes_t reset_ack = {packet_start, sys_command, XMID_ResetAck, 0x00, 0xC0};
-
-cbytes_t req_device_id = {packet_start, sys_command, XMID_ReqDid, 0x00, 0x01};
-cbytes_t device_id_resp = {packet_start, sys_command, XMID_DeviceId};
-
-cbytes_t init_mt = {packet_start, sys_command, XMID_Initbus, 0x00, 0xFF};
-cbytes_t mt_ack = {packet_start, sys_command, XMID_InitBusResults};
-
-cbytes_t wakeup = {packet_start, sys_command, XMID_Wakeup, 0x00, 0xC3};
-cbytes_t wakeup_ack = {packet_start, sys_command, XMID_WakeupAck, 0x00, 0xC2};
-
-cbytes_t req_product_code = {packet_start, sys_command, XMID_ReqProductCode, 0x00, 0xE5};
-cbytes_t product_code_resp = {packet_start, sys_command, XMID_ProductCode};
-
-cbytes_t req_firmware_rev = {packet_start, sys_command, XMID_ReqFirmwareRevision, 0x00, 0xEF};
-cbytes_t firmware_rev_resp = {packet_start, sys_command, XMID_FirmwareRevision};
 
 cbytes_t error_resp = {packet_start, sys_command, XMID_Error, 0x01};
 
-cbytes_t set_string_output_type = {packet_start, sys_command, XMID_SetStringOutputType,
-  0x02,
-  0x00, 0x00,
-  0x71};
-cbytes_t set_string_output_type6 = {packet_start, sys_command, XMID_SetStringOutputType,
-  0x06,
+cbytes_t string_output_type = {
+  0x00, 0x00
+};
+cbytes_t string_output_type6 = {
   0x00, 0x00,
   0x00, 0x00,
-  0x00, 0x00,
-  0x6D};
-cbytes_t string_output_type_ack = {packet_start, sys_command, XMID_SetStringOutputTypeAck};
+  0x00, 0x00
+};
 
-
-cbytes_t get_output_configuration = {packet_start, sys_command, XMID_ReqOutputConfiguration, 0x00, 0x41};
-cbytes_t get_output_configuration_ack = {
-  packet_start, sys_command,
-  XMID_ReqOutputConfigurationAck,
-  0x2C,                   // Length
+cbytes_t output_configuration = {
   0x10, 0x10, 0xFF, 0xFF, // Utc time
   0x40, 0x20, 0x00, 0x64, // Acceleration, 100Hz
   0x40, 0x30, 0x00, 0x64, // Free Acceleration, 100Hz
@@ -104,31 +68,7 @@ cbytes_t get_output_configuration_ack = {
   0x50, 0x20, 0x00, 0x0A, // Altitude above ellipsoid, 10Hz
   0x50, 0x10, 0x00, 0x0A, // Altitude above MSL, 10Hz
   0x20, 0x30, 0x00, 0x0A, // Euler angles, 10 Hz
-  0x20, 0x10, 0x00, 0x0A, // Quaternion, 10 Hz
-  0x71                    // Checksum
-};
-
-cbytes_t set_output_configuration = {
-  packet_start, sys_command,
-  XMID_SetOutputConfiguration,
-  0x2C,                   // Length
-  0x10, 0x10, 0xFF, 0xFF, // Utc time
-  0x40, 0x20, 0x00, 0x64, // Acceleration, 100Hz
-  0x40, 0x30, 0x00, 0x64, // Free Acceleration, 100Hz
-  0x80, 0x20, 0x00, 0x64, // Rate of turn, 100Hz
-  0x50, 0x43, 0x00, 0x0A, // LatLon, 10Hz
-  0xC0, 0x20, 0x00, 0x0A, // Magnetic flux, 10Hz
-  0xD0, 0x10, 0x00, 0x0A, // Velocity, 10Hz
-  0x50, 0x20, 0x00, 0x0A, // Altitude above ellipsoid, 10Hz
-  0x50, 0x10, 0x00, 0x0A, // Altitude above MSL, 10Hz
-  0x20, 0x30, 0x00, 0x0A, // Euler angles, 10 Hz
-  0x20, 0x10, 0x00, 0x0A, // Quaternion, 10 Hz
-  0x72                    // Checksum
-};
-
-cbytes_t output_configuration_ack = {
-  packet_start, sys_command,
-  XMID_SetOutputConfigurationAck
+  0x20, 0x10, 0x00, 0x0A  // Quaternion, 10 Hz
 };
 
 } // namespace command
