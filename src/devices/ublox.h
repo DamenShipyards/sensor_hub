@@ -548,7 +548,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
   }
 
 
-  void set_options(const prtr::ptree& options) {
+  void set_options(const prtr::ptree& options) override {
     std::string s = options.get("dyn_model", "portable");
     dyn_model_ =
       s == "portable" ? portable :

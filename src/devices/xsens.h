@@ -202,7 +202,6 @@ struct Xsens: public Port_device<Port, ContextProvider>,
         response);
   }
 
-
   bool goto_config(asio::yield_context yield) {
     return do_command(XMID_GotoConfig, XMID_GotoConfigAck, 
         yield, "Xsens GotoConfig");
@@ -227,6 +226,18 @@ struct Xsens: public Port_device<Port, ContextProvider>,
 
   virtual bool set_string_output_type(asio::yield_context) {
     return true;
+  }
+
+  virtual bool set_filter_profile(asio::yield_context yield) {
+    if (filter_profile_ != 0) {
+      cbytes_t payload = { 0x0, filter_profile_ };
+      return do_set(XMID_SetFilterProfile, XMID_SetFilterProfileAck, 
+          yield, payload, fmt::format("Xsens SetFilterProfile: {}", filter_profile_));
+    }
+    else {
+      log(level::info, "Filter profile not configured");
+      return true;
+    }
   }
 
   bool reset(asio::yield_context yield) override {
@@ -305,10 +316,10 @@ struct Xsens: public Port_device<Port, ContextProvider>,
         && request_firmware(yield)
         && set_option_flags(yield)
         && set_string_output_type(yield)
+        && set_filter_profile(yield)
         && (check_output_configuration(yield)
             || (set_output_configuration(yield) && init_mt(yield)))
         && goto_measurement(yield);
-
 
     if (result) {
       log(level::info, "Successfully initialized Xsens device");
@@ -324,6 +335,10 @@ struct Xsens: public Port_device<Port, ContextProvider>,
     return result;
   }
 
+  void set_options(const prtr::ptree& options) override {
+    filter_profile_ = static_cast<byte_t>(options.get("filter_profile", 0));
+  }
+
   void use_as_time_source(const bool value) override {
     Device::use_as_time_source(value);
     // Decrease clock adjust rate because of high sample frequency of xsens
@@ -335,6 +350,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   }
 private:
   parser::Xsens_parser parser_;
+  byte_t filter_profile_;
 };
 
 

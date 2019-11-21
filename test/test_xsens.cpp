@@ -9,10 +9,15 @@
 
 #include <memory>
 #include <boost/filesystem.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+
 
 using namespace xsens;
 namespace fs = boost::filesystem;
+namespace prtr = boost::property_tree;
 
+static prtr::ptree opts;
 
 BOOST_AUTO_TEST_CASE(construction_test) {
   Device_ptr dev = std::make_unique<MTi_G_710<Usb, Ctx> >();
@@ -34,6 +39,8 @@ BOOST_AUTO_TEST_CASE(connection_test_g_710, *ut::precondition(xsens_g_710_availa
 
   mti_g_710.set_name("xsens-g_710-test");
   mti_g_710.set_connection_string("2639:0017");
+  opts.put("filter_profile", 1);
+  mti_g_710.set_options(opts);
   BOOST_TEST(!mti_g_710.is_connected());
   asio::spawn(ctx, 
       [&](asio::yield_context yield) {
