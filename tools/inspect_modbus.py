@@ -8,7 +8,8 @@ from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 if len(sys.argv) > 1:
     ip = sys.argv[1]
 else:
-    ip = '127.0.0.1'
+    print("Usage inspect_modbus.py <host> [port [slave_id [register_range] ] ]")
+    exit(1)
 
 if len(sys.argv) > 2:
     port = int(sys.argv[2])
