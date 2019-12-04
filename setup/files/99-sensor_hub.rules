@@ -1,3 +1,6 @@
+# Automount sensor_hub USB stick
+ACTION=="add", ENV{ID_FS_LABEL}=="sensor_hub", SYMLINK+="sensor_hub/log", RUN{program}+="/usr/bin/systemd-mount --no-block --automount=yes --collect $devnode /media/sensor_hub"
+
 # Set group "plugdev" for USB Devices
 # XSens
 SUBSYSTEM=="usb", ATTRS{idVendor}=="2639", ACTION=="add", GROUP="plugdev", MODE="0660"
