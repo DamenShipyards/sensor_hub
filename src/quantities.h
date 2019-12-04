@@ -128,7 +128,7 @@ using Quantity_type = std::underlying_type<Quantity>::type;
 template <Quantity quantity> struct Quantity_name { };
 
 //! Macro for adding quantity name traits DRY style.
-#define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static constexpr inline char* value() { return #NAME; } }
+#define QUANTITY_NAME(NAME) template <> struct Quantity_name<Quantity::NAME> { static constexpr inline char const * value() { return #NAME; } }
 
 QUANTITY_NAME(ut);
 QUANTITY_NAME(la);
