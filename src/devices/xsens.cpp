@@ -74,9 +74,9 @@ struct Xsens_MTi_630: public xsens::MTi_630<Serial, Context_provider> {
     std::string result = get_serial_connection_string(Context_provider::get_context(),
       "\\Device\\VCP",
       "FTDIBUS",
-      "USB\\VID_2639&PID_0300");
+      "USB\\VID_0403&PID_6015");
 #else
-    std::string result = get_serial_connection_string(Context_provider::get_context(), "xsens_mti_usb_serial-ttyUSB");
+    std::string result = get_serial_connection_string(Context_provider::get_context(), "ftdi_mti_usb_serial-ttyUSB");
 #endif
     result += ":921600";
     return result;
