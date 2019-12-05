@@ -34,6 +34,8 @@
 #include <list>
 
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/iostreams/stream.hpp>
 
 #include <fmt/format.h>
 
@@ -202,6 +204,20 @@ constexpr inline const char* get_quantity_name_impl(Quantity) {
   return "";
 }
 
+template <Quantity_type... Qs>
+constexpr inline const char* get_quantity_name(Quantity quantity, const std::integer_sequence<Quantity_type, Qs...>) {
+  return get_quantity_name_impl<int, Qs...>(quantity);
+}
+
+template <Quantity Q>
+constexpr inline decltype(auto) get_quantity_name() {
+  return get_enum_trait<Quantity, Quantity_name, Q>();
+}
+
+constexpr inline const char* get_quantity_name(Quantity quantity) {
+  return get_quantity_name(quantity, quantity_sequence);
+}
+
 template <typename T, Quantity_type Q, Quantity_type... Qs>
 constexpr inline const char* get_quantity_name_impl(Quantity quantity) {
   if (static_cast<Quantity_type>(quantity) == Q) {
@@ -210,20 +226,6 @@ constexpr inline const char* get_quantity_name_impl(Quantity quantity) {
   else {
     return get_quantity_name_impl<int, Qs...>(quantity);
   }
-}
-
-template <Quantity Q>
-constexpr inline decltype(auto) get_quantity_name() {
-  return get_enum_trait<Quantity, Quantity_name, Q>();
-}
-
-template <Quantity_type... Qs>
-constexpr inline const char* get_quantity_name(Quantity quantity, const std::integer_sequence<Quantity_type, Qs...>) {
-  return get_quantity_name_impl<int, Qs...>(quantity);
-}
-
-constexpr inline const char* get_quantity_name(Quantity quantity) {
-  return get_quantity_name(quantity, quantity_sequence);
 }
 
 inline Quantity get_quantity(std::string& quantity_name) {
@@ -458,16 +460,79 @@ struct Scale {
   bool signed_type;
 };
 
-template<Quantity Q> struct Quantity_min_max { static constexpr double min = -32768;  static constexpr double max = 32768; };
-template<> struct Quantity_min_max<Quantity::ut> { static constexpr double min = -32768;  static constexpr double max = 32768; };
+static constexpr char const* def_config_data = R"RAW(
+{ 
+  "ut": { "min": 0, "max": 4294967296 },
+  "la": { "min": -3.1415926535897931, "max": 3.1415926535897931},
+  "lo": { "min": -3.1415926535897931, "max": 3.1415926535897931},
+  "hdg": { "min": 0, "max": 6.2831853071795862 },
+  "crs": { "min": 0, "max": 6.2831853071795862 },
+  "ax": { "min": -32.768, "max": 32.768 },
+  "ay": { "min": -32.768, "max": 32.768 },
+  "az": { "min": -32.768, "max": 32.768 },
+  "vx": { "min": -32.768, "max": 32.768 },
+  "vy": { "min": -32.768, "max": 32.768 },
+  "vz": { "min": -32.768, "max": 32.768 },
+  "ro": { "min": -3.1415926535897931, "max": 3.1415926535897931 },
+  "pi": { "min": -3.1415926535897931, "max": 3.1415926535897931 },
+  "ya": { "min": -3.1415926535897931, "max": 3.1415926535897931 },
+  "rr": { "min": -3.1415926535897931, "max": 3.1415926535897931 },
+  "pr": { "min": -3.1415926535897931, "max": 3.1415926535897931 },
+  "yr": { "min": -3.1415926535897931, "max": 3.1415926535897931 },
+  "h1": { "min": -327.68, "max": 327.68 },
+  "h2": { "min": -327.68, "max": 327.68 },
+  "mx": { "min": -0.00032768, "max": 0.00032768 },
+  "my": { "min": -0.00032768, "max": 0.00032768 },
+  "mz": { "min": -0.00032768, "max": 0.00032768 },
+  "du": { "min": 0, "max": 6553.6 },
+  "hg84": { "min": -327.68, "max": 327.68 },
+  "hmsl": { "min": -327.68, "max": 327.68 },
+  "hacc": { "min": 0, "max": 655.36 },
+  "vacc": { "min": 0, "max": 655.36 },
+  "sacc": { "min": 0, "max": 655.36 },
+  "cacc": { "min": 0, "max": 655.36 },
+  "racc": { "min": 0, "max": 655.36 },
+  "pacc": { "min": 0, "max": 655.36 },
+  "yacc": { "min": 0, "max": 655.36 },
+  "hdac": { "min": 0, "max": 655.36 },
+  "rax": { "min": -32.768, "max": 32.768 },
+  "ray": { "min": -32.768, "max": 32.768 },
+  "raz": { "min": -32.768, "max": 32.768 },
+  "rrr": { "min": -3.1415926535897931, "max": 3.1415926535897931 },
+  "rpr": { "min": -3.1415926535897931, "max": 3.1415926535897931 },
+  "ryr": { "min": -3.1415926535897931, "max": 3.1415926535897931 },
+  "rmx": { "min": -0.00032768, "max": 0.00032768 },
+  "rmy": { "min": -0.00032768, "max": 0.00032768 },
+  "rmz": { "min": -0.00032768, "max": 0.00032768 },
+  "gtmp": { "min": 0, "max": 655.36 },
+  "stmp": { "min": 0, "max": 655.36 },
+  "wtmp": { "min": 0, "max": 655.36 },
+  "atmp": { "min": 0, "max": 655.36 },
+  "etmp": { "min": 0, "max": 6553.6 },
+  "otmp": { "min": 0, "max": 655.36 },
+  "q1": { "min": -1, "max": 1 },
+  "q2": { "min": -1, "max": 1 },
+  "q3": { "min": -1, "max": 1 },
+  "q4": { "min": -1, "max": 1 },
+  "fax": { "min": -32.768, "max": 32.768 },
+  "fay": { "min": -32.768, "max": 32.768 },
+  "faz": { "min": -32.768, "max": 32.768 }
+}
+)RAW";
 
+struct Def_config {
+  Def_config() {
+    boost::iostreams::stream<boost::iostreams::array_source> stream(def_config_data, strlen(def_config_data));
+    prtr::read_json(stream, tree);
+  }
+  prtr::ptree tree;
+};
+
+static Def_config def_config;
+ 
 template<typename T>
 static T get_def_config(Quantity q, const std::string& type, const T def) {
-  if (type == "min") {
-    return get_enum_trait<Quantity, Quantity_min_max, Q>(); quantity_min_max<q>::min;
-  } else if (type == "max") {
-    return quantity_min_max<q>::max;
-  }
+  return def_config.tree.get(fmt::format("{}.{}", get_quantity_name(q), type), def);
 }
 
 template<typename T>

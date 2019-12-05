@@ -47,7 +47,7 @@ endif()
 
 find_package(Boost 1.70.0 REQUIRED
   system date_time filesystem log log_setup unit_test_framework regex coroutine chrono
-  program_options
+  program_options iostreams
 )
 
 find_package(libusb-1.0 1.0.22 REQUIRED)

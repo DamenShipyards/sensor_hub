@@ -85,6 +85,8 @@ BOOST_AUTO_TEST_CASE(comparison_test) {
 
 BOOST_AUTO_TEST_CASE(scaler_test) {
   prtr::ptree pt;
+  pt.put("vx_min", -32768);
+  pt.put("vx_max", 32768);
   Base_scale scaler(pt);
   Quantity_value vx(8, Quantity::vx);
   auto u16vx = scaler.scale_to<uint16_t>(vx);
@@ -132,4 +134,11 @@ BOOST_AUTO_TEST_CASE(scaler_test) {
   vx.value += 4 / (double(0xFFFFFFFF) + 1);
   u32vx = scaler.scale_to<uint32_t>(vx);
   BOOST_TEST(u32vx == 4);
+
+  // Test defaults: vy should scale to 1000x
+  pt.put("vy_signed", true);
+  scaler.load(pt);
+  Quantity_value vy(8, Quantity::vy);
+  auto u16vy = scaler.scale_to<uint16_t>(vy);
+  BOOST_TEST(u16vy == 8000);
 }
