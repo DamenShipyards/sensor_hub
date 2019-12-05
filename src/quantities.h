@@ -191,10 +191,6 @@ QUANTITY_NAME(otmp);
 QUANTITY_NAME(du);
 #undef QUANTITY_NAME
 
-template <Quantity quantity>
-constexpr inline decltype(auto) get_quantity_name() {
-  return get_enum_trait<Quantity, Quantity_name, quantity>();
-}
 
 constexpr auto q_end = static_cast<Quantity_type>(Quantity::end);
 using Quantity_sequence = std::make_integer_sequence<Quantity_type, q_end>;
@@ -206,19 +202,24 @@ constexpr inline const char* get_quantity_name_impl(Quantity) {
   return "";
 }
 
-template <typename T, Quantity_type q2, Quantity_type... qs>
+template <typename T, Quantity_type Q, Quantity_type... Qs>
 constexpr inline const char* get_quantity_name_impl(Quantity quantity) {
-  if (static_cast<Quantity_type>(quantity) == q2) {
-    return get_quantity_name<static_cast<Quantity>(q2)>();
+  if (static_cast<Quantity_type>(quantity) == Q) {
+    return get_quantity_name<static_cast<Quantity>(Q)>();
   }
   else {
-    return get_quantity_name_impl<int, qs...>(quantity);
+    return get_quantity_name_impl<int, Qs...>(quantity);
   }
 }
 
-template <Quantity_type... qs>
-constexpr inline const char* get_quantity_name(Quantity quantity, const std::integer_sequence<Quantity_type, qs...>) {
-  return get_quantity_name_impl<int, qs...>(quantity);
+template <Quantity Q>
+constexpr inline decltype(auto) get_quantity_name() {
+  return get_enum_trait<Quantity, Quantity_name, Q>();
+}
+
+template <Quantity_type... Qs>
+constexpr inline const char* get_quantity_name(Quantity quantity, const std::integer_sequence<Quantity_type, Qs...>) {
+  return get_quantity_name_impl<int, Qs...>(quantity);
 }
 
 constexpr inline const char* get_quantity_name(Quantity quantity) {
@@ -457,11 +458,16 @@ struct Scale {
   bool signed_type;
 };
 
+template<Quantity Q> struct Quantity_min_max { static constexpr double min = -32768;  static constexpr double max = 32768; };
+template<> struct Quantity_min_max<Quantity::ut> { static constexpr double min = -32768;  static constexpr double max = 32768; };
+
 template<typename T>
 static T get_def_config(Quantity q, const std::string& type, const T def) {
-  (void)q;
-  (void)type;
-  return def;
+  if (type == "min") {
+    return get_enum_trait<Quantity, Quantity_min_max, Q>(); quantity_min_max<q>::min;
+  } else if (type == "max") {
+    return quantity_min_max<q>::max;
+  }
 }
 
 template<typename T>
