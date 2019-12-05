@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(comparison_test) {
 BOOST_AUTO_TEST_CASE(scaler_test) {
   prtr::ptree pt;
   pt.put("vx_min", -32768);
-  pt.put("vx_max", 32768);
+  pt.put("vx_max",  32768);
   Base_scale scaler(pt);
   Quantity_value vx(8, Quantity::vx);
   auto u16vx = scaler.scale_to<uint16_t>(vx);

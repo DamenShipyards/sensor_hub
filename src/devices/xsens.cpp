@@ -64,6 +64,27 @@ struct Xsens_MTi_670: public xsens::MTi_670<Serial, Context_provider> {
 
 using Xsens_MTi_670_factory = Device_factory<Xsens_MTi_670>;
 
+struct Xsens_MTi_630: public xsens::MTi_630<Serial, Context_provider> {
+  Xsens_MTi_630(): xsens::MTi_630<Serial, Context_provider>() {
+    this->set_poll_size(0x41);
+  };
+
+  std::string get_auto_connection_string() const override {
+#ifdef _WIN32
+    std::string result = get_serial_connection_string(Context_provider::get_context(),
+      "\\Device\\VCP",
+      "FTDIBUS",
+      "USB\\VID_2639&PID_0300");
+#else
+    std::string result = get_serial_connection_string(Context_provider::get_context(), "xsens_mti_usb_serial-ttyUSB");
+#endif
+    result += ":921600";
+    return result;
+  }
+};
+
+using Xsens_MTi_630_factory = Device_factory<Xsens_MTi_630>;
+
 
 static auto& mti_g_710_usb_factory =
     add_device_factory("xsens_mti_g_710_usb", std::move(std::make_unique<Xsens_MTi_G_710_usb_factory>()));
@@ -72,5 +93,7 @@ static auto& mti_g_710_serial_factory =
 
 static auto& mti_670_factory =
     add_device_factory("xsens_mti_670", std::move(std::make_unique<Xsens_MTi_670_factory>()));
+static auto& mti_630_factory =
+    add_device_factory("xsens_mti_630", std::move(std::make_unique<Xsens_MTi_630_factory>()));
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

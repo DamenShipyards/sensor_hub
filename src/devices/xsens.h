@@ -52,8 +52,9 @@ constexpr byte_t conf_command = 0x01;
 
 extern cbytes_t option_flags;
 extern cbytes_t string_output_type;
-extern cbytes_t string_output_type6;
+extern cbytes_t string_output_type_6;
 extern cbytes_t output_configuration;
+extern cbytes_t output_configuration_630;
 extern cbytes_t error_resp;
 
 constexpr unsigned size_offset = 3;
@@ -337,6 +338,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
 
   void set_options(const prtr::ptree& options) override {
     filter_profile_ = static_cast<byte_t>(options.get("filter_profile", 0));
+    flip_axes_ = options.get("flip_axes", true);
   }
 
   void use_as_time_source(const bool value) override {
@@ -351,6 +353,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
 private:
   parser::Xsens_parser parser_;
   byte_t filter_profile_;
+  bool flip_axes_;
 };
 
 
@@ -399,6 +402,7 @@ struct MTi_G_710: public MTi_GPS_based<Port, ContextProvider> {
 
 };
 
+
 template <typename Port, class ContextProvider>
 struct MTi_670: public MTi_GPS_based<Port, ContextProvider> {
 
@@ -413,7 +417,44 @@ struct MTi_670: public MTi_GPS_based<Port, ContextProvider> {
 
   bool set_string_output_type(asio::yield_context yield) override {
     return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck, 
-        yield, command::string_output_type6, "Xsens SetStringOutputType 6xx");
+        yield, command::string_output_type_6, "Xsens SetStringOutputType 670");
+  }
+
+};
+
+template <typename Port, class ContextProvider>
+struct MTi_630: public Xsens<Port, ContextProvider> {
+
+  MTi_630(): Xsens<Port, ContextProvider>() {
+    log(level::info, "Constructing Xsens_MTi_630");
+  }
+
+
+  ~MTi_630() override {
+    log(level::info, "Destroying Xsens_MTi_630");
+  }
+
+  bool check_output_configuration(asio::yield_context yield) override {
+    return this->do_check(
+        XMID_ReqOutputConfiguration, XMID_ReqOutputConfigurationAck, 
+        yield, command::output_configuration_630, "Xsens ReqOutputConfiguration");
+  }
+
+  bool set_option_flags(asio::yield_context yield) override {
+    return this->do_set(XMID_SetOptionFlags, XMID_SetOptionFlagsAck,
+        yield, command::option_flags, "Xsens SetOptionFlags");
+  }
+
+
+  bool set_output_configuration(asio::yield_context yield) override {
+    return this->do_set(
+        XMID_SetOutputConfiguration, XMID_SetOutputConfigurationAck,
+        yield, command::output_configuration_630, "Xsens SetOutputConfiguration");
+  }
+
+  bool set_string_output_type(asio::yield_context yield) override {
+    return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck, 
+        yield, command::string_output_type_6, "Xsens SetStringOutputType 630");
   }
 
 };
