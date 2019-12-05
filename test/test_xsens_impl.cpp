@@ -50,9 +50,11 @@ BOOST_AUTO_TEST_CASE(xsens_parse_date_time_test) {
 }
 
 BOOST_AUTO_TEST_CASE(data_converter_test) {
-  BOOST_TEST(parser::IdentityConverter<3>::factor(0) == 1.0);
-  BOOST_TEST(parser::IdentityConverter<3>::factor(1) == -1.0);
-  BOOST_TEST(parser::RadConverter<2>::factor(0) == M_PI / 180.0);
+  BOOST_TEST((parser::IdentityConverter<3>::factor(0)) == 1.0);
+  BOOST_TEST((parser::IdentityConverter<3>::factor(1)) == 1.0);
+  BOOST_TEST((parser::IdentityConverter<3, true>::factor(1)) == -1.0);
+  BOOST_TEST((parser::IdentityConverter<3, false>::factor(1)) == 1.0);
+  BOOST_TEST((parser::RadConverter<2, false>::factor(0)) == M_PI / 180.0);
 }
 
 BOOST_AUTO_TEST_CASE(xsens_parse_bytes_test) {
@@ -70,9 +72,9 @@ BOOST_AUTO_TEST_CASE(xsens_parse_bytes_test) {
   BOOST_TEST(values.size() == 4);
   BOOST_TEST(values[0].value == to_float(data.data() + 3));
   BOOST_TEST(values[0].quantity == Quantity::ax);
-  BOOST_TEST(values[1].value == -to_float(data.data() + 7));
+  BOOST_TEST(values[1].value == to_float(data.data() + 7));
   BOOST_TEST(values[1].quantity == Quantity::ay);
-  BOOST_TEST(values[2].value == -to_float(data.data() + 11));
+  BOOST_TEST(values[2].value == to_float(data.data() + 11));
   BOOST_TEST(values[3].value == 1536569876.3429);
 }
 

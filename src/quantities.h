@@ -55,7 +55,7 @@ struct Quantity_not_available: public std::exception {
  * With respect to ships, the X coordinate is longitudinal and positive
  * pointing to the bow. Y coordinate is transerse and positive 
  * pointing to starboard. Z coordinate is vertical and positive pointing
- * down.
+ * down. Heights are positive pointing up, so Z = -40 == H = 40.
  * With respect to the earth, the X axis points north, the Y axis east
  * and the Z axis down.
  * All values are in SI units, angles are in radians.
@@ -64,7 +64,7 @@ enum class Quantity {
   ut,  ///<  0: Unix/POSIX time
   la,  ///<  1: Latitude with respect to WGS84 ellipsoid (GPS)
   lo,  ///<  2: Longitude with respect to WGS84 ellipsoid (GPS)
-  hg84,///<  3: Height with respect to WGS84 ellipsoid (GPS)
+  hg84,///<  3: Height with respect to WGS84 ellipsoid (GPS) 
   hmsl,///<  4: Height with respect to MSL/EGM2008
   vog, ///<  5: Absolute value of speed vector over ground
   vtw, ///<  6: Absolute value of speed vector through water

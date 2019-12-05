@@ -29,7 +29,7 @@ namespace xsens {
 
 namespace command {
 
-cbytes_t option_flags = { 
+cbytes_t option_flags = {
   0x00, 0x00, 0x00,       // Option flags to set:
   0x00 |
   // 0x01 |               // Disable auto store
@@ -102,16 +102,33 @@ using x3::_pass;
  * Provides default convertion value
  *
  * All sensors values a converted when arriving from the sensor.
- * The default multiplier does nothing but flip the signs of Y and
- * Z axis values to from Z up to Z down axis.
  *
  * @tparam DIM number of dimensions in value to convert.
  */
-template<int DIM>
+template<int DIM, bool FLIP=false>
 struct IdentityConverter {
+  static constexpr double factor(int, double f=1.0) {
+    return f;
+  }
+};
+
+/**
+ * Template specialization for flipped axes vectors
+ */
+template<>
+struct IdentityConverter<3, true> {
   static constexpr double factor(int dim, double f=1.0) {
-    return (DIM == 3) && (dim > 0) ? -f :
-           (DIM == 4) && (dim > 1) ? -f : f;
+    return dim > 0 ? -f : f;
+  }
+};
+
+/**
+ * Template specialization for flipped axes quaternions
+ */
+template<>
+struct IdentityConverter<4, true> {
+  static constexpr double factor(int dim, double f=1.0) {
+    return dim > 1 ? -f : f;
   }
 };
 
@@ -119,15 +136,15 @@ struct IdentityConverter {
 /**
  * Deg to rad converter
  *
- * Conversion factor for angles provided by the sensor in angular 
+ * Conversion factor for angles provided by the sensor in angular
  * degrees to radians.
- * 
+ *
  * @tparam DIM number of dimensions in value to convert
  */
-template<int DIM>
-struct RadConverter: IdentityConverter<DIM> {
+template<int DIM, bool FLIP=false>
+struct RadConverter: IdentityConverter<DIM, FLIP> {
   static constexpr double factor(int dim) {
-    return IdentityConverter<DIM>::factor(dim, M_PI / 180.0);
+    return IdentityConverter<DIM, FLIP>::factor(dim, M_PI / 180.0);
   }
 };
 
@@ -135,15 +152,15 @@ struct RadConverter: IdentityConverter<DIM> {
 /**
  * Magnetic field strength converter
  *
- * Conversion factor for converting fields strengths 
+ * Conversion factor for converting fields strengths
  * in Gauss to Tesla.
- *  
+ *
  * @tparam DIM number of dimensions in value to convert
  */
-template<int DIM>
-struct TeslaConverter: IdentityConverter<DIM> {
+template<int DIM, bool FLIP=false>
+struct TeslaConverter: IdentityConverter<DIM, FLIP> {
   static constexpr double factor(int dim) {
-    return IdentityConverter<DIM>::factor(dim, 1E-4);
+    return IdentityConverter<DIM, FLIP>::factor(dim, 1E-4);
   }
 };
 
@@ -215,11 +232,12 @@ struct Date_time: public Data_packet {
  * @tparam DIM number of values provided for this data type
  * @tparam QUANT The sensor hub quantity associated with this data
  * @tparam Converter Converion factor provider for this data packet
+ * @tparam FLIP whether to convert for flipped axes
  */
 template<uint16_t DID, uint16_t COORD, uint16_t FORMAT, int DIM, Quantity QUANT,
-         template<int D> typename Converter=IdentityConverter>
+         template<int D, bool F> typename Converter=IdentityConverter, bool FLIP=false >
 struct Data_value: public Data_packet {
-  typedef Converter<DIM> converter;
+  typedef Converter<DIM, FLIP> converter;
   static constexpr uint16_t did = DID | COORD | FORMAT;
   static constexpr Quantity quantity = QUANT;
   Data_value(): Data_packet(did), data() {}
@@ -272,16 +290,38 @@ struct Data_value: public Data_packet {
 
 
 // Define specific data packet type for each data type received from sensor
-using Acceleration = Data_value<XDI_Acceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ax>;
-using Free_acceleration = Data_value<XDI_FreeAcceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::fax>;
-using Rate_of_turn = Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::rr, RadConverter>;
+template<bool FLIP> using AccelerationT = 
+  Data_value<XDI_Acceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ax, IdentityConverter, FLIP>;
+using Acceleration = AccelerationT<false>;
+using Acceleration_flipped = AccelerationT<true>;
+template<bool FLIP> using Free_accelerationT = 
+  Data_value<XDI_FreeAcceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::fax, IdentityConverter, FLIP>;
+using Free_acceleration = Free_accelerationT<false>;
+using Free_acceleration_flipped = Free_accelerationT<true>;
+template<bool FLIP> using Rate_of_turnT = 
+  Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::rr, RadConverter, FLIP>;
+using Rate_of_turn = Rate_of_turnT<false>;
+using Rate_of_turn_flipped = Rate_of_turnT<true>;
 using Lat_lon = Data_value<XDI_LatLon, XDI_CoordSysEnu, XDI_SubFormatDouble, 2, Quantity::la, RadConverter>;
-using Magnetic_flux = Data_value<XDI_MagneticField, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::mx, TeslaConverter>;
-using Velocity = Data_value<XDI_VelocityXYZ, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::vx>;
+template<bool FLIP> using Magnetic_fluxT = 
+  Data_value<XDI_MagneticField, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::mx, TeslaConverter, FLIP>;
+using Magnetic_flux = Magnetic_fluxT<false>;
+using Magnetic_flux_flipped = Magnetic_fluxT<true>;
+template<bool FLIP> using VelocityT = 
+  Data_value<XDI_VelocityXYZ, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::vx, IdentityConverter, FLIP>;
+using Velocity = VelocityT<false>;
+using Velocity_flipped = VelocityT<true>;
 using Altitude_ellipsoid = Data_value<XDI_AltitudeEllipsoid, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::hg84>;
 using Altitude_msl = Data_value<XDI_AltitudeMsl, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::hmsl>;
-using Euler_angles = Data_value<XDI_EulerAngles, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ro, RadConverter>;
-using Quaternion = Data_value<XDI_Quaternion, XDI_CoordSysEnu, XDI_SubFormatFloat, 4, Quantity::q1>;
+template<bool FLIP> using Euler_anglesT = 
+  Data_value<XDI_EulerAngles, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ro, RadConverter, FLIP>;
+using Euler_angles = Euler_anglesT<false>;
+using Euler_angles_flipped = Euler_anglesT<true>;
+template<bool FLIP> using QuaternionT = 
+  Data_value<XDI_Quaternion, XDI_CoordSysEnu, XDI_SubFormatFloat, 4, Quantity::q1, IdentityConverter, FLIP>;
+using Quaternion = QuaternionT<false>;
+using Quaternion_flipped = QuaternionT<true>;
+
 
 auto set_did = [](auto& ctx) { _val(ctx).id = _attr(ctx); };
 auto set_len = [](auto& ctx) { _val(ctx).len = static_cast<int>(_attr(ctx)); };
@@ -301,22 +341,27 @@ BOOST_SPIRIT_DEFINE(name)
 // Define parse rules for each individual data packet type
 RULE_DEFINE(date_time, Date_time)
 RULE_DEFINE(acceleration, Acceleration)
+RULE_DEFINE(acceleration_flipped, Acceleration_flipped)
 RULE_DEFINE(free_acceleration, Free_acceleration)
+RULE_DEFINE(free_acceleration_flipped, Free_acceleration_flipped)
 RULE_DEFINE(rate_of_turn, Rate_of_turn)
+RULE_DEFINE(rate_of_turn_flipped, Rate_of_turn_flipped)
 RULE_DEFINE(lat_lon, Lat_lon)
 RULE_DEFINE(magnetic_flux, Magnetic_flux)
+RULE_DEFINE(magnetic_flux_flipped, Magnetic_flux_flipped)
 RULE_DEFINE(velocity, Velocity)
+RULE_DEFINE(velocity_flipped, Velocity_flipped)
 RULE_DEFINE(altitude_ellipsoid, Altitude_ellipsoid)
 RULE_DEFINE(altitude_msl, Altitude_msl)
 RULE_DEFINE(euler_angles, Euler_angles)
+RULE_DEFINE(euler_angles_flipped, Euler_angles_flipped)
 RULE_DEFINE(quaternion, Quaternion)
+RULE_DEFINE(quaternion_flipped, Quaternion_flipped)
 
 #undef RULE_DEFINE
 
-/**
- * Parse rule for data packets
- */
-auto data_parser = *(
+// Parse rule for data packets..
+static auto data_parser = *(
     date_time |
     acceleration |
     free_acceleration |
@@ -328,6 +373,21 @@ auto data_parser = *(
     altitude_msl |
     euler_angles |
     quaternion |
+    unknown_data);
+
+// ... and for flipped data packets
+static auto flipped_parser = *(
+    date_time |
+    acceleration_flipped |
+    free_acceleration_flipped |
+    rate_of_turn_flipped |
+    lat_lon |
+    magnetic_flux_flipped |
+    velocity_flipped |
+    altitude_ellipsoid |
+    altitude_msl |
+    euler_angles_flipped |
+    quaternion_flipped |
     unknown_data);
 
 /**
@@ -343,15 +403,22 @@ struct Xsens_parser::Data_packets
       Data_packet,
       Date_time,
       Acceleration,
+      Acceleration_flipped,
       Free_acceleration,
+      Free_acceleration_flipped,
       Rate_of_turn,
+      Rate_of_turn_flipped,
       Lat_lon,
       Magnetic_flux,
+      Magnetic_flux_flipped,
       Velocity,
+      Velocity_flipped,
       Altitude_ellipsoid,
       Altitude_msl,
       Euler_angles,
-      Quaternion
+      Euler_angles_flipped,
+      Quaternion,
+      Quaternion_flipped
     > > {
 };
 
@@ -422,7 +489,9 @@ bool Xsens_parser::parse_single(const double& stamp) {
       //! We're only interested in data messages
       if (mid == XMID_MtData2) {
         //! Look for data packets in the message content
-        if (x3::parse(dcur, data.end(), data_parser, *data_packets)) {
+        if (flip_axes_ ?
+              x3::parse(dcur, data.end(), flipped_parser, *data_packets) :
+              x3::parse(dcur, data.end(), data_parser, *data_packets)) {
           for (auto& data_packet: *data_packets) {
             //! Visit each packet. The visitor will extract the data from it
             boost::apply_visitor(*visitor, data_packet);
@@ -456,19 +525,28 @@ Stamped_queue& Xsens_parser::get_values() {
 
 }  // namespace xsens
 
-// Magic to map parsed values which are stored in fusion::vector to the actual data packet type. 
-// Macro call is at global scope as stated in the manual. Trivial for anything but the date-time values.
-BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Date_time, nano, year, month, day, hour, minute, second, flags)
+// Magic to map parsed values which are stored in fusion::vector to the actual data packet type.
+// Macro call is at global scope as stated in the manual. Trivial for anything but the
+// date-time values.
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Date_time, nano, year, month, day,
+                                                    hour, minute, second, flags)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Acceleration, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Acceleration_flipped, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Free_acceleration, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Free_acceleration_flipped, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Rate_of_turn, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Rate_of_turn_flipped, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Lat_lon, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Magnetic_flux, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Magnetic_flux_flipped, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Velocity, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Velocity_flipped, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Altitude_ellipsoid, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Altitude_msl, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Euler_angles, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Euler_angles_flipped, data)
 BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Quaternion, data)
+BOOST_FUSION_ADAPT_STRUCT(xsens::parser::Quaternion_flipped, data)
 
 #endif
 

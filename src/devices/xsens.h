@@ -97,7 +97,11 @@ struct Xsens_parser: public Packet_parser {
 
   void parse(const double& stamp) override;
   Stamped_queue& get_values() override;
+  void set_flip_axes(const bool value) {
+    flip_axes_ = value;
+  }
 private:
+  bool flip_axes_;
   bool parse_single(const double& stamp);
 };
 
@@ -338,7 +342,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
 
   void set_options(const prtr::ptree& options) override {
     filter_profile_ = static_cast<byte_t>(options.get("filter_profile", 0));
-    flip_axes_ = options.get("flip_axes", true);
+    parser_.set_flip_axes(options.get("flip_axes", get_default_flip_axes()));
   }
 
   void use_as_time_source(const bool value) override {
@@ -350,10 +354,15 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   const parser::Xsens_parser& get_parser() const {
     return parser_;
   }
+
+protected:
+  virtual bool get_default_flip_axes() {
+    return true;
+  }
+
 private:
   parser::Xsens_parser parser_;
   byte_t filter_profile_;
-  bool flip_axes_;
 };
 
 
@@ -420,6 +429,11 @@ struct MTi_670: public MTi_GPS_based<Port, ContextProvider> {
         yield, command::string_output_type_6, "Xsens SetStringOutputType 670");
   }
 
+protected:
+  bool get_default_flip_axes() override {
+    // Assume 6XX sensors are mounted up side down, so don't flip
+    return false;
+  }
 };
 
 template <typename Port, class ContextProvider>
@@ -455,6 +469,12 @@ struct MTi_630: public Xsens<Port, ContextProvider> {
   bool set_string_output_type(asio::yield_context yield) override {
     return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck, 
         yield, command::string_output_type_6, "Xsens SetStringOutputType 630");
+  }
+
+protected:
+  bool get_default_flip_axes() override {
+    // Assume 6XX sensors are mounted up side down, so don't flip
+    return false;
   }
 
 };
