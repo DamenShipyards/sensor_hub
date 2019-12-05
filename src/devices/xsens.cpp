@@ -57,7 +57,7 @@ struct Xsens_MTi_670: public xsens::MTi_670<Serial, Context_provider> {
 #else
     std::string result = get_serial_connection_string(Context_provider::get_context(), "xsens_mti_usb_serial-ttyUSB");
 #endif
-    result += ":921600";
+    result += ":115200";
     return result;
   }
 };
@@ -78,7 +78,7 @@ struct Xsens_MTi_630: public xsens::MTi_630<Serial, Context_provider> {
 #else
     std::string result = get_serial_connection_string(Context_provider::get_context(), "ftdi_mti_usb_serial-ttyUSB");
 #endif
-    result += ":921600";
+    result += ":115200";
     return result;
   }
 };
