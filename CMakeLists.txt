@@ -32,6 +32,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 # Link boost statically in release builds
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
+set(STD_LINK  -static-libgcc -static-libstdc++)
 set(Boost_USE_STATIC_LIBS ON)
 add_definitions(
   -DFMT_HEADER_ONLY
@@ -133,7 +134,12 @@ link_directories(
   ${LIBUSB_1_LIBRARIES}
 )
 
-link_libraries(
+add_executable(sensor_hub
+  ${SENSORHUB_SOURCE_DIR}/daemon.cpp
+  ${CPP_SOURCES}
+)
+
+target_link_libraries(sensor_hub
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBUSB_1_LIBRARY}
   Boost::system
@@ -145,20 +151,11 @@ link_libraries(
   Boost::chrono
   Boost::coroutine
   ${USE_EIGEN}
-)
-
-
-add_executable(sensor_hub
-  ${SENSORHUB_SOURCE_DIR}/daemon.cpp
-  ${CPP_SOURCES}
+  ${STD_LINK}
 )
 
 set_target_properties(sensor_hub PROPERTIES
   LINK_FLAGS "-Wl,--no-as-needed"
-)
-
-target_link_libraries(sensor_hub 
-   -static-libgcc -static-libstdc++
 )
 
 macro(new_test NEW_TEST)
@@ -182,6 +179,7 @@ macro(new_test NEW_TEST)
     Boost::coroutine
     Boost::unit_test_framework
     ${LIBUSB_1_LIBRARY}
+    ${USE_EIGEN}
   )
   add_test(${NEW_TEST} test/${NEW_TEST})
 endmacro()
