@@ -122,47 +122,9 @@ struct Xsens: public Port_device<Port, ContextProvider>,
     }
   }
 
-  bool look_for_wakeup(asio::yield_context yield) {
-    // When the device just powered on, it sends wakeup messages.
-    Port& port = this->get_port();
-    asio::streambuf read_buf;
-    boost::system::error_code ec;
-    bytes_t response{};
-    log(level::info, "Xsens LookForWakeup");
-
-    // Set a timeout for the command to complete
-    asio::deadline_timer timeout_timer(ContextProvider::get_context(), pt::milliseconds(2000));
-    timeout_timer.async_wait(
-        [&](const boost::system::error_code& error) {
-          if (!error)
-            port.cancel();
-        });
-
-    size_t bytes_read = port.async_read_some(read_buf.prepare(0x100), yield[ec]);
-    if (!ec) {
-      read_buf.commit(bytes_read);
-      auto buf_begin = asio::buffers_begin(read_buf.data());
-      auto buf_end = buf_begin + bytes_read;
-
-      cbytes_t data(buf_begin, buf_end);
-      std::stringstream ssr;
-      ssr << data;
-      log(level::debug, "Received from XSens while looking for wakeup: %", ssr.str());
-
-      response.insert(response.end(), buf_begin, buf_end);
-
-      read_buf.consume(bytes_read);
-      if (contains(response, command::packet(XMID_Wakeup))) {
-        log(level::info, "Received WakeUp from XSens: Acknowledging");
-        asio::async_write(port, asio::buffer(command::packet(XMID_WakeupAck)), yield);
-        // This device will spit out its configuration, which we will just swallow
-        port.async_read_some(read_buf.prepare(0x1000), yield[ec]);
-        this->wait(500, yield);
-      } else {
-        this->wait(50, yield);
-      }
-    }
-    // Always return true as we don't really care about how this was handled
+  virtual bool look_for_wakeup(asio::yield_context) {
+    // Some devices when just powered on, send wakeup messages. Override
+    // this method to handle them.
     return true;
   }
 
@@ -407,6 +369,50 @@ struct MTi_G_710: public MTi_GPS_based<Port, ContextProvider> {
 
   ~MTi_G_710() override {
     log(level::info, "Destroying Xsens_MTi_G_710");
+  }
+
+  bool look_for_wakeup(asio::yield_context yield) override {
+    // When the device just powered on, it sends wakeup messages.
+    Port& port = this->get_port();
+    asio::streambuf read_buf;
+    boost::system::error_code ec;
+    bytes_t response{};
+    log(level::info, "Xsens LookForWakeup");
+
+    // Set a timeout for the command to complete
+    asio::deadline_timer timeout_timer(ContextProvider::get_context(), pt::milliseconds(2000));
+    timeout_timer.async_wait(
+        [&](const boost::system::error_code& error) {
+          if (!error)
+            port.cancel();
+        });
+
+    size_t bytes_read = port.async_read_some(read_buf.prepare(0x100), yield[ec]);
+    if (!ec) {
+      read_buf.commit(bytes_read);
+      auto buf_begin = asio::buffers_begin(read_buf.data());
+      auto buf_end = buf_begin + bytes_read;
+
+      cbytes_t data(buf_begin, buf_end);
+      std::stringstream ssr;
+      ssr << data;
+      log(level::debug, "Received from XSens while looking for wakeup: %", ssr.str());
+
+      response.insert(response.end(), buf_begin, buf_end);
+
+      read_buf.consume(bytes_read);
+      if (contains(response, command::packet(XMID_Wakeup))) {
+        log(level::info, "Received WakeUp from XSens: Acknowledging");
+        asio::async_write(port, asio::buffer(command::packet(XMID_WakeupAck)), yield);
+        // This device will spit out its configuration, which we will just swallow
+        port.async_read_some(read_buf.prepare(0x1000), yield[ec]);
+        this->wait(500, yield);
+      } else {
+        this->wait(50, yield);
+      }
+    }
+    // Always return true as we don't really care about how this was handled
+    return true;
   }
 
 };
