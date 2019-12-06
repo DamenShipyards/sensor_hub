@@ -124,16 +124,10 @@ BOOST_AUTO_TEST_CASE(scaler_test) {
   pt.put("vx_min", -89);
   pt.put("vx_max", -88);
   scaler.load(pt);
+  u16vx = scaler.scale_to<uint16_t>(vx);
+  BOOST_TEST(u16vx == 0xFFFF);
   u32vx = scaler.scale_to<uint32_t>(vx);
   BOOST_TEST(u32vx == 0xFFFFFFFF);
-
-  pt.put("vx_overflow", true);
-  scaler.load(pt);
-  u32vx = scaler.scale_to<uint32_t>(vx);
-  BOOST_TEST(u32vx == 0);
-  vx.value += 4 / (double(0xFFFFFFFF) + 1);
-  u32vx = scaler.scale_to<uint32_t>(vx);
-  BOOST_TEST(u32vx == 4);
 
   // Test defaults: vy should scale to 1000x
   pt.put("vy_signed", true);

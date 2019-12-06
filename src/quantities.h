@@ -456,7 +456,6 @@ struct Scale {
   double max;
   double multiplier;
   double offset;
-  bool overflow;
   bool signed_type;
 };
 
@@ -561,9 +560,8 @@ struct Base_scale {
       double max = config.get(fmt::format("{}_max", quant), get_def_config(*qi, "max",  32768.0));
       double multiplier = config.get(fmt::format("{}_scale", quant),  get_def_config(*qi, "scale", 0));
       double offset = config.get(fmt::format("{}_offset", quant),  get_def_config(*qi, "offset", 0));
-      bool overflow = config.get(fmt::format("{}_overflow", quant), get_def_config(*qi, "overflow", false));
       bool signed_type = config.get(fmt::format("{}_signed", quant), get_def_config(*qi, "signed", multiplier != 0));
-      scale_[*qi] = {min, max, multiplier, offset, overflow, signed_type};
+      scale_[*qi] = {min, max, multiplier, offset, signed_type};
     }
   }
 
@@ -586,10 +584,8 @@ struct Base_scale {
       value /= max - min;
       value *= type_range<T>();
 
-      if (!scale.overflow) {
-        value = value < std::numeric_limits<T>::lowest() ? std::numeric_limits<T>::lowest() : value; 
-        value = value >= std::numeric_limits<T>::max() ? std::numeric_limits<T>::max() : value; 
-      }
+      value = value < std::numeric_limits<T>::lowest() ? std::numeric_limits<T>::lowest() : value; 
+      value = value >= std::numeric_limits<T>::max() ? std::numeric_limits<T>::max() : value; 
 
       result = static_cast<T>(value);
 
