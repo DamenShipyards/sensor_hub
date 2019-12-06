@@ -114,7 +114,7 @@ extern std::string get_current_log_file();
 #ifdef DEBUG
 #define DEBUGLOG(...) log(level::debug, __VA_ARGS__)
 #else
-#define DEBUGLOG(...) void
+#define DEBUGLOG(...)
 #endif
 
 #endif

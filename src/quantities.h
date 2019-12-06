@@ -204,18 +204,9 @@ constexpr inline const char* get_quantity_name_impl(Quantity) {
   return "";
 }
 
-template <Quantity_type... Qs>
-constexpr inline const char* get_quantity_name(Quantity quantity, const std::integer_sequence<Quantity_type, Qs...>) {
-  return get_quantity_name_impl<int, Qs...>(quantity);
-}
-
 template <Quantity Q>
 constexpr inline decltype(auto) get_quantity_name() {
   return get_enum_trait<Quantity, Quantity_name, Q>();
-}
-
-constexpr inline const char* get_quantity_name(Quantity quantity) {
-  return get_quantity_name(quantity, quantity_sequence);
 }
 
 template <typename T, Quantity_type Q, Quantity_type... Qs>
@@ -228,6 +219,15 @@ constexpr inline const char* get_quantity_name_impl(Quantity quantity) {
   }
 }
 
+template <Quantity_type... Qs>
+constexpr inline const char* get_quantity_name(Quantity quantity, const std::integer_sequence<Quantity_type, Qs...>) {
+  return get_quantity_name_impl<int, Qs...>(quantity);
+}
+
+constexpr inline const char* get_quantity_name(Quantity quantity) {
+  return get_quantity_name(quantity, quantity_sequence);
+}
+
 inline Quantity get_quantity(std::string& quantity_name) {
   for (auto qi = Quantity_iter::begin(); qi != Quantity_iter::end(); ++qi) {
     if (quantity_name == get_quantity_name(*qi)) {
@@ -236,7 +236,6 @@ inline Quantity get_quantity(std::string& quantity_name) {
   }
   return Quantity::end;
 }
-
 
 
 struct Data_value {
