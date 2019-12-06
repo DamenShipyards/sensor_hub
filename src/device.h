@@ -107,7 +107,8 @@ private:
 struct Device: public Named_object {
 
   Device(): Named_object(fmt::format("id_{:d}", seq_), fmt::format("device_{:d}", seq_)),
-            connected_(false), data_(), enable_logging_(false), device_log_initialized_(false),
+            connected_(false), data_(), 
+            enable_logging_(false), max_log_files_(32), device_log_initialized_(false),
             processors_() {
     log(level::debug, "Constructing Device");
     ++seq_;
@@ -213,6 +214,11 @@ struct Device: public Named_object {
     }
   }
 
+  void set_max_log_files(const int value) {
+    log(level::info, "Set max log files to % for  %", value, this->get_name());
+    max_log_files_ = value;
+  }
+
 
   virtual void use_as_time_source(const bool value) {
     use_as_time_source_ = value;
@@ -239,7 +245,7 @@ protected:
   void setup_device_log() {
     if (!enable_logging_ || device_log_initialized_)
       return;
-    device_log_initialized_ = init_device_log(this->get_id(), this->get_name());
+    device_log_initialized_ = init_device_log(this->get_id(), this->get_name(), max_log_files_);
     if (device_log_initialized_) {
       log(level::info, "Device log started: %", this->get_name());
     }
@@ -289,6 +295,7 @@ private:
   std::string connection_string_;
   Data_map data_;
   bool enable_logging_;
+  int max_log_files_;
   bool device_log_initialized_;
   bool use_as_time_source_;
   Processors processors_;

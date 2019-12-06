@@ -17,6 +17,7 @@ type=<sensor type>
 name=<configurable friendly name for sensor>
 connection_string=<connection>
 enable_logging=<whether to enable a device log for this sensor>
+max_log_files=<maximum number of log files for this device>
 use_as_time_source=<synchronize clock with this device>
 enabled=<whether to enable this device>
 @end verbatim

@@ -50,7 +50,7 @@ enum class level {
 
 extern boost::log::sources::severity_logger_mt<level>& get_log();
 extern boost::log::sources::logger& get_device_log();
-extern bool init_device_log(const std::string& device_id, const std::string& device_name);
+extern bool init_device_log(const std::string& device_id, const std::string& device_name, int max_files=32);
 extern void set_log_level(level lvl);
 extern void set_device_log_dir(const fs::path& dir);
 

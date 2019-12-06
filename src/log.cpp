@@ -237,7 +237,7 @@ sources::logger& get_device_log() {
 }
 
 
-bool init_device_log(const std::string& device_id, const std::string& device_name) {
+bool init_device_log(const std::string& device_id, const std::string& device_name, int max_files) {
   try {
     auto log_dir = Logger::get_instance().get_device_log_dir();
     typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
@@ -245,7 +245,7 @@ bool init_device_log(const std::string& device_id, const std::string& device_nam
     auto collector = sinks::file::make_collector(
         keywords::target = log_dir,
         keywords::min_free_space = 256 * 1024 * 1024,
-        keywords::max_files = 32
+        keywords::max_files = max_files
         );
     auto sink = boost::make_shared<file_sink>(
         keywords::file_name = filename,

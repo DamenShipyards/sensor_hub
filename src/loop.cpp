@@ -167,6 +167,7 @@ struct Service {
       prtr::read_json(option_stream, options);
       device->set_options(options);
       device->enable_logging(device_cfg.get("enable_logging", false));
+      device->set_max_log_files(device_cfg.get("max_log_files", 32));
       device->use_as_time_source(device_cfg.get("use_as_time_source", false));
       devices_.push_back(std::move(device));
     }
