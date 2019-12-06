@@ -66,6 +66,8 @@
     <ClCompile Include="..\src\datetime.cpp" />
     <ClCompile Include="..\src\device.cpp" />
     <ClCompile Include="..\src\devices\dummy.cpp" />
+    <ClCompile Include="..\src\devices\nmea.cpp" />
+    <ClCompile Include="..\src\devices\regex.cpp" />
     <ClCompile Include="..\src\devices\ublox.cpp" />
     <ClCompile Include="..\src\devices\xsens.cpp" />
     <ClCompile Include="..\src\http.cpp" />
@@ -75,6 +77,7 @@
     <ClCompile Include="..\src\processor.cpp" />
     <ClCompile Include="..\src\processors\acceleration_history.cpp" />
     <ClCompile Include="..\src\processors\fusion.cpp" />
+    <ClCompile Include="..\src\processors\signalk.cpp" />
     <ClCompile Include="..\src\processors\statistics.cpp" />
     <ClCompile Include="..\src\types.cpp" />
     <ClCompile Include="..\src\usb.cpp" />
@@ -86,6 +89,8 @@
     <ClInclude Include="..\src\datetime.h" />
     <ClInclude Include="..\src\device.h" />
     <ClInclude Include="..\src\devices\dummy.h" />
+    <ClInclude Include="..\src\devices\nmea.h" />
+    <ClInclude Include="..\src\devices\regex.h" />
     <ClInclude Include="..\src\devices\ublox.h" />
     <ClInclude Include="..\src\devices\ublox_impl.h" />
     <ClInclude Include="..\src\devices\xsens.h" />
@@ -97,9 +102,11 @@
     <ClInclude Include="..\src\loop.h" />
     <ClInclude Include="..\src\main.h" />
     <ClInclude Include="..\src\modbus.h" />
+    <ClInclude Include="..\src\parser.h" />
     <ClInclude Include="..\src\processor.h" />
     <ClInclude Include="..\src\processors\acceleration_history.h" />
     <ClInclude Include="..\src\processors\fusion.h" />
+    <ClInclude Include="..\src\processors\signalk.h" />
     <ClInclude Include="..\src\processors\statistics.h" />
     <ClInclude Include="..\src\quantities.h" />
     <ClInclude Include="..\src\spirit_x3.h" />
