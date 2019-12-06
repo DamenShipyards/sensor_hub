@@ -157,6 +157,10 @@ set_target_properties(sensor_hub PROPERTIES
   LINK_FLAGS "-Wl,--no-as-needed"
 )
 
+target_link_libraries(sensor_hub 
+   -static-libgcc -static-libstdc++
+)
+
 macro(new_test NEW_TEST)
   set(TEST_SOURCES ${ARGN})
   list(TRANSFORM TEST_SOURCES PREPEND ${SENSORHUB_SOURCE_DIR}/ )
