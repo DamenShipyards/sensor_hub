@@ -1,4 +1,4 @@
 @table @asis
-@bibitem{XSENS_MTLL} Xsens, "MT Low Level Communication Documentation", 2017
+@bibitem{XSENS_MTLL} Xsens, "MT Low Level Communication Documentation", Rev. 2019.A, Sept. 2019
 @bibitem{UBLOX_COMM} Ublox, "u-blox 8 / u-blox M8 Receiver Description Including Protocol Specification, R16", 2018
 @end table

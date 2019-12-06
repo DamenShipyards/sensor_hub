@@ -1,8 +1,31 @@
 @menu
+* Sensor configuration:: Sensor configuration
 * Xsens:: Xsens
 * Ublox:: Ublox
 @end menu
 
+@node Sensor configuration
+@section Sensor configuration
+
+See also @xref{Configuration}. Configuration items for sensors are
+@verbatim
+[devices]
+count=<number of sensors>
+
+[device<sensor number starting at 0>]
+type=<sensor type>
+name=<configurable friendly name for sensor>
+connection_string=<connection>
+enable_logging=<whether to enable a device log for this sensor>
+use_as_time_source=<synchronize clock with this device>
+enabled=<whether to enable this device>
+@end verbatim
+
+The @code{connection_string} determines how to connect to the device. For a USB connection
+it is either <VENDOR_ID>:<PRODUCT_ID> or <VENDOR_ID>:<PRODUCT_ID>,<INTERFACE_NO>. 
+For a serial connection, the connection string is <SERIAL_DEVICE>:<BAUDRATE>
+A valueof @code{auto} for connection string will guess the connection string from default values.
+Inspect the daemon/service log file for connection failures.
 
 @node Xsens
 @section Xsens
@@ -12,7 +35,22 @@ MRU devices by @url{https://www.xsens.com/, Xsens}
 @subsection MTi-G700/710
 
 Motion reference unit with built-in GPS capability. @bibcite{XSENS_MTLL}
-Device USB vendor:product is 2639:0017
+Device USB vendor:product is 2639:0017. The device can be connected through
+a serial connection or USB directly. The respective devices types are 
+@code{xsens_mti_g_710_serial} and @code{xsens_mti_g_710_usb}
+
+@subsection MTi-670
+
+Motion reference unit with built-in GPS capability. @bibcite{XSENS_MTLL}
+This device has no native USB. The development board for this device has a FTDI
+USB converter with vendor:product id 2639:0300. The device type is 
+@code{xsens_mti_670}.
+
+@subsection MTi-630
+
+Motion reference unit. @bibcite{XSENS_MTLL}. The device type is 
+@code{xsens_mti_630}.
+
 
 
 @node Ublox

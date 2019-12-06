@@ -5,4 +5,6 @@ file on Windows is @code{C:\ProgramData\Damen\SensorHub\Config\sensor_hub.conf} 
 The service/daemon needs to be restarted for a new configuration to become active.
 
 Service log files can be found in @code{C:\ProgramData\Damen\SensorHub\Log} on windows and in @code{/var/log/sensor_hub} or
-@code{~/.local/var/log} on linux.
+@code{~/.local/var/log} on linux. Logging can be configured in the @code{[logging]} section of the configuration. A log level 
+can be specified to be either @code{debug}, @code{info}, @code{warning} or @code{error}. When logging at debug level, the log 
+file can become very large, so this should only be used for trouble shooting.

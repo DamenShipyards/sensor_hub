@@ -27,7 +27,9 @@ is done by means of a minimum and maximum value. So the 16 bit value becomes:
 
 @code{u16_value = (double_value - min) / (max - min) * 0x10000}
 
-This desired minimum and maximum values for @ref{Quantities} can be provided in @ref{Configuration}
+This desired minimum and maximum values for @ref{Quantities} can be provided in @ref{Configuration}, by 
+means of an entry in the @code{[modbus]} section like e.g. @code{vx_min=-10} for a minimum x velocity
+of -10 m/s.
 
 Note that Sensor Hub modbus register addresses are 0 based. Some modbus masters are 1 based, meaning
 all addresses in this document should be increased by 1 for those masters.
