@@ -257,23 +257,38 @@ protected:
   }
 
   void insert_value(const Stamped_quantity& value) {
+    // When registered as time source, adjust application clock when receiving time sample
     if (use_as_time_source_ && value.quantity == Quantity::ut) {
       adjust_clock_diff(value.value - value.stamp);
     }
+    // Add value to sample cache
     auto item = data_.try_emplace(value.quantity);
     auto& queue = item.first->second;
     queue.push_back({value.value, value.stamp});
+
+    // Pass value to processors
     for (auto&& processor: processors_) {
       processor->insert_value(value);
     }
-    if (queue.size() > 0x0040000) {
+    // Prune sample cache: maximum 256K or 1h of samples
+    while (queue.size() > 0x0040000 || value.stamp - queue.front().stamp > 3600) {
       queue.pop_front();
     }
+    // Write device log if enabled
     if (enable_logging_) {
-      std::stringstream ss;
-      ss << std::setprecision(15) << value.stamp << "," << value.quantity << "," << value.value;
-      if (enable_logging_ && device_log_initialized_) {
-        log(this->get_name(), ss.str());
+      try {
+        std::stringstream ss;
+        ss << std::setprecision(15) << value.stamp << "," << value.quantity << "," << value.value;
+        if (enable_logging_ && device_log_initialized_) {
+          log(this->get_name(), ss.str());
+        }
+      }
+      catch (...) {
+        static int err_count = 0;
+        if ((err_count % 10000) == 0) {
+          log(level::error, "Failed to write device log");
+        }
+        ++err_count;
       }
     }
   }
