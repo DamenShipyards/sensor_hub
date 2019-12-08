@@ -237,7 +237,8 @@ sources::logger& get_device_log() {
 }
 
 
-bool init_device_log(const std::string& device_id, const std::string& device_name, int max_files) {
+bool init_device_log(const std::string& device_id, const std::string& device_name, 
+    const int max_files, const size_t file_size) {
   try {
     auto log_dir = Logger::get_instance().get_device_log_dir();
     typedef sinks::asynchronous_sink<sinks::text_file_backend> file_sink;
@@ -250,7 +251,7 @@ bool init_device_log(const std::string& device_id, const std::string& device_nam
     auto sink = boost::make_shared<file_sink>(
         keywords::file_name = filename,
         keywords::open_mode = std::ios_base::app,
-        keywords::rotation_size = 32 * 1024 * 1024,
+        keywords::rotation_size = file_size,
         keywords::auto_flush = false
         );
     sink->set_exception_handler(make_exception_handler<std::exception>(device_log_exception_handler()));
