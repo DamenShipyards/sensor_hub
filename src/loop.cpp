@@ -27,6 +27,7 @@
 #include "modbus.h"
 #include "device.h"
 #include "processor.h"
+#include "watchdog.h"
 
 #include "driver/install.h"
 
@@ -80,6 +81,13 @@ struct Service {
 
   Modbus_server& get_modbus_server() {
     return *modbus_server_;
+  }
+
+  /**
+   * Enable watchdog
+   */
+  void enable_watchdog() {
+    watchdog_.enable();
   }
 
 
@@ -261,6 +269,7 @@ struct Service {
       if (counter % 3600 == 0) {
         hourly_service(yield);
       }
+      watchdog_.feed();
     }
   }
 
@@ -324,7 +333,8 @@ private:
         http_server_(nullptr),
         modbus_server_(nullptr),
         devices_(),
-        processors_() {
+        processors_(),
+        watchdog_() {
     log(level::info, "Constructing service instance");
 		signals_.async_wait(
 				[this](boost::system::error_code ec, int signo)
@@ -346,6 +356,7 @@ private:
   std::unique_ptr<Modbus_server> modbus_server_;
   Devices devices_;
   Processors processors_;
+  Watchdog watchdog_;
 };
 
 
@@ -358,6 +369,10 @@ int enter_loop() {
   set_device_log_dir(cfg.get("logging.device_log_dir", ""));
 
   Service& service = Service::get_instance();
+
+  if (cfg.get("watchdog.enabled", false)) {
+    service.enable_watchdog();
+  }
 
   if (cfg.get("http.enabled", false)) {
     service.start_http_server(cfg.get("http.address", "localhost"), cfg.get("http.port", 80));

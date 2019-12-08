@@ -197,4 +197,4 @@ inline std::string get_serial_connection_string(boost::asio::io_context& ctx, co
 
 #endif  // SERIAL_H_
 
-// vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
+// vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2 filetype=cpp
