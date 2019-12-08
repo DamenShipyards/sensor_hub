@@ -32,7 +32,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 # Link boost statically in release builds
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-set(STD_LINK  -static-libgcc -static-libstdc++)
 set(Boost_USE_STATIC_LIBS ON)
 add_definitions(
   -DFMT_HEADER_ONLY
@@ -151,7 +150,6 @@ target_link_libraries(sensor_hub
   Boost::chrono
   Boost::coroutine
   ${USE_EIGEN}
-  ${STD_LINK}
 )
 
 set_target_properties(sensor_hub PROPERTIES
