@@ -164,7 +164,7 @@ struct RadConverter<3, false> {
 template<>
 struct RadConverter<3, true> {
   static constexpr double convert(int dim, double value) {
-    auto result = IdentityConverter<3, false>::convert(dim, value, M_PI / 180.0);
+    auto result = IdentityConverter<3, true>::convert(dim, value, M_PI / 180.0);
     return result;
   }
 };
