@@ -54,7 +54,7 @@ struct Serial: public serial_port {
     std::string parity_s = "N";
     std::string stop_bits_s = "1";
     switch (fields.size()) {
-      case 5: 
+      case 5:
         stop_bits_s = fields[4];
         /* fall through */
       case 4:
@@ -105,7 +105,7 @@ struct Serial: public serial_port {
     serial_port::set_option(data_bits);
     serial_port::set_option(parity);
     serial_port::set_option(stop_bits);
-    log(level::info, "Succesfully opened Serial port %, %, %, %, %", 
+    log(level::info, "Succesfully opened Serial port %, %, %, %, %",
         device_s, baud_rate_s, data_bits_s, parity_s, stop_bits_s);
   }
 };
@@ -126,7 +126,7 @@ inline bool can_open_serial(boost::asio::io_context& ctx, const std::string& dev
 
 #ifdef _WIN32
 
-inline std::string get_serial_connection_string(boost::asio::io_context& ctx, 
+inline std::string get_serial_connection_string(boost::asio::io_context& ctx,
     const std::string& prefix,
     const std::string& service,
     const std::string& device) {
@@ -179,15 +179,20 @@ inline std::string get_serial_connection_string(boost::asio::io_context& ctx,
 inline std::string get_serial_connection_string(boost::asio::io_context& ctx, const std::string& prefix) {
   static const auto dev_dir = fs::path("/dev/sensor_hub");
   std::string match = (dev_dir / prefix).string();
-  fs::directory_iterator it{dev_dir};
-  while (it != fs::directory_iterator{}) {
-    std::string item = it->path().string();
-    if (algo::starts_with(item, match)) {
-      if (can_open_serial(ctx, item)) {
-        return item;
+  try {
+    fs::directory_iterator it{dev_dir};
+    while (it != fs::directory_iterator{}) {
+      std::string item = it->path().string();
+      if (algo::starts_with(item, match)) {
+        if (can_open_serial(ctx, item)) {
+          return item;
+        }
       }
-    } 
-    ++it;
+      ++it;
+    }
+  }
+  catch (fs::filesystem_error& e) {
+    log(level::error, "Failed to iterate over device directory: %", e.what());
   }
   log(level::info, "Serial device %* not found or already connected", match);
   return "dev_connection_string_not_found";
