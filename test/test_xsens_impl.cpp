@@ -55,11 +55,16 @@ BOOST_AUTO_TEST_CASE(data_converter_test) {
   BOOST_TEST((parser::IdentityConverter<3, true>::convert(1, 1.0)) == -1.0);
   BOOST_TEST((parser::IdentityConverter<3, false>::convert(1, 1.0)) == 1.0);
   BOOST_TEST((parser::RadConverter<2, false>::convert(0, 1.0)) == M_PI / 180.0);
-  BOOST_TEST((parser::RadConverter<3, false>::convert(0, 1.0)) == M_PI / 180.0);
-  BOOST_TEST((parser::RadConverter<3, true>::convert(1, 1.0)) == - M_PI / 180.0);
-  BOOST_TEST((parser::RadConverter<3, false>::convert(0, 0.0)) == 0.0);
-  BOOST_TEST((parser::RadConverter<3, true>::convert(0, 1.0)) == M_PI + M_PI / 180.0);
+  BOOST_TEST((parser::RadConverter<2, true>::convert(0, 1.0)) == M_PI / 180.0);
+  BOOST_TEST((parser::RadConverter<2, true>::convert(1, 1.0)) == M_PI / 180.0);
+  BOOST_TEST((parser::RadConverter<3, true>::convert(0, 0.0)) == 0.0);
+  BOOST_TEST((parser::RadConverter<3, true>::convert(0, 1.0)) == M_PI / 180.0);
   BOOST_TEST((parser::RadConverter<3, true>::convert(1, 0.0)) == 0.0);
+  BOOST_TEST((parser::RadConverter<3, true>::convert(1, 1.0)) == M_PI / 180.0);
+  BOOST_TEST((parser::RadConverter<3, false>::convert(0, 0.0)) == M_PI);
+  BOOST_TEST((parser::RadConverter<3, false>::convert(0, 1.0)) == M_PI + M_PI / 180.0);
+  BOOST_TEST((parser::RadConverter<3, false>::convert(1, 0.0)) == 0.0);
+  BOOST_TEST((parser::RadConverter<3, false>::convert(1, 1.0)) == -M_PI / 180.0);
 }
 
 BOOST_AUTO_TEST_CASE(xsens_parse_bytes_test) {

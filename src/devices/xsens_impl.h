@@ -141,7 +141,7 @@ struct IdentityConverter<4, true> {
  * @tparam DIM number of dimensions in value to convert
  */
 template<int DIM, bool FLIP=false>
-struct RadConverter: IdentityConverter<DIM, FLIP> {
+struct RadConverter {
   static constexpr double convert(int dim, double value) {
     return IdentityConverter<DIM, FLIP>::convert(dim, value, M_PI / 180.0);
   }
@@ -149,13 +149,23 @@ struct RadConverter: IdentityConverter<DIM, FLIP> {
 
 
 /**
- * Template specialization for orientation angles
+ * Template specializations for orientation angles
+ *
+ * Orientation angles from the Xsens do *not* match the device axes :(.
  */
 template<>
-struct RadConverter<3, true>: IdentityConverter<3, true> {
+struct RadConverter<3, false> {
   static constexpr double convert(int dim, double value) {
     auto result = IdentityConverter<3, true>::convert(dim, value, M_PI / 180.0);
     return dim == 0 ? result + M_PI : result;
+  }
+};
+
+template<>
+struct RadConverter<3, true> {
+  static constexpr double convert(int dim, double value) {
+    auto result = IdentityConverter<3, false>::convert(dim, value, M_PI / 180.0);
+    return result;
   }
 };
 
@@ -169,7 +179,7 @@ struct RadConverter<3, true>: IdentityConverter<3, true> {
  * @tparam DIM number of dimensions in value to convert
  */
 template<int DIM, bool FLIP=false>
-struct TeslaConverter: IdentityConverter<DIM, FLIP> {
+struct TeslaConverter {
   static constexpr double convert(int dim, double value) {
     return IdentityConverter<DIM, FLIP>::convert(dim, value, 1E-4);
   }
