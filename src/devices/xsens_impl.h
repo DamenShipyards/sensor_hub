@@ -107,8 +107,8 @@ using x3::_pass;
  */
 template<int DIM, bool FLIP=false>
 struct IdentityConverter {
-  static constexpr double factor(int, double f=1.0) {
-    return f;
+  static constexpr double convert(int, double value, double f=1.0) {
+    return value * f;
   }
 };
 
@@ -117,8 +117,8 @@ struct IdentityConverter {
  */
 template<>
 struct IdentityConverter<3, true> {
-  static constexpr double factor(int dim, double f=1.0) {
-    return dim > 0 ? -f : f;
+  static constexpr double convert(int dim, double value, double f=1.0) {
+    return dim > 0 ? -f * value: f * value;
   }
 };
 
@@ -127,8 +127,8 @@ struct IdentityConverter<3, true> {
  */
 template<>
 struct IdentityConverter<4, true> {
-  static constexpr double factor(int dim, double f=1.0) {
-    return dim > 1 ? -f : f;
+  static constexpr double convert(int dim, double value, double f=1.0) {
+    return dim > 1 ? -f * value: f * value;
   }
 };
 
@@ -136,15 +136,26 @@ struct IdentityConverter<4, true> {
 /**
  * Deg to rad converter
  *
- * Conversion factor for angles provided by the sensor in angular
- * degrees to radians.
+ * Converter provider for converting degrees to radians.
  *
  * @tparam DIM number of dimensions in value to convert
  */
 template<int DIM, bool FLIP=false>
 struct RadConverter: IdentityConverter<DIM, FLIP> {
-  static constexpr double factor(int dim) {
-    return IdentityConverter<DIM, FLIP>::factor(dim, M_PI / 180.0);
+  static constexpr double convert(int dim, double value) {
+    return IdentityConverter<DIM, FLIP>::convert(dim, value, M_PI / 180.0);
+  }
+};
+
+
+/**
+ * Template specialization for orientation angles
+ */
+template<>
+struct RadConverter<3, true>: IdentityConverter<3, true> {
+  static constexpr double convert(int dim, double value) {
+    auto result = IdentityConverter<3, true>::convert(dim, value, M_PI / 180.0);
+    return dim == 0 ? result + M_PI : result;
   }
 };
 
@@ -152,15 +163,15 @@ struct RadConverter: IdentityConverter<DIM, FLIP> {
 /**
  * Magnetic field strength converter
  *
- * Conversion factor for converting fields strengths
+ * Converter for converting fields strengths
  * in Gauss to Tesla.
  *
  * @tparam DIM number of dimensions in value to convert
  */
 template<int DIM, bool FLIP=false>
 struct TeslaConverter: IdentityConverter<DIM, FLIP> {
-  static constexpr double factor(int dim) {
-    return IdentityConverter<DIM, FLIP>::factor(dim, 1E-4);
+  static constexpr double convert(int dim, double value) {
+    return IdentityConverter<DIM, FLIP>::convert(dim, value, 1E-4);
   }
 };
 
@@ -231,7 +242,7 @@ struct Date_time: public Data_packet {
  * @tparam FORMAT number format used by sensro when providing this data value
  * @tparam DIM number of values provided for this data type
  * @tparam QUANT The sensor hub quantity associated with this data
- * @tparam Converter Converion factor provider for this data packet
+ * @tparam Converter Value converter provider for this data packet
  * @tparam FLIP whether to convert for flipped axes
  */
 template<uint16_t DID, uint16_t COORD, uint16_t FORMAT, int DIM, Quantity QUANT,
@@ -262,7 +273,8 @@ struct Data_value: public Data_packet {
     for (auto& value: data) {
       // When a data packet contains multiple values, the quantities of these
       // values are always consecutive, so we can just increment the quantity
-      result.push_back({converter::factor(dim++) * static_cast<double>(value), *qi++});
+      result.push_back({value_norm(*qi, converter::convert(dim++, static_cast<double>(value))), *qi});
+      qi++;
     }
     return result;
   }
@@ -299,7 +311,7 @@ template<bool FLIP> using Free_accelerationT =
 using Free_acceleration = Free_accelerationT<false>;
 using Free_acceleration_flipped = Free_accelerationT<true>;
 template<bool FLIP> using Rate_of_turnT = 
-  Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::rr, RadConverter, FLIP>;
+  Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::rr, IdentityConverter, FLIP>;
 using Rate_of_turn = Rate_of_turnT<false>;
 using Rate_of_turn_flipped = Rate_of_turnT<true>;
 using Lat_lon = Data_value<XDI_LatLon, XDI_CoordSysEnu, XDI_SubFormatDouble, 2, Quantity::la, RadConverter>;
