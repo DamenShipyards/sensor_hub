@@ -304,7 +304,10 @@ struct Xsens: public Port_device<Port, ContextProvider>,
 
   void set_options(const prtr::ptree& options) override {
     filter_profile_ = static_cast<byte_t>(options.get("filter_profile", 0));
-    parser_.set_flip_axes(options.get("flip_axes", get_default_flip_axes()));
+
+    bool flip_axes = options.get("flip_axes", get_default_flip_axes());
+    parser_.set_flip_axes(flip_axes);
+    log(level::info, "Set flip axes: %", flip_axes);
   }
 
   void use_as_time_source(const bool value) override {
