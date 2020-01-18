@@ -132,6 +132,12 @@ struct IdentityConverter<4, true> {
   }
 };
 
+template<>
+struct IdentityConverter<4, false> {
+  static constexpr double convert(int dim, double value, double f=1.0) {
+    return (dim % 2 == 0) ? -f * value: f * value;
+  }
+};
 
 /**
  * Deg to rad converter
@@ -241,6 +247,20 @@ struct Date_time: public Data_packet {
 };
 
 
+namespace detail {
+
+template<int DIM, bool FLIP>
+inline int index_permute(int i) {
+  return i;
+}
+
+template<>
+inline int index_permute<4, false>(int i) {
+  return 2 * (i / 2) + (i + 1) % 2;
+}
+
+}
+
 /**
  * Generic data packet
  *
@@ -276,17 +296,17 @@ struct Data_value: public Data_packet {
    * received from the sensor
    */
   Quantity_values get_values() const override {
-    Quantity_values result;
-    int dim = 0;
+    Quantity_values result(DIM);
     Quantity_iter qi(quantity);
-    for (auto& value: data) {
+    for (int dim=0; dim < DIM; ++dim) {
       // When a data packet contains multiple values, the quantities of these
       // values are always consecutive, so we can just increment the quantity
-      result.push_back({value_norm(*qi, converter::convert(dim++, static_cast<double>(value))), *qi});
-      qi++;
+      double value =static_cast<double>(data[detail::index_permute<DIM,FLIP>(dim)]);
+      result[dim] = {value_norm(*qi, converter::convert(dim, value)), *qi++};
     }
     return result;
   }
+
 
   /**
    * Get parse rule for single precision data
@@ -307,6 +327,8 @@ struct Data_value: public Data_packet {
   }
 
   // Other formats are not currently supported
+
+private:
 };
 
 
