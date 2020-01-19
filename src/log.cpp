@@ -68,7 +68,7 @@ struct device_log_exception_handler {
     static auto last = cur - 1;
 
     if (cur != last) {
-      log(level::info, msg);
+      log(level::error, msg);
       last = cur;
     }
   }
