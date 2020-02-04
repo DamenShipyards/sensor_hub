@@ -53,7 +53,7 @@ struct Quantity_not_available: public std::exception {
  *
  * Note the following ship and earth related conventions:
  * With respect to ships, the X coordinate is longitudinal and positive
- * pointing to the bow. Y coordinate is transerse and positive 
+ * pointing to the bow. Y coordinate is transverse and positive 
  * pointing to starboard. Z coordinate is vertical and positive pointing
  * down. Heights are positive pointing up, so Z = -40 == H = 40.
  * With respect to the earth, the X axis points north, the Y axis east
