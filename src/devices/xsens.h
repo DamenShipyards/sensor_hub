@@ -229,9 +229,9 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   }
 
   virtual bool request_product_code(asio::yield_context yield) {
-    bytes_t response;
-    bool result = do_request(XMID_ReqProductCode, XMID_ProductCode, 
-        yield, &response, "Xsens GetProductCode");
+    bytes_t response = { command::size_offset };
+    bool result = do_request(XMID_ReqProductCode, XMID_ProductCode, yield,
+        &response, "Xsens GetProductCode");
     if (result) {
       std::string data = get_string_from_response(response);
       log(level::info, "Product code: %", data);
@@ -240,27 +240,27 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   }
 
   virtual bool request_identifier(asio::yield_context yield) {
-    bytes_t response;
-    bool result = do_request(XMID_ReqDid, XMID_DeviceId, yield, 
-        &response, "Xsens GetIdentifier");
-    if (result && response.size() >= (command::data_offset + 4)) {
-      size_t offset = response[command::size_offset] - 4;
-      std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}",
-          static_cast<uint8_t>(response[command::data_offset + offset + 0]),
-          static_cast<uint8_t>(response[command::data_offset + offset + 1]),
-          static_cast<uint8_t>(response[command::data_offset + offset + 2]),
-          static_cast<uint8_t>(response[command::data_offset + offset + 3])
-      );
-      log(level::info, "Xsens device serial#: %", serial_no);
-      this->set_id("xsens_" + serial_no);
+    bytes_t response = { command::size_offset };
+    std::string serial_no = "";
+    bool result = do_request(XMID_ReqDid, XMID_DeviceId, yield, &response, "Xsens GetIdentifier") 
+        && response.size() > command::size_offset;
+    if (result) {
+      size_t size = response[command::size_offset];
+      if (response.size() > command::size_offset + size) {
+        for (size_t i = 0; i < size; ++i) {
+          serial_no += fmt::format("{:02X}", static_cast<uint8_t>(response[command::data_offset + i]));
+        }
+        log(level::info, "Xsens device serial#: %", serial_no);
+        this->set_id("xsens_" + serial_no);
+      }
     }
     return result;
   }
 
   virtual bool request_firmware(asio::yield_context yield) {
-    bytes_t response;
-    bool result = do_request(XMID_ReqFirmwareRevision, XMID_FirmwareRevision,
-        yield, &response, "Xsens GetFirmwareVersion");
+    bytes_t response = { command::size_offset };
+    bool result = do_request(XMID_ReqFirmwareRevision, XMID_FirmwareRevision, yield,
+        &response, "Xsens GetFirmwareVersion");
     if (result && response.size() >= (command::data_offset + 11)) {
       uint8_t maj = response[command::data_offset + 0];
       uint8_t min = response[command::data_offset + 1];
