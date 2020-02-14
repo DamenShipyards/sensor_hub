@@ -133,8 +133,8 @@ struct Xsens: public Port_device<Port, ContextProvider>,
     this->wait(50, yield);
     log(level::info, message);
     return this->exec_command(
-        command::packet(mid), 
-        command::packet(ack), 
+        command::packet(mid),
+        command::packet(ack),
         command::error_resp, yield);
   }
 
@@ -144,7 +144,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
     log(level::info, message);
     return this->exec_command(
         command::packet(mid, setting),
-        command::packet_head(ack), 
+        command::packet_head(ack),
         command::error_resp, yield);
   }
 
@@ -154,24 +154,28 @@ struct Xsens: public Port_device<Port, ContextProvider>,
     log(level::info, message);
     return this->exec_command(
         command::packet(mid),
-        command::packet(ack, setting), 
+        command::packet(ack, setting),
         command::error_resp, yield);
   }
 
-  bool do_request(cbyte_t mid, cbyte_t ack, asio::yield_context yield, 
+  bool do_request(cbyte_t mid, cbyte_t ack, asio::yield_context yield,
       bytes_t* response, const std::string& message) {
     this->wait(50, yield);
     log(level::info, message);
     return this->exec_command(
-        command::packet(mid), 
-        command::packet_head(ack), 
-        command::error_resp, yield, 
+        command::packet(mid),
+        command::packet_head(ack),
+        command::error_resp, yield,
         response);
   }
 
   bool goto_config(asio::yield_context yield) {
-    return do_command(XMID_GotoConfig, XMID_GotoConfigAck, 
+    bool result = do_command(XMID_GotoConfig, XMID_GotoConfigAck,
         yield, "Xsens GotoConfig");
+    // Wait a little after switching to config, to give the device time to adjust
+    // to its new role
+    this->wait(100, yield);
+    return result;
   }
 
   bool goto_measurement(asio::yield_context yield) {
@@ -198,7 +202,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   virtual bool set_filter_profile(asio::yield_context yield) {
     if (filter_profile_ != 0) {
       cbytes_t payload = { 0x0, filter_profile_ };
-      return do_set(XMID_SetFilterProfile, XMID_SetFilterProfileAck, 
+      return do_set(XMID_SetFilterProfile, XMID_SetFilterProfileAck,
           yield, payload, fmt::format("Xsens SetFilterProfile: {}", filter_profile_));
     }
     else {
@@ -212,7 +216,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   }
 
   bool init_mt(asio::yield_context yield) {
-    return do_request(XMID_Initbus, XMID_InitBusResults, yield, 
+    return do_request(XMID_Initbus, XMID_InitBusResults, yield,
         nullptr, "Xsens InitMT");
   }
 
@@ -254,7 +258,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
         this->set_id("xsens_" + serial_no);
       }
       else {
-        log(level::warning, "Failed to get Xsens serial#");
+        log(level::warning, "Failed to get Xsens serial");
         this->set_id("xsens_unknown_serial");
       }
     }
@@ -340,7 +344,7 @@ struct MTi_GPS_based: public Xsens<Port, ContextProvider> {
 
   bool check_output_configuration(asio::yield_context yield) override {
     return this->do_check(
-        XMID_ReqOutputConfiguration, XMID_ReqOutputConfigurationAck, 
+        XMID_ReqOutputConfiguration, XMID_ReqOutputConfigurationAck,
         yield, command::output_configuration, "Xsens ReqOutputConfiguration");
   }
 
@@ -359,7 +363,7 @@ struct MTi_GPS_based: public Xsens<Port, ContextProvider> {
 
 
   bool set_string_output_type(asio::yield_context yield) override {
-    return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck, 
+    return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck,
         yield, command::string_output_type, "Xsens SetStringOutputType");
   }
 
@@ -438,7 +442,7 @@ struct MTi_670: public MTi_GPS_based<Port, ContextProvider> {
   }
 
   bool set_string_output_type(asio::yield_context yield) override {
-    return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck, 
+    return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck,
         yield, command::string_output_type_6, "Xsens SetStringOutputType 670");
   }
 
@@ -463,7 +467,7 @@ struct MTi_630: public Xsens<Port, ContextProvider> {
 
   bool check_output_configuration(asio::yield_context yield) override {
     return this->do_check(
-        XMID_ReqOutputConfiguration, XMID_ReqOutputConfigurationAck, 
+        XMID_ReqOutputConfiguration, XMID_ReqOutputConfigurationAck,
         yield, command::output_configuration_630, "Xsens ReqOutputConfiguration");
   }
 
@@ -480,7 +484,7 @@ struct MTi_630: public Xsens<Port, ContextProvider> {
   }
 
   bool set_string_output_type(asio::yield_context yield) override {
-    return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck, 
+    return this->do_set(XMID_SetStringOutputType, XMID_SetStringOutputTypeAck,
         yield, command::string_output_type_6, "Xsens SetStringOutputType 630");
   }
 
