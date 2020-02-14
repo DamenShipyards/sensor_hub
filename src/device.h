@@ -423,12 +423,9 @@ struct Port_device: public Context_device<ContextProvider> {
 
     // ... and look for the expected response
     try {
-      // Repeat response reading several times as the response might be cluttered with
-      // other data coming in
-      int repeats = 4;
       bytes_t response;
       int response_found = -1;
-      uint16_t len = 0;
+      uint16_t expected_len = expected_response.size();
       bool read_all = false;
       do {
         asio::streambuf read_buf;
@@ -464,17 +461,19 @@ struct Port_device: public Context_device<ContextProvider> {
             // Get a length indicator for data in the response
             size_t len_offset_1 = (*data)[0] + response_found;
             size_t len_offset_2  = (data->size() > 1) ? (*data)[1] + response_found: -1;
-            len = response.size() > len_offset_1 ? response[len_offset_1] : 0;
-            len += len_offset_2 >= 0 && response.size() > len_offset_2 ?
+            expected_len = response.size() > len_offset_1 ? response[len_offset_1] : 0;
+            expected_len += len_offset_2 >= 0 && response.size() > len_offset_2 ?
               response[len_offset_2] << 8: 0;
-            len += static_cast<uint16_t>(std::max(len_offset_1, len_offset_2));
-            // ... and indicate whether we have read enough data (i.e. equal to or more than len)
-            // starting from the first byte after the offset of the length indicator
+            // Add length of item upto lenght indicator for total length
+            expected_len += static_cast<uint16_t>(std::max(len_offset_1, len_offset_2)) + 1;
+            log(level::debug, "Expecting % bytes", expected_len);
             data->clear();
           }
-          read_all = response.size() > len;
+          // ... and indicate whether we have read enough data (i.e. equal to or more than len)
+          // starting from the first byte after the offset of the length indicator
+          read_all = response.size() >= expected_len;
         }
-      } while ((--repeats > 0 && response_found < 0) || !read_all);
+      } while (!read_all);
 
       timeout_timer.cancel();
 
