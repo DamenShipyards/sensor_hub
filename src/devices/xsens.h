@@ -242,8 +242,8 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   virtual bool request_identifier(asio::yield_context yield) {
     bytes_t response = { command::size_offset };
     std::string serial_no = "";
-    bool result = do_request(XMID_ReqDid, XMID_DeviceId, yield, &response, "Xsens GetIdentifier") 
-        && response.size() > command::size_offset;
+    bool result = do_request(XMID_ReqDid, XMID_DeviceId, yield, &response, "Xsens GetIdentifier");
+    result &= response.size() > command::size_offset;
     if (result) {
       size_t size = response[command::size_offset];
       if (response.size() > command::size_offset + size) {
@@ -252,6 +252,10 @@ struct Xsens: public Port_device<Port, ContextProvider>,
         }
         log(level::info, "Xsens device serial#: %", serial_no);
         this->set_id("xsens_" + serial_no);
+      }
+      else {
+        log(level::warning, "Failed to get Xsens serial#");
+        this->set_id("xsens_unknown_serial");
       }
     }
     return result;
