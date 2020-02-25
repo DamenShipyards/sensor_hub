@@ -1,0 +1,52 @@
+sensor_hub(1)
+=============
+:doctype: manpage
+
+NAME
+----
+sensor_hub - sensor logging daemon for collecting and redistributing sensor data
+
+SYNOPSIS
+--------
+sensor_hub [<options>] <command>
+
+DESCRIPTION
+-----------
+sensor_hub logs sensor data to file and redistributes the data through a modbus and http interface.
+
+COMMANDS
+--------
+start::
+    start a daemon
+stop::
+    stop a running daemon
+restart::
+    restart a running daemon
+update_config::
+    update the configuration file
+    
+
+OPTIONS
+-------
+*-c,--configuration* 'arg'::  
+    Configuration file. The default is "/home/jaapie/.config/sensor_hub/sensor_hub.conf"
+*-h,--help*::
+    Display help and exit
+*-p,--pidfile*  'arg'::
+    Alternative to default pid file. Default is "/var/run/sensor_hub.pid"
+*-v,--version*::
+    Display version info and exit
+
+BUGS
+----
+You can report issue with this software here: http://github.com/DamenShipyards/sensor_hub/issues.
+
+AUTHOR
+------
+sensor_hub was written by Jaap Versteegh <jaap.versteegh@damen.com>.
+
+COPYING
+-------
+Copyright \(C) 2019-2020 Damen Shipyards. Free use of this software is
+granted under the terms of the GNU General Public License (GPL).
+

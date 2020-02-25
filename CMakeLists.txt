@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.14)
 
 project(SensorHub)
 
+include(GNUInstallDirs)
+
 # Use compilers on the path, not /usr/bin/(g++|gcc) perse. cmake is stupid that way
 # Apparently, we shouldn't do this, because it's too late set CC en CXX environment variables instead
 #execute_process(COMMAND which gcc OUTPUT_VARIABLE CMAKE_C_COMPILER)
@@ -54,7 +56,10 @@ find_package(libusb-1.0 1.0.22 REQUIRED)
 
 find_package(Threads REQUIRED)
 find_package(Doxygen)
-find_program(BUILD_MANUAL texi2dvi)
+find_program(HAVE_TEXI2DVI texi2dvi) 
+find_program(HAVE_ASCIIDOC asciidoc)
+find_program(HAVE_XSLTPROC xsltproc)
+set(BUILD_MANUAL ${HAVE_TEXI2DVI} AND ${HAVE_ASCIIDOC} AND ${HAVE_XSLTPROC})
 
 # Optional
 find_package(Eigen3 QUIET)
@@ -207,25 +212,25 @@ new_test(test_signalk datetime.cpp log.cpp)
 
 install(
   TARGETS sensor_hub
-  DESTINATION sbin
+  DESTINATION ${CMAKE_INSTALL_SBINDIR}
   COMPONENT runtime
 )
 
 install(
   FILES ${CMAKE_CURRENT_SOURCE_DIR}/setup/files/99-sensor_hub.rules
-  DESTINATION /etc/udev/rules.d
+  DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/udev/rules.d
   COMPONENT runtime
 )
 
 install(
   FILES ${CMAKE_CURRENT_SOURCE_DIR}/setup/files/sensor_hub.service
-  DESTINATION /lib/systemd/system
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system
   COMPONENT runtime
 )
 
 install(
   FILES ${CMAKE_CURRENT_SOURCE_DIR}/setup/files/sensor_hub.conf
-  DESTINATION /etc/sensor_hub
+  DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/sensor_hub
   COMPONENT configuration
 )
 
@@ -254,19 +259,26 @@ if(BUILD_MANUAL)
     manual ALL
     COMMAND make -j1 >/dev/null
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/manual
-    COMMENT "Generating Manual with TexInfo"
+    COMMENT "Generating manual with TexInfo and asciidoc"
   )
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/manual/sensor_hub.pdf
-  DESTINATION share/doc/sensor_hub
+  DESTINATION ${CMAKE_INSTALL_DOCDIR}
   COMPONENT documentation
 )
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/manual/sensor_hub.info
-  DESTINATION share/doc/sensor_hub/info
+  DESTINATION ${CMAKE_INSTALL_INFODIR}
   COMPONENT documentation
 )
 
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/sensor_hub.1
+  DESTINATION ${CMAKE_INSTALL_MANDIR}
+  COMPONENT documentation
+)
+else()
+  message("Not building manual because of missing texi2dvi, asciidoc or xsltproc")
 endif()
