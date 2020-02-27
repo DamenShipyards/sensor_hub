@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(SensorHub)
+project(sensor-hub)
 
 include(GNUInstallDirs)
 
@@ -157,6 +157,13 @@ target_link_libraries(sensor_hub
   ${USE_EIGEN}
 )
 
+# Link stdc++ statically in release builds
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+target_link_options(sensor_hub
+  PUBLIC -static-libgcc -static-libstdc++
+)
+endif()
+
 set_target_properties(sensor_hub PROPERTIES
   LINK_FLAGS "-Wl,--no-as-needed"
 )
@@ -218,13 +225,13 @@ install(
 
 install(
   FILES ${CMAKE_CURRENT_SOURCE_DIR}/setup/files/99-sensor_hub.rules
-  DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/udev/rules.d
+  DESTINATION /lib/udev/rules.d
   COMPONENT runtime
 )
 
 install(
   FILES ${CMAKE_CURRENT_SOURCE_DIR}/setup/files/sensor_hub.service
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system
+  DESTINATION /lib/systemd/system
   COMPONENT runtime
 )
 

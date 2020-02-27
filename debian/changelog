@@ -1,5 +1,5 @@
-sensor-hub (0.4.2-1) UNRELEASED; urgency=medium
+sensor-hub (0.4.16) UNRELEASED; urgency=medium
 
   * Initial release. (Closes: #XXXXXX)
 
- -- Jaap Versteegh <j.r.versteegh@orca-st.com>  Mon, 09 Sep 2019 23:07:36 +0200
+ -- Jaap Versteegh <jaap.versteegh@damen.com>  Thu, 27 Feb 2020 16:04:36 +0100
