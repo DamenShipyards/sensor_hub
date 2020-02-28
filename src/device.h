@@ -221,7 +221,7 @@ struct Device: public Named_object {
 
   void set_max_log_size(const size_t value) {
     log(level::info, "Set max log size to % for  %", value, this->get_name());
-    max_log_size_ = value;
+    max_log_size_ = static_cast<int>(value);
   }
 
   virtual void use_as_time_source(const bool value) {
@@ -425,7 +425,7 @@ struct Port_device: public Context_device<ContextProvider> {
     try {
       bytes_t response;
       int response_found = -1;
-      uint16_t expected_len = expected_response.size();
+      uint16_t expected_len = static_cast<uint16_t>(expected_response.size());
       bool read_all = false;
       do {
         asio::streambuf read_buf;

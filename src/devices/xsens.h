@@ -57,8 +57,8 @@ extern cbytes_t output_configuration;
 extern cbytes_t output_configuration_630;
 extern cbytes_t error_resp;
 
-constexpr unsigned size_offset = 3;
-constexpr unsigned data_offset = 4;
+constexpr cbyte_t size_offset = 3;
+constexpr cbyte_t data_offset = 4;
 
 byte_t checksum(cbytes_t data) {
   byte_t result = 0;

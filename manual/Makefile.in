@@ -1,4 +1,5 @@
 HHC_BINARY := $(shell `which hhc` --help 2>/dev/null)
+A2X_BINARY := $(shell `which a2x` --help 2>/dev/null)
 APP_NAME := sensor_hub
 MANUAL_FILES := $(wildcard @CMAKE_CURRENT_SOURCE_DIR@/manual/*)
 
@@ -45,7 +46,11 @@ endif
 manpage: @CMAKE_CURRENT_BINARY_DIR@/$(APP_NAME).1
 
 @CMAKE_CURRENT_BINARY_DIR@/$(APP_NAME).1: @CMAKE_CURRENT_SOURCE_DIR@/manual/$(APP_NAME).1.txt
+ifdef A2X_BINARY
 	a2x --doctype manpage --format manpage --destination-dir="@CMAKE_CURRENT_BINARY_DIR@" "@CMAKE_CURRENT_SOURCE_DIR@/manual/$(APP_NAME).1.txt"
+else
+	@echo "a2x binary (asciidoc compiler) not found"
+endif
 
 	
 .PHONY: pdf html chm info manpage
