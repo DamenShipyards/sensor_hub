@@ -61,7 +61,7 @@ struct Pid_file {
     pid_t pid = getpid();
     char pids[32];
     snprintf(pids, 32, "%d", pid);
-    write(fd_, pids, strlen(pids));
+    (void)write(fd_, pids, strlen(pids));
   }
   ~Pid_file() {
     if (fd_ > 0) {
@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
       // Child continues here: become session leader
       setsid();
       // Change dir to root to prevent any accidental dir locking
-      chdir("/");
+      (void)chdir("/");
       // Clear umask so we can create files with any permission
       umask(0);
 
