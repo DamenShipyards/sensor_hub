@@ -223,8 +223,8 @@ struct Xsens: public Port_device<Port, ContextProvider>,
   std::string get_string_from_response(cbytes_t response) {
     std::string result;
     if (response.size() > command::size_offset) {
-      int size = response[command::size_offset];
-      if (response.size() > (size + command::data_offset)) {
+      unsigned size = response[command::size_offset];
+      if (response.size() > (size + static_cast<size_t>(command::data_offset))) {
         auto data_start = response.begin() + command::data_offset;
         result.insert(result.end(), data_start, data_start + size);
       }
