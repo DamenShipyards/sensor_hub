@@ -37,3 +37,8 @@
 /debian/sensor-hub.substvars
 /debian/sensor-hub/
 /obj-x86_64-linux-gnu/
+
+# CLion
+/.idea
+/cmake-build-debug
+/cmake-build-release
