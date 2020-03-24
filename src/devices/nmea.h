@@ -20,6 +20,9 @@
  */
 
 
+#ifndef NMEA_H_
+#define NMEA_H_
+
 #include "../types.h"
 #include "../device.h"
 #include "../log.h"
@@ -59,5 +62,7 @@ struct Generic_Nmea: public Port_device<Port, ContextProvider>,
 
 
 }  // namespace nmea
+
+#endif  // ifndef NMEA_H_
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
