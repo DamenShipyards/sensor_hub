@@ -1,5 +1,5 @@
 /**
- * \file nmea.h
+ * \file regex.h
  * \brief Provide generic regular expression parsing device
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
@@ -20,18 +20,31 @@
  */
 
 
+#ifndef REGEX_H_
+#define REGEX_H__
+
+
 #include "../types.h"
 #include "../device.h"
 #include "../log.h"
 #include "../tools.h"
 #include "../functions.h"
 #include "../datetime.h"
+#include "../parser.h"
 
 namespace regex {
 
+namespace parser {
+
+struct Regex_parser {
+
+};
+
+}
+
 template <class Port, class ContextProvider>
 struct Regex_device: public Port_device<Port, ContextProvider>, 
-    public Polling_mixin<Regex_device<Port, ContextProvider> > {
+    public Port_polling_mixin<Regex_device<Port, ContextProvider> > {
 
   bool initialize(asio::yield_context yield) override {
     bool result = true;
@@ -50,14 +63,19 @@ struct Regex_device: public Port_device<Port, ContextProvider>,
     return result;
   }
 
-  void poll_data(asio::yield_context yield) override {
-    (void)yield;
+  template <typename Iterator>
+  void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
+    (void)stamp;
+    (void)buf_begin;
+    (void)buf_end;
   }
 
+private:
+  parser::Regex_parser parser_;
 };
 
-
-
 }  // namespace regex
+
+#endif  // ifndef REGEX_H_
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
