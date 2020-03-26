@@ -116,6 +116,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/devices/nmea.cpp
   ${SENSORHUB_SOURCE_DIR}/devices/regex.cpp
   ${SENSORHUB_SOURCE_DIR}/devices/dummy.cpp
+  ${SENSORHUB_SOURCE_DIR}/devices/gpsd.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/statistics.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/acceleration_history.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/fusion.cpp
@@ -214,6 +215,7 @@ new_test(test_xsens usb.cpp device.cpp log.cpp datetime.cpp types.cpp)
 new_test(test_xsens_impl datetime.cpp log.cpp types.cpp)
 new_test(test_ublox device.cpp log.cpp datetime.cpp types.cpp)
 new_test(test_ublox_impl datetime.cpp log.cpp types.cpp)
+new_test(test_gpsd datetime.cpp device.cpp log.cpp types.cpp)
 new_test(test_fusion datetime.cpp log.cpp modbus.cpp)
 new_test(test_signalk datetime.cpp log.cpp)
 

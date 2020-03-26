@@ -307,8 +307,6 @@ protected:
     connected_ = connected;
   }
 
-
-
 private:
   static int seq_;
   bool connected_;
@@ -320,7 +318,6 @@ private:
   bool device_log_initialized_;
   bool use_as_time_source_;
   Processors processors_;
-
 };
 
 
