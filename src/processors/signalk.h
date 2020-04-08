@@ -34,8 +34,8 @@
 #include "signalk_server.h"
 #include "signalk_converter.h"
 template <class ContextProvider>
-struct SignalK: public Port_processor<tcp_server,ContextProvider> {
-  SignalK(): Port_processor<tcp_server,ContextProvider>(), signalk_converter_(){
+struct SignalK_pusher: public Port_processor<tcp_server,ContextProvider> {
+  SignalK_pusher(): Port_processor<tcp_server,ContextProvider>(), signalk_converter_() {
   }
 
   void insert_value(const Stamped_quantity& q) override {

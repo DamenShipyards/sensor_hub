@@ -24,9 +24,23 @@
 #include "../loop.h"
 #include "signalk.h"
 
-//TODO fix this
-using SignalK_processor = SignalK<Context_provider>;
+using SignalK_processor = SignalK_pusher<Context_provider>;
 using SignalK_factory = Processor_factory<SignalK_processor>;
+
+std::string SignalK_pusher::get_json() const {
+  using namespace rapidjson;
+  StringBuffer sb;
+  PrettyWriter<StringBuffer> writer(sb);
+  writer.StartObject();
+  writer.String("name"); writer.String(get_name());
+  writer.String("data"); writer.StartObject();
+  writer.EndObject();
+  writer.EndObject();
+  return sb.GetString();
+}
+
+
+using SignalK_factory = Processor_factory<SignalK_pusher>;
 static auto& signalk_factory =
     add_processor_factory("signalk", std::move(std::make_unique<SignalK_factory>()));
 
