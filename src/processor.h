@@ -61,6 +61,9 @@ struct Processor {
   virtual void set_param(const std::string&, const double&) {
   }
 
+  virtual void set_param(const std::string&, const std::string&) {
+  }
+
   virtual void set_filter(const std::string&) {
   }
 
@@ -87,9 +90,7 @@ struct Processor {
         set_param(keyval[0], val);
       }
       catch (std::exception& e) {
-        log(level::error, "%. Expected floating point argument in processor parameter. Got %.",
-            e.what(), keyval[1]);
-        continue;
+        set_param(keyval[0], keyval[1]);
       }
     }
   }
