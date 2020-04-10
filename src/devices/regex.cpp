@@ -24,19 +24,24 @@
 
 #include "../usb.h"
 #include "../serial.h"
+#include "../socket.h"
 // For context provider
 #include "../loop.h"
 
 using Regex_device_usb = regex::Regex_device<Usb, Context_provider>;
 using Regex_device_serial = regex::Regex_device<Serial, Context_provider>;
+using Regex_device_socket = regex::Regex_device<Socket, Context_provider>;
 
 using Regex_device_usb_factory = Device_factory<Regex_device_usb>;
 using Regex_device_serial_factory = Device_factory<Regex_device_serial>;
+using Regex_device_socket_factory = Device_factory<Regex_device_socket>;
 
 static auto& regex_usb_devicefactory =
     add_device_factory("regex_device_usb", std::move(std::make_unique<Regex_device_usb_factory>()));
 static auto& regex_serial_device_factory =
     add_device_factory("regex_device_serial", std::move(std::make_unique<Regex_device_serial_factory>()));
+static auto& regex_socket_device_factory =
+    add_device_factory("regex_device_socket", std::move(std::make_unique<Regex_device_socket_factory>()));
 
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
