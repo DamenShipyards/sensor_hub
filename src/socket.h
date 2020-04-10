@@ -32,12 +32,34 @@
 #include <boost/filesystem.hpp>
 
 using tcp_socket = boost::asio::ip::tcp::socket;
+namespace ip = boost::asio::ip;
 
 struct Socket: public tcp_socket {
   using tcp_socket::tcp_socket;
 
   void open(const std::string& device_str) {
-    (void)device_str;
+    std::vector<std::string> fields;
+    boost::split(fields, device_str, [](char c) { return c == ':'; });
+    std::string host_s = "127.0.0.1";
+    std::string port_s = "2947";
+    switch (fields.size()) {
+      case 2:
+        port_s = fields[1];
+        /* fall through */
+      case 1:
+        host_s = fields[0];
+        break;
+      default:
+        log(level::info, "Using default local gpsd");
+    }
+
+    size_t len = 0;
+    auto host = ip::address::from_string(host_s);
+    auto port = int(std::stol(port_s, &len, 10));
+    auto endpoint = ip::tcp::endpoint(host, port);
+
+    tcp_socket::connect(endpoint);
+    log(level::info, "Succesfully TCP socket %, %", host_s, port_s);
   }
 };
 
