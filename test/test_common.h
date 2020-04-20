@@ -79,4 +79,10 @@ struct Ctx {
     static asio::io_context instance;
     return instance;
   }
+  static void run(int seconds) {
+    boost::asio::deadline_timer timer(get_context());
+    timer.expires_from_now(boost::posix_time::seconds(seconds));
+    timer.async_wait(boost::bind(&asio::io_context::stop, &get_context()));
+    get_context().run();
+  }
 };

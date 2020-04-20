@@ -34,6 +34,8 @@
 
 #include <boost/regex.hpp>
 
+#include <ostream>
+
 namespace regex {
 
 namespace parser {
