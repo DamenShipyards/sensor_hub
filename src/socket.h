@@ -50,7 +50,7 @@ struct Socket: public tcp_socket {
         host_s = fields[0];
         break;
       default:
-        log(level::info, "Using default local gpsd");
+        log(level::info, "Using default local gpsd socket");
     }
 
     size_t len = 0;
@@ -59,7 +59,7 @@ struct Socket: public tcp_socket {
     auto endpoint = ip::tcp::endpoint(host, port);
 
     tcp_socket::connect(endpoint);
-    log(level::info, "Succesfully TCP socket %, %", host_s, port_s);
+    log(level::info, "Succesfully connected TCP socket %:%", host_s, port_s);
   }
 };
 
