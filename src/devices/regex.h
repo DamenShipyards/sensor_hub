@@ -32,18 +32,33 @@
 #include "../datetime.h"
 #include "../parser.h"
 
+#include <boost/regex.hpp>
+
 namespace regex {
 
 namespace parser {
 
-struct Regex_parser {
+using namespace boost;
+
+struct Regex_parser: public Packet_parser {
+
+  void parse(const double& stamp) override {
+    (void)stamp;
+  }
+
+  Stamped_queue& get_values() override {
+    return values_;
+  }
+
+private:
+  Stamped_queue values_;
 
 };
 
 }
 
 template <class Port, class ContextProvider>
-struct Regex_device: public Port_device<Port, ContextProvider>, 
+struct Regex_device: public Port_device<Port, ContextProvider>,
     public Port_polling_mixin<Regex_device<Port, ContextProvider> > {
 
   bool initialize(asio::yield_context yield) override {
@@ -65,9 +80,12 @@ struct Regex_device: public Port_device<Port, ContextProvider>,
 
   template <typename Iterator>
   void handle_data(double stamp, Iterator buf_begin, Iterator buf_end) {
-    (void)stamp;
-    (void)buf_begin;
-    (void)buf_end;
+    parser_.add_and_parse(stamp, buf_begin, buf_end);
+    auto& values = parser_.get_values();
+    while (!values.empty()) {
+      this->insert_value(values.front());
+      values.pop_front();
+    }
   }
 
 private:
