@@ -87,7 +87,7 @@ Bytes packet(cbyte_t mid, cbytes_t command=cbytes_t()) {
 
 namespace parser {
 
-struct Xsens_parser: public Packet_parser {
+struct Xsens_parser: public Packet_parser<> {
   Xsens_parser();
   ~Xsens_parser();
   struct Data_packets;

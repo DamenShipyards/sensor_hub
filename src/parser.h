@@ -42,17 +42,22 @@ using Quantity_values = std::vector<Quantity_value>;
 using Stamped_quantities = std::vector<Stamped_quantity>;
 using Stamped_queue = std::deque<Stamped_quantity>;
 
+template<typename BufferType = std::deque<uint8_t> >
 struct Packet_parser {
-  Packet_parser(): queue(), cur(queue.begin()) {}
-  std::deque<uint8_t> queue;
-  typename std::deque<uint8_t>::iterator cur;
+  Packet_parser(): buffer(), cur(buffer.begin()) {}
+  BufferType buffer;
+  using buffer_type = BufferType; 
+  using iterator = typename BufferType::iterator;
+  using const_iterator = typename BufferType::const_iterator;
+  typename BufferType::iterator cur;
 
   template <typename Iterator>
   void add_and_parse(const double& stamp, Iterator begin, Iterator end) {
-    if (queue.size() > 0x1000)
-      // Something is wrong. Hose the queue
-      queue.clear();
-    queue.insert(queue.end(), begin, end);
+    if (buffer.size() > 0x1000)
+      // More than 4K data in the buffer. Something is wrong. Hose it.
+      buffer.clear();
+    buffer.insert(buffer.end(), begin, end);
+    cur = buffer.begin();
     parse(stamp);
   }
   virtual void parse(const double& stamp) = 0;

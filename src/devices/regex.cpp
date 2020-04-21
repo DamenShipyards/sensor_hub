@@ -28,9 +28,9 @@
 // For context provider
 #include "../loop.h"
 
-using Regex_device_usb = regex::Regex_device<Usb, Context_provider>;
-using Regex_device_serial = regex::Regex_device<Serial, Context_provider>;
-using Regex_device_socket = regex::Regex_device<Socket, Context_provider>;
+using Regex_device_usb = regexp::Regex_device<Usb, Context_provider>;
+using Regex_device_serial = regexp::Regex_device<Serial, Context_provider>;
+using Regex_device_socket = regexp::Regex_device<Socket, Context_provider>;
 
 using Regex_device_usb_factory = Device_factory<Regex_device_usb>;
 using Regex_device_serial_factory = Device_factory<Regex_device_serial>;

@@ -520,11 +520,10 @@ bool Xsens_parser::parse_single(const double& stamp) {
 
   visitor->stamp = stamp;
 
-  cur = queue.begin();
-  //! Look for messages in the queue
-  if (x3::parse(cur, queue.end(), packet_rule)) {
-    //! Consume the message from the queue
-    queue.erase(queue.begin(), cur);
+  //! Look for messages in the buffer
+  if (x3::parse(cur, buffer.end(), packet_rule)) {
+    //! Consume the message from the buffer
+    buffer.erase(buffer.begin(), cur);
     //! Verify the checksum is 0
     if (sum == 0) {
       //! The content of the message is now in "data"
@@ -556,7 +555,9 @@ bool Xsens_parser::parse_single(const double& stamp) {
 }
 
 void Xsens_parser::parse(const double& stamp) {
-  while (parse_single(stamp)) {}
+  while (parse_single(stamp)) {
+    cur = buffer.begin();
+  }
 }
 
 

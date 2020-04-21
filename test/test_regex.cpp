@@ -17,7 +17,7 @@
 #include <boost/system/error_code.hpp>
 
 
-using namespace regex;
+using namespace regexp;
 namespace fs = boost::filesystem;
 namespace prtr = boost::property_tree;
 
@@ -34,7 +34,7 @@ decltype(auto) create() {
 template<typename DEV>
 void set_options(DEV& dev) {
   prtr::ptree options;
-  options.put("ax", "^(.*)$\" }");
+  options.put("ax.filter", "^(.+)$");
   dev->set_options(options);
 }
 

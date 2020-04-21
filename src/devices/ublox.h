@@ -386,7 +386,7 @@ private:
 };
 
 
-struct Ublox_parser: public Packet_parser {
+struct Ublox_parser: public Packet_parser<> {
   Ublox_parser();
   ~Ublox_parser();
   struct Payload_visitor;
