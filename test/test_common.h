@@ -86,3 +86,17 @@ struct Ctx {
     get_context().run();
   }
 };
+
+struct Log {
+  void setup() {
+    if (!setup_) {
+      set_log_level(level::debug);
+      std::cout << "Log: " << get_current_log_file() << std::endl;
+      setup_ = true;
+    }
+  }
+  void teardown() {
+  }
+private:
+  bool setup_ = false;
+};

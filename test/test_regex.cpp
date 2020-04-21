@@ -114,9 +114,7 @@ private:
 tcp_server server(Ctx::get_context());
 
 
-BOOST_AUTO_TEST_CASE(full_test) {
-  std::cout << get_current_log_file() << std::endl;
-  set_log_level(level::debug);
+BOOST_FIXTURE_TEST_CASE(full_test, Log) {
   log(level::info, "Starting regex full test");
   auto dev = create();
   set_options(dev);
