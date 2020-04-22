@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <clocale>
 
 #include "../src/tools.h"
 
@@ -20,7 +21,8 @@ typedef const byte_t cbyte_t;
 typedef std::vector<byte_t> bytes_t;
 typedef const bytes_t cbytes_t;
 
-BOOST_AUTO_TEST_CASE(test_contains) {
+BOOST_AUTO_TEST_CASE(test_contains) 
+{
   cbytes_t c1{0x01, 0x02, 0x03, 0x04, 0x04};
   cbytes_t c2{0x01, 0x02, 0x03};
   cbytes_t c3{0x02, 0x03, 0x04};
@@ -56,3 +58,7 @@ BOOST_AUTO_TEST_CASE(test_contains) {
   BOOST_TEST(contains_at(c1, c7) == -1);
 }
 
+BOOST_AUTO_TEST_CASE(test_locale) 
+{
+  std::setlocale(LC_TIME, "de_DE.UTF8");
+}
