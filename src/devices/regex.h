@@ -64,6 +64,8 @@ struct Regex_parser: public Packet_parser<std::string> {
     while (matched) {
       matched = false;
       iterator last = cur;
+      if (cur == buffer.end())
+        break;
       for (const auto& [q, filter]: filters_) {
         Stamped_quantity sq{0.0, stamp, q};
         log(level::debug, "Looking for % in % with %", get_quantity_name(q), buffer, filter.expression);
