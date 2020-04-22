@@ -34,23 +34,25 @@
 #include "../quantities.h"
 
 #include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <ostream>
 #include <string>
 #include <map>
+#include <ctime>
+#include <iomanip>
 
 namespace regexp {
 
 namespace parser {
 
-using namespace boost;
-
 struct Quantity_filter {
-  Quantity_filter(const std::string& filter): expression(filter), multipliers(), offsets() {}
+  Quantity_filter(const std::string& filter): expression(filter), multipliers(), offsets(), formats() {}
   Quantity_filter(const Quantity_filter& value) = default; 
-  regex expression;
+  boost::regex expression;
   std::vector<double> multipliers;
   std::vector<double> offsets;
+  std::vector<std::string> formats;
 };
 
 using Quantity_filters = std::map<Quantity, Quantity_filter>;
@@ -64,23 +66,55 @@ struct Regex_parser: public Packet_parser<std::string> {
       iterator last = cur;
       for (const auto& [q, filter]: filters_) {
         Stamped_quantity sq{0.0, stamp, q};
-        ::log(level::debug, "Looking for % in % with %", get_quantity_name(q), buffer, filter.expression);
-        match_results<iterator> match;
-        if (regex_search(cur, buffer.end(), match, filter.expression, match_perl)) {
+        log(level::debug, "Looking for % in % with %", get_quantity_name(q), buffer, filter.expression);
+        boost::match_results<iterator> match;
+        if (boost::regex_search(cur, buffer.end(), match, filter.expression, boost::match_perl)) {
           matched = true;
           if (match[0].second > last) {
             last = match[0].second;
           }
           for (size_t i = 1; i < match.size(); ++i) {
-            ::log(level::debug, "Found: %", match[i]);
-            double value = std::stod(match[i]);
-            if (i <= filter.multipliers.size()) {
-              value *= filter.multipliers[i - 1];
+            if (match[i].matched) {
+              log(level::debug, "Found: %", match[i]);
+
+              double value;
+              std::string s = match[i];
+
+              if (i <= filter.formats.size()) {
+                auto format = filter.formats[i - 1];
+                if (format == "f") {
+                  if (s.find(".") == std::string::npos) {
+                    boost::algorithm::replace_last(s, ",", ".");
+                  }
+                  boost::algorithm::replace_all(s, ",", "");
+                  value = std::stod(s);
+                }
+                else if (format == "dt") {
+                  pt::ptime dt;
+                  if (s.find("T") == std::string::npos) {
+                    dt = pt::time_from_string(s);
+                  }
+                  else {
+                    dt = pt::from_iso_string(s);
+                  }
+                  value = to_timestamp(dt);
+                }
+                else {
+                  std::tm tm = {};
+                  std::stringstream ss(s);
+                  ss >> std::get_time(&tm, format.c_str());
+                  value = std::mktime(&tm);
+                }
+              }
+
+              if (i <= filter.multipliers.size()) {
+                value *= filter.multipliers[i - 1];
+              }
+              if (i <= filter.offsets.size()) {
+                value += filter.offsets[i - 1];
+              }
+              sq.value += value;
             }
-            if (i <= filter.offsets.size()) {
-              value += filter.offsets[i - 1];
-            }
-            sq.value += value;
           }
           values_.push_back(sq);
         }
@@ -145,6 +179,7 @@ struct Regex_device: public Port_device<Port, ContextProvider>,
         for (int i = 0; i < 10; ++i) {
           filter.multipliers.push_back(options.get(fmt::format("{:s}.multiplier{:d}", q_name, i), 1.0));
           filter.offsets.push_back(options.get(fmt::format("{:s}.offset{:d}", q_name, i), 0.0));
+          filter.formats.push_back(options.get(fmt::format("{:s}.format{:d}", q_name, i), "f"));
         }
         parser_.filters().emplace(std::pair(*it, filter));
       }
