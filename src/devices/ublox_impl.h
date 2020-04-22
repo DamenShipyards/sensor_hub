@@ -487,11 +487,10 @@ void Ublox_parser::parse(const double& stamp) {
                           >> little_word[set_len] >> content >> little_word[set_chk];
 
   visitor->stamp = stamp;
-  cur = queue.begin();
-  //! Look for messages in the queue
-  while (cur != queue.end() && x3::parse(cur, queue.end(), packet_rule)) {
-    //! Consume the message from the queue
-    cur = queue.erase(queue.begin(), cur);
+  //! Look for messages in the buffer
+  while (cur != buffer.end() && x3::parse(cur, buffer.end(), packet_rule)) {
+    //! Consume the message from the buffer
+    cur = buffer.erase(buffer.begin(), cur);
     if (packet.check()) {
       Payload_variant payload;
       if (x3::parse(packet.get_data().begin(), packet.get_data().end(),

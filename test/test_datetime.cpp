@@ -8,7 +8,8 @@
 #include <thread>
 #include <iomanip>
 
-BOOST_AUTO_TEST_CASE(datetime_test) {
+BOOST_AUTO_TEST_CASE(datetime_test) 
+{
   std::cout << "BOOST SYSTEM: " << chrono::system_clock::now().time_since_epoch().count() << '\n';
 #ifdef BOOST_CHRONO_HAS_CLOCK_STEADY
   std::cout << "BOOST STEADY: " << chrono::steady_clock::now().time_since_epoch().count() << '\n';
@@ -52,7 +53,7 @@ double get_test_time() {
   return static_cast<double>(musecs.count()) * 1E-6;
 }
 
-BOOST_AUTO_TEST_CASE(datetime_adjust)
+BOOST_AUTO_TEST_CASE(datetime_adjust_test) 
 {
   double diff = get_test_time() - get_time();
   BOOST_TEST(diff > 9.9);
@@ -62,4 +63,11 @@ BOOST_AUTO_TEST_CASE(datetime_adjust)
   diff = get_test_time() - get_time();
   BOOST_TEST(diff > 9.7);
   BOOST_TEST(diff < 9.8);
+}
+
+BOOST_AUTO_TEST_CASE(to_timestamp_test) 
+{
+  auto dt = pt::time_from_string("2020-04-22 17:10:43.782");
+  double ut = to_timestamp(dt);
+  BOOST_TEST(ut == 1587575443.782);
 }

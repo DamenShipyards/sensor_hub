@@ -45,6 +45,7 @@
 
 #include <string>
 #include <memory>
+#include <clocale>
 
 
 namespace pt = boost::posix_time;
@@ -363,6 +364,8 @@ private:
 
 int enter_loop() {
   int result = 0;
+  std::setlocale(LC_NUMERIC, "en_US.UTF8");
+  std::setlocale(LC_TIME, "nl_NL.UTF8");
 
   prtr::ptree& cfg = get_config();
   set_log_level(cfg.get("logging.level", "info"));

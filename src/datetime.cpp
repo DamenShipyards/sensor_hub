@@ -64,8 +64,7 @@ private:
     auto dt_now = date_time::microsec_clock<pt::ptime>::universal_time();
     auto sys_now = chrono::system_clock::now().time_since_epoch();
     
-    auto since_epoch =  dt_now - unix_epoch;
-    double secs_since_epoch = static_cast<double>(since_epoch.ticks()) / static_cast<double>(since_epoch.ticks_per_second());
+    double secs_since_epoch = to_timestamp(dt_now);
     double sys_since_epoch = static_cast<double>(sys_now.count()) * rate_;
     offset_ = secs_since_epoch - sys_since_epoch;
   }
@@ -109,6 +108,11 @@ void adjust_clock_diff(const double& diff) {
 void set_clock_adjust_rate(const double& rate) {
   log(level::info, "Setting clock adjust rate to %", rate);
   Clock::get_instance().set_adjust_rate(rate);
+}
+
+double to_timestamp(const pt::ptime& time) {
+  auto since_epoch =  time - unix_epoch;
+  return static_cast<double>(since_epoch.ticks()) / static_cast<double>(since_epoch.ticks_per_second());
 }
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

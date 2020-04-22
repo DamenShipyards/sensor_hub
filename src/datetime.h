@@ -74,6 +74,14 @@ extern void adjust_clock_diff(const double& diff);
 extern void set_clock_adjust_rate(const double& rate);
 
 
+/**
+ * Convert posix time to unix timestamp
+ *
+ * \param time Posix time stamp to convert.
+ */
+extern double to_timestamp(const pt::ptime& time); 
+
+
 inline std::string timestamp_to_string(const double& stamp) {
   double secs = 0;
   double micros = std::modf(stamp, &secs) * 1E6;
