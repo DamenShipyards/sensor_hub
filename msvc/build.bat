@@ -7,8 +7,6 @@ set EXE="sensor_hub.exe"
 set BUILDDIR="Release"
 set DESCRIPTION="Damen Sensor Hub"
 set URL="http://www.damen.com/"
-set SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\10.0.17134.0\x64\signtool.exe"
-set SIGNSHA1=742ECBBE6C66BB716C80C1FEA18FAB8FFEBC15BA
 rem ================================================
 
 rem Remove existing build directory
@@ -30,9 +28,15 @@ rem Assemble full path to executable
 set FULLEXE=%BUILDDIR%\\%EXE%
 
 rem Sign the executable
-%SIGNTOOL% sign /sha1 %SIGNSHA1% /d %DESCRIPTION% /du %URL% /t http://timestamp.globalsign.com/scripts/timestamp.dll %FULLEXE%
+if "X%SIGNTOOL%"=="X" goto skipsign
+if "X%SIGNSHA1%"=="X" echo "You must provide the SHA1 of your signing key as in environment variable SIGNSHA1"
+"%SIGNTOOL%" sign /sha1 %SIGNSHA1% /d %DESCRIPTION% /du %URL% /t http://timestamp.globalsign.com/scripts/timestamp.dll %FULLEXE%
 @if errorlevel 1 goto error
+goto copylibusb
+:skipsign
+echo "SIGNTOOL environment variable not provided: not signing executable."
 
+:copylibusb
 @copy ..\depends\libusb\lib\libusb-1.0.dll %BUILDDIR%\\
 
 goto success
