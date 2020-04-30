@@ -20,12 +20,12 @@
  */
 
 
-#include "../types.h"
 #include "../device.h"
 #include "../log.h"
 #include "../tools.h"
 #include "../functions.h"
 #include "../datetime.h"
+#include "../types.h"
 
 namespace dummy {
 

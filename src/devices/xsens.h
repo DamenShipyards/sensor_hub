@@ -30,8 +30,6 @@
 #include "../datetime.h"
 #include "../parser.h"
 
-#include <boost/bind.hpp>
-
 #include <xsens/xsxbusmessageid.h>
 #include <xsens/xsdataidentifier.h>
 #include <xsens/xsdataidentifiervalue.h>

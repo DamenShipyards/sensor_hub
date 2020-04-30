@@ -33,6 +33,10 @@
 #include <deque>
 #include <list>
 
+ // As long as <boost/bind.hpp> is still used within boost itself, ignore
+ // hints about deprecated global placeholders
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/iostreams/stream.hpp>

@@ -23,13 +23,12 @@
 #ifndef MODBUS_H_
 #define MODBUS_H_
 
+#include "device.h"
+
 #ifdef BOOST_COROUTINES_NO_DEPRECATION_WARNING
 #undef BOOST_COROUTINES_NO_DEPRECATION_WARNING
 #endif
 #include <modbus/server.hpp>
-
-#include "device.h"
-
 
 struct Modbus_handler: public modbus::Default_handler {
   Modbus_handler(const Devices& devices, const Processors& processors, const prtr::ptree& config)

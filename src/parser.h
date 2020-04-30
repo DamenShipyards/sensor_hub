@@ -29,8 +29,6 @@
 #include "datetime.h"
 #include "quantities.h"
 
-#include <boost/bind.hpp>
-
 #include <ios>
 #include <ostream>
 #include <deque>

@@ -32,7 +32,7 @@
 #include "driver/install.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -49,6 +49,7 @@
 
 
 namespace pt = boost::posix_time;
+using namespace boost::placeholders;
 
 
 struct Service {

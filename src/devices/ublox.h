@@ -31,7 +31,6 @@
 #include "../types.h"
 #include "../parser.h"
 
-#include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <ios>

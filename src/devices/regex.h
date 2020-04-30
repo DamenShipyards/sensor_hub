@@ -24,7 +24,6 @@
 #define REGEX_H__
 
 
-#include "../types.h"
 #include "../device.h"
 #include "../log.h"
 #include "../tools.h"
@@ -32,6 +31,7 @@
 #include "../datetime.h"
 #include "../parser.h"
 #include "../quantities.h"
+#include "../types.h"
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
@@ -76,11 +76,12 @@ struct Regex_parser: public Packet_parser<std::string> {
             last = match[0].second;
           }
           for (size_t i = 1; i < match.size(); ++i) {
-            if (match[i].matched) {
-              log(level::debug, "Found: %", match[i]);
+            int ii = static_cast<int>(i);
+            if (match[ii].matched) {
+              log(level::debug, "Found: %", match[ii]);
 
               double value;
-              std::string s = match[i];
+              std::string s = match[ii];
 
               if (i <= filter.formats.size()) {
                 auto format = filter.formats[i - 1];
@@ -105,7 +106,7 @@ struct Regex_parser: public Packet_parser<std::string> {
                   std::tm tm = {};
                   std::stringstream ss(s);
                   ss >> std::get_time(&tm, format.c_str());
-                  value = std::mktime(&tm);
+                  value = static_cast<double>(std::mktime(&tm));
                 }
               }
 
@@ -185,7 +186,7 @@ struct Regex_device: public Port_device<Port, ContextProvider>,
         }
         parser_.filters().emplace(std::pair(*it, filter));
       }
-      catch (prtr::ptree_bad_path& e) {
+      catch (prtr::ptree_bad_path&) {
         // Quantity filter not provided: fine!
       }
     }

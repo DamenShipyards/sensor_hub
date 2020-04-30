@@ -28,20 +28,18 @@
 #include <exception>
 #include <iomanip>
 
-// asio uses "old" boost::coroutine instead of boost::coroutine2
-#ifndef BOOST_COROUTINES_NO_DEPRECATION_WARNING
-#define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
-#endif
-
-#include <boost/asio.hpp>
-#include <boost/asio/spawn.hpp>
-#include <boost/property_tree/ptree.hpp>
-
 #include "quantities.h"
 #include "log.h"
 #include "datetime.h"
 #include "processor.h"
 #include "types.h"
+
+// asio uses "old" boost::coroutine instead of boost::coroutine2
+#ifndef BOOST_COROUTINES_NO_DEPRECATION_WARNING
+#define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
+#endif
+#include <boost/asio.hpp>
+#include <boost/asio/spawn.hpp>
 
 namespace asio = boost::asio;
 namespace prtr = boost::property_tree;
