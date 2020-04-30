@@ -17,7 +17,7 @@ Download
 
 Use `git clone  --recurse-submodules <sensor hub repo>` in order to checkout sub modules, or `git submodule init && git submodule update` after a 'regular' clone.
 
-Installation
+Building
 ------------
 
 On linux:
