@@ -21,8 +21,8 @@ Building
 ------------
 
 On linux:
-* Requirements: gcc 4.7+, cmake 3.14+, boost 1.70+
-* Create a build directory and run ``cmake <source directory>``
+* Requirements: gcc 4.7+, cmake 3.14+, boost 1.70+ (1.72 doesn't work)
+* Create a build directory and run ``cmake <source directory>`` in this directory.
 * Run ``make -j 4 && make test``
 
 On Windows:
