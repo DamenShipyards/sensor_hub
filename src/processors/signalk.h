@@ -30,7 +30,8 @@
 struct SignalK: public Processor {
   SignalK(): Processor() {}
 
-  void insert_value(const Stamped_quantity&) override {
+  void insert_value(const Stamped_quantity& q) override {
+    log(level::debug, "SignalK processor received: %", q);
   }
 
   double operator[](size_t) override {

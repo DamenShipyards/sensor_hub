@@ -86,6 +86,7 @@ struct Dummy_gps: public Dummy_device<ContextProvider> {
 
   void poll_data(asio::yield_context yield) override {
     while (this->is_connected()) {
+      log(level::debug, "Creating dummy gps values");
       this->wait(1000, yield);
       double t = get_time();
       this->insert_value(Stamped_quantity(t, t, Quantity::ut));
@@ -120,6 +121,7 @@ struct Dummy_imu: public Dummy_device<ContextProvider> {
 
   void poll_data(asio::yield_context yield) override {
     while (this->is_connected()) {
+      log(level::debug, "Creating dummy imu values");
       this->wait(100, yield);
       this->insert_acc_and_rot();
     }
