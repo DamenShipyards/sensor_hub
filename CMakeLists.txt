@@ -217,6 +217,7 @@ new_test(test_ublox_impl datetime.cpp log.cpp types.cpp)
 new_test(test_fusion datetime.cpp log.cpp modbus.cpp)
 new_test(test_signalk datetime.cpp log.cpp)
 new_test(test_regex device.cpp datetime.cpp types.cpp log.cpp)
+new_test(test_runwell device.cpp datetime.cpp types.cpp log.cpp)
 
 install(
   TARGETS sensor_hub
