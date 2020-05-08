@@ -25,6 +25,7 @@
 
 
 #include "../processor.h"
+#include <rapidjson/writer.h>
 
 
 struct SignalK: public Processor {
@@ -32,6 +33,7 @@ struct SignalK: public Processor {
 
   void insert_value(const Stamped_quantity& q) override {
     log(level::debug, "SignalK processor received: %", q);
+    log(level::debug, get_delta(q));
   }
 
   double operator[](size_t) override {
@@ -48,6 +50,10 @@ struct SignalK: public Processor {
   }
 
 private:
+  std::string context_;
+  std::string get_path(const Quantity& q);
+  void get_value(const Stamped_quantity& q,  rapidjson::Writer<rapidjson::StringBuffer>& writer);
+  std::string get_delta(const Stamped_quantity& q);
 };
 
 #endif // SIGNALK_H_
