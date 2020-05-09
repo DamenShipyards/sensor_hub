@@ -53,9 +53,10 @@ BOOST_AUTO_TEST_CASE(options_test) {
 
 
 using boost::asio::ip::tcp;
+namespace asio = boost::asio;
 
 
-// Create a tcp server that spits out pi for testing. 
+// Create a tcp server that serves as a mock for a serial runwell device. 
 struct tcp_connection {
   using pointer = tcp_connection*;
   static pointer create(boost::asio::io_context& io_context) {
@@ -65,24 +66,50 @@ struct tcp_connection {
     return socket_;
   }
   void start() {
-    message_ = "";
-    boost::asio::async_write(socket_, boost::asio::buffer(message_),
+      socket_.async_read_some(asio::buffer(read_buf_, 16),
+          boost::bind(&tcp_connection::handle_read, this, 
+            asio::placeholders::error, 
+            asio::placeholders::bytes_transferred));
+  }
+
+  void handle_read( const boost::system::error_code& ec, std::size_t bytes_read) {
+    if (!ec && bytes_read > 0) {
+      switch (read_buf_[0]) {
+        case '?':
+          message_ = "Freq = 69767\nVolt = 18.927\nVSig = 18.984\nVBridge = 27.366\nIBridge = 0.630\nPOTs: 2253 2187 1\n";
+          break;
+        case 'a':
+          message_ = "12:34:56:78:90:12\n";
+          break;
+        case 'l':
+          message_ = "1,0,224,69767,18.927,18.984,27.366,0.630\n";
+          break;
+        case 'h':
+          message_ = "Runwell mock driver\nVersion 0.1, May 9th, 2020\n";
+          break;
+        default:
+          message_ = "Invalid request\n";
+      }
+    }
+    asio::async_write(socket_, asio::buffer(message_),
         boost::bind(&tcp_connection::handle_write, this,
-          boost::asio::placeholders::error,
-          boost::asio::placeholders::bytes_transferred));
+          asio::placeholders::error,
+          asio::placeholders::bytes_transferred));
+    start();
   }
 private:
-  tcp_connection(boost::asio::io_context& io_context): socket_(io_context) {}
+  tcp_connection(asio::io_context& io_context): socket_(io_context) {}
   void handle_write(const boost::system::error_code&, size_t) {
     log(level::info, "Written the data to the socket");
   }
   tcp::socket socket_;
   std::string message_;
+  char read_buf_[16];
 };
 
 
 struct tcp_server {
-  tcp_server(boost::asio::io_context& io_context)
+  tcp_server(asio::io_context& io_context)
     : io_context_(io_context),
       acceptor_(io_context, tcp::endpoint(tcp::v4(), 1999)),
       connection_(nullptr) {
@@ -98,7 +125,7 @@ private:
     connection_ = tcp_connection::create(io_context_);
     acceptor_.async_accept(connection_->socket(),
         boost::bind(&tcp_server::handle_accept, this, connection_,
-        boost::asio::placeholders::error));
+        asio::placeholders::error));
   }
   void handle_accept(tcp_connection::pointer connection,
       const boost::system::error_code& error) {
@@ -106,7 +133,7 @@ private:
       connection->start();
     }
   }
-  boost::asio::io_context& io_context_;
+  asio::io_context& io_context_;
   tcp::acceptor acceptor_;
   // We'll only support a single connection
   tcp_connection* connection_;

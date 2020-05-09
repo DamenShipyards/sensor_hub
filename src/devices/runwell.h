@@ -30,7 +30,7 @@ namespace runwell {
 
 
 template <class Port, class ContextProvider>
-struct Runwell_device: public Regex_device<Port, ContextProvider> {
+struct Runwell_device: public regexp::Regex_device<Port, ContextProvider> {
 
   bool initialize(asio::yield_context yield) override {
     bool result = true;
