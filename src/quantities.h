@@ -124,6 +124,25 @@ enum class Quantity {
   atmp,///< 56: Air temperature
   etmp,///< 57: Exhaust temperature
   otmp,///< 58: Oil temperature
+  vsup,///< 59: Supply voltage
+  isup,///< 60: Supply current
+  vset,///< 61: Voltage set point
+  vsig,///< 62: Voltage signal
+  frq, ///< 63: Cycle frequency
+  sts0,///< 64: Status 0, some sensor specific status
+  sts1,///< 65: Status 1, some sensor specific status
+  md0, ///< 66: Mode 0, some sensor specific mode setting
+  md1, ///< 67: Mode 1, some sensor specific mode setting
+  md2, ///< 68: Mode 2, some sensor specific mode setting
+  md3, ///< 69: Mode 3, some sensor specific mode setting
+  cst0,///< 70: Custom 0, some sensor specific custom quantity
+  cst1,///< 71: Custom 1, some sensor specific custom quantity
+  cst2,///< 72: Custom 2, some sensor specific custom quantity
+  cst3,///< 73: Custom 3, some sensor specific custom quantity
+  cst4,///< 74: Custom 4, some sensor specific custom quantity
+  cst5,///< 75: Custom 5, some sensor specific custom quantity
+  cst6,///< 76: Custom 6, some sensor specific custom quantity
+  cst7,///< 77: Custom 7, some sensor specific custom quantity
   end, ///< Enumeration end marker. Do not use
 };
 
@@ -171,6 +190,7 @@ QUANTITY_NAME(yr);
 QUANTITY_NAME(fax);
 QUANTITY_NAME(fay);
 QUANTITY_NAME(faz);
+QUANTITY_NAME(du);
 QUANTITY_NAME(hacc);
 QUANTITY_NAME(vacc);
 QUANTITY_NAME(sacc);
@@ -194,7 +214,25 @@ QUANTITY_NAME(wtmp);
 QUANTITY_NAME(atmp);
 QUANTITY_NAME(etmp);
 QUANTITY_NAME(otmp);
-QUANTITY_NAME(du);
+QUANTITY_NAME(vsup);
+QUANTITY_NAME(isup);
+QUANTITY_NAME(vset);
+QUANTITY_NAME(vsig);
+QUANTITY_NAME(frq);
+QUANTITY_NAME(sts0);
+QUANTITY_NAME(sts1);
+QUANTITY_NAME(md0);
+QUANTITY_NAME(md1);
+QUANTITY_NAME(md2);
+QUANTITY_NAME(md3);
+QUANTITY_NAME(cst0);
+QUANTITY_NAME(cst1);
+QUANTITY_NAME(cst2);
+QUANTITY_NAME(cst3);
+QUANTITY_NAME(cst4);
+QUANTITY_NAME(cst5);
+QUANTITY_NAME(cst6);
+QUANTITY_NAME(cst7);
 #undef QUANTITY_NAME
 
 

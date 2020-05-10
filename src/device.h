@@ -457,13 +457,18 @@ struct Port_device: public Context_device<ContextProvider> {
         if (response_found >= 0) {
           if (data != nullptr && data->size() > 0) {
             // Get a length indicator for data in the response
-            size_t len_offset_1 = (*data)[0] + response_found;
-            size_t len_offset_2  = (data->size() > 1) ? (*data)[1] + response_found: -1;
-            expected_len = response.size() > len_offset_1 ? response[len_offset_1] : 0;
-            expected_len += len_offset_2 >= 0 && response.size() > len_offset_2 ?
-              response[len_offset_2] << 8: 0;
-            // Add length of item upto lenght indicator for total length
-            expected_len += static_cast<uint16_t>(std::max(len_offset_1, len_offset_2)) + 1;
+            if ((*data)[0] == 0xFF && data->size() > 1) {
+              expected_len = static_cast<uint16_t>((*data)[1]);
+            }
+            else {
+              size_t len_offset_1 = (*data)[0] + response_found;
+              size_t len_offset_2  = (data->size() > 1) ? (*data)[1] + response_found: -1;
+              expected_len = response.size() > len_offset_1 ? response[len_offset_1] : 0;
+              expected_len += len_offset_2 >= 0 && response.size() > len_offset_2 ?
+                response[len_offset_2] << 8: 0;
+              // Add length of item upto lenght indicator for total length
+              expected_len += static_cast<uint16_t>(std::max(len_offset_1, len_offset_2)) + 1;
+            }
             log(level::debug, "Expecting % bytes", expected_len);
             data->clear();
           }

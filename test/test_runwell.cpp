@@ -79,13 +79,13 @@ struct tcp_connection {
           message_ = "Freq = 69767\nVolt = 18.927\nVSig = 18.984\nVBridge = 27.366\nIBridge = 0.630\nPOTs: 2253 2187 1\n";
           break;
         case 'a':
-          message_ = "12:34:56:78:90:12\n";
+          message_ = "12:34:56:78:9A:BC\n";
           break;
         case 'l':
           message_ = "1,0,224,69767,18.927,18.984,27.366,0.630\n";
           break;
         case 'h':
-          message_ = "Runwell mock driver\nVersion 0.1, May 9th, 2020\n";
+          message_ = "Runwell mock driver\nVersion 0.1, May 9th, 2020\nThird line we're not interested in";
           break;
         default:
           message_ = "Invalid request\n";
@@ -149,15 +149,22 @@ BOOST_FIXTURE_TEST_CASE(full_test, Log, * utf::tolerance(0.00001)) {
   set_options(dev);
   // Connect the device as soon as the context starts running
   asio::spawn(Ctx::get_context(), boost::bind(&Runwell::connect, dev, _1));
-  Ctx::run(1);
-  auto value = dev->get_value(Quantity::ax);
-  BOOST_TEST(value == 3.1415927);
-  value = dev->get_value(Quantity::ay);
-  BOOST_TEST(value == 1.44);
-  value = dev->get_value(Quantity::az);
-  BOOST_TEST(value == 1.22);
-  value = dev->get_value(Quantity::ut);
-  BOOST_TEST(value == 1587575443.782);
-  value = dev->get_value(Quantity::vx);
-  BOOST_TEST(value == 1587575443.782);
+  Ctx::run(4);
+  BOOST_TEST(dev->get_id() == "runwell_123456789ABC");
+  auto value = dev->get_value(Quantity::frq);
+  BOOST_TEST(value == 69767);
+  value = dev->get_value(Quantity::vsup);
+  BOOST_TEST(value == 27.366);
+  value = dev->get_value(Quantity::isup);
+  BOOST_TEST(value == 0.63);
+  value = dev->get_value(Quantity::vsig);
+  BOOST_TEST(value == 18.984);
+  value = dev->get_value(Quantity::vset);
+  BOOST_TEST(value == 18.927);
+  value = dev->get_value(Quantity::sts0);
+  BOOST_TEST(value == 224);
+  value = dev->get_value(Quantity::md0);
+  BOOST_TEST(value == 1);
+  value = dev->get_value(Quantity::md1);
+  BOOST_TEST(value == 0);
 }
