@@ -580,7 +580,26 @@ static constexpr char const* def_config_data = R"RAW(
   "wtmp": { "min": 0.0, "max": 655.36 },
   "atmp": { "min": 0.0, "max": 655.36 },
   "etmp": { "min": 0.0, "max": 6553.6 },
-  "otmp": { "min": 0.0, "max": 655.36 }
+  "otmp": { "min": 0.0, "max": 655.36 },
+  "vsup": { "min": 0.0, "max": 655.36 },
+  "isup": { "min": 0.0, "max": 655.36 },
+  "vset": { "min": -327.68, "max": 327.68 },
+  "vsig": { "min": -327.68, "max": 327.68 },
+  "frq": { "min": 0.0, "max": 655360.0 },
+  "sts0": { "min": 0.0, "max": 65536.0 },
+  "sts1": { "min": 0.0, "max": 65536.0 },
+  "md0": { "min": 0.0, "max": 65536.0 },
+  "md1": { "min": 0.0, "max": 65536.0 },
+  "md2": { "min": 0.0, "max": 65536.0 },
+  "md3": { "min": 0.0, "max": 65536.0 },
+  "cst0": { "min": 0.0, "max": 65536.0 },
+  "cst1": { "min": 0.0, "max": 65536.0 },
+  "cst2": { "min": 0.0, "max": 65536.0 },
+  "cst3": { "min": 0.0, "max": 65536.0 },
+  "cst4": { "min": 0.0, "max": 65536.0 },
+  "cst5": { "min": 0.0, "max": 65536.0 },
+  "cst6": { "min": 0.0, "max": 65536.0 },
+  "cst7": { "min": 0.0, "max": 65536.0 }
 }
 )RAW";
 
