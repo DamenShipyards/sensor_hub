@@ -1,5 +1,6 @@
 @menu
 * Sensor configuration:: Sensor configuration
+* Sensor types:: Sensor types
 * Xsens:: Xsens
 * Ublox:: Ublox
 @end menu
@@ -24,9 +25,38 @@ enabled=<whether to enable this device>
 
 The @code{connection_string} determines how to connect to the device. For a USB connection
 it is either <VENDOR_ID>:<PRODUCT_ID> or <VENDOR_ID>:<PRODUCT_ID>,<INTERFACE_NO>. 
-For a serial connection, the connection string is <SERIAL_DEVICE>:<BAUDRATE>
+For a serial connection, the connection string is <SERIAL_DEVICE>:<BAUDRATE> and for a tcp
+connection it is <HOST>:<PORT>
 A valueof @code{auto} for connection string will guess the connection string from default values.
 Inspect the daemon/service log file for connection failures.
+
+@node Sensor types
+@section Sensor types
+
+A list of currently available sensors.
+
+@itemize
+@item dummy_device
+@item dummy_gps
+@item dummy_imu
+@item dummy_mru
+@item generic_nmea_usb
+@item generic_nmea_serial
+@item generic_nmea_tcp
+@item generic_nmea_tcp
+@item regex_device_usb
+@item regex_device_serial
+@item regex_device_tcp
+@item runwell_device_serial
+@item runwell_device_socket
+@item ublox_neo_m8u_serial
+@item xsens_mti_g_710_usb
+@item xsens_mti_g_710_serial
+@item xsens_mti_670
+@item xsens_mti_670_tcp
+@item xsens_mti_630
+@item xsens_mti_630_tcp
+@end itemize
 
 @node Xsens
 @section Xsens
