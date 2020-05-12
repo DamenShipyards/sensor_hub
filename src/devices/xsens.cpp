@@ -28,6 +28,7 @@
 // Ports:
 #include "../serial.h"
 #include "../usb.h"
+#include "../socket.h"
 
 // Add factories to registry
 struct Xsens_MTi_G_710_usb: public xsens::MTi_G_710<Usb, Context_provider> {
@@ -64,6 +65,9 @@ struct Xsens_MTi_670: public xsens::MTi_670<Serial, Context_provider> {
 
 using Xsens_MTi_670_factory = Device_factory<Xsens_MTi_670>;
 
+using Xsens_MTi_670_tcp = xsens::MTi_670<Socket, Context_provider>;
+using Xsens_MTi_670_tcp_factory = Device_factory<Xsens_MTi_670_tcp>;
+
 struct Xsens_MTi_630: public xsens::MTi_630<Serial, Context_provider> {
   Xsens_MTi_630(): xsens::MTi_630<Serial, Context_provider>() {
     this->set_poll_size(0x41);
@@ -85,6 +89,9 @@ struct Xsens_MTi_630: public xsens::MTi_630<Serial, Context_provider> {
 
 using Xsens_MTi_630_factory = Device_factory<Xsens_MTi_630>;
 
+using Xsens_MTi_630_tcp = xsens::MTi_630<Socket, Context_provider>;
+using Xsens_MTi_630_tcp_factory = Device_factory<Xsens_MTi_630_tcp>;
+
 
 static auto& mti_g_710_usb_factory =
     add_device_factory("xsens_mti_g_710_usb", std::move(std::make_unique<Xsens_MTi_G_710_usb_factory>()));
@@ -93,7 +100,12 @@ static auto& mti_g_710_serial_factory =
 
 static auto& mti_670_factory =
     add_device_factory("xsens_mti_670", std::move(std::make_unique<Xsens_MTi_670_factory>()));
+static auto& mti_670_tcp_factory =
+    add_device_factory("xsens_mti_670_tcp", std::move(std::make_unique<Xsens_MTi_670_tcp_factory>()));
+
 static auto& mti_630_factory =
     add_device_factory("xsens_mti_630", std::move(std::make_unique<Xsens_MTi_630_factory>()));
+static auto& mti_630_tcp_factory =
+    add_device_factory("xsens_mti_630_tcp", std::move(std::make_unique<Xsens_MTi_630_tcp_factory>()));
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
