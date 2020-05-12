@@ -41,7 +41,7 @@ static auto& regex_usb_devicefactory =
 static auto& regex_serial_device_factory =
     add_device_factory("regex_device_serial", std::move(std::make_unique<Regex_device_serial_factory>()));
 static auto& regex_socket_device_factory =
-    add_device_factory("regex_device_socket", std::move(std::make_unique<Regex_device_socket_factory>()));
+    add_device_factory("regex_device_tcp", std::move(std::make_unique<Regex_device_socket_factory>()));
 
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
