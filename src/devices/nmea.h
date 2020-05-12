@@ -33,8 +33,8 @@
 namespace nmea {
 
 template <class Port, class ContextProvider>
-struct Generic_Nmea: public Port_device<Port, ContextProvider>, 
-    public Polling_mixin<Generic_Nmea<Port, ContextProvider> > {
+struct Generic_NMEA: public Port_device<Port, ContextProvider>, 
+    public Polling_mixin<Generic_NMEA<Port, ContextProvider> > {
 
   bool initialize(asio::yield_context yield) override {
     bool result = true;
