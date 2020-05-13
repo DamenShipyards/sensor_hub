@@ -96,7 +96,31 @@ struct Processor {
 
 private:
   std::string name_;
-};
+
+};  // Processor
+
+
+template <typename Port, class ContextProvider>
+struct Port_processor: public Processor {
+
+  Port_processor(): Processor(), port_(ContextProvider::get_context()) {}
+
+  ~Port_processor() {}
+
+  typedef Port port_type;
+
+  Port& get_port() {
+    return port_;
+  }
+
+  auto get_executor() {
+    return ContextProvider::get_context().get_executor();
+  }
+
+private:
+  Port port_;
+
+};  // Port_processor
 
 
 using Processor_ptr = std::shared_ptr<Processor>;

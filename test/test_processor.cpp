@@ -5,6 +5,7 @@
 #include "../src/processor.h" 
 #include "../src/processors/statistics.h" 
 #include "../src/processors/acceleration_history.h" 
+#include "../src/socket.h"
 
 #include <iostream>
 #include <typeinfo>
@@ -17,7 +18,6 @@
 #include "test_common.h"
 
 namespace posix_time = boost::posix_time;
-
 
 
 BOOST_AUTO_TEST_CASE(statistics_test, * ut::tolerance(0.00000001)) {
@@ -77,6 +77,10 @@ BOOST_AUTO_TEST_CASE(statistics_test, * ut::tolerance(0.00000001)) {
   BOOST_TEST(stdd ==  0.1);
 }
 
+BOOST_AUTO_TEST_CASE(port_processor_test, * ut::tolerance(0.00000001)) {
+  auto processor = Port_processor<Socket, Ctx>();
+  // TODO: do something interesting with the socket here maybe
+}
 
 BOOST_AUTO_TEST_CASE(random_statistics_test, * ut::tolerance(0.00000001)) {
   // Setup mersenne twister pseudo random number generator
