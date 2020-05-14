@@ -10,7 +10,7 @@ This readme provides some basic information about this service application. See 
 Motivation
 ----------
 
-This service application was initially written for capturing data from Xsens motion and orientation sensing devices and either log or redistribute this data in raw or processed form. 
+This service application was initially written for capturing data from Xsens motion and orientation sensing devices and either log or redistribute this data in raw or processed form. Additionally it is intended to serve as a sensor data collection service for maneuvring trial measurements.
 
 Download
 --------
