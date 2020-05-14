@@ -25,22 +25,39 @@
 
 
 #include "../processor.h"
-#include <rapidjson/writer.h>
 
 
-struct SignalK: public Processor {
-  SignalK(): Processor() {}
+#define RAPIDJSON_HAS_STDSTRING 1
+#include <rapidjson/prettywriter.h>
+
+#include "signalk_server.h"
+#include "signalk_converter.h"
+template <class ContextProvider>
+struct SignalK: public Port_processor<tcp_server,ContextProvider> {
+  SignalK(): Port_processor<tcp_server,ContextProvider>(){
+  }
 
   void insert_value(const Stamped_quantity& q) override {
     log(level::debug, "SignalK processor received: %", q);
-    log(level::debug, get_delta(q));
+    // log(level::debug, signalk_converter::get_delta(q));
+    this->get_port().send(signalk_converter::get_delta(q) + "\n");
   }
 
   double operator[](size_t) override {
     return 0.0;
   }
 
-  std::string get_json() const override;
+  std::string get_json() const override{
+  using namespace rapidjson;
+  StringBuffer sb;
+  PrettyWriter<StringBuffer> writer(sb);
+  writer.StartObject();
+  writer.String("name"); writer.String(this->get_name());
+  writer.String("data"); writer.StartObject();
+  writer.EndObject();
+  writer.EndObject();
+  return sb.GetString();
+}
 
   size_t size() override {
     return 0;
@@ -51,10 +68,7 @@ struct SignalK: public Processor {
 
 private:
   std::string context_;
-  std::string get_path(const Quantity& q);
-  void get_value(const Stamped_quantity& q,  rapidjson::Writer<rapidjson::StringBuffer>& writer);
-  std::string get_delta(const Stamped_quantity& q);
-};
+};  
 
 #endif // SIGNALK_H_
 
