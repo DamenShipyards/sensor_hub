@@ -238,6 +238,12 @@ install(
 )
 
 install(
+  FILES ${CMAKE_CURRENT_SOURCE_DIR}/tools/runwell_mac_link.py
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT runtime
+)
+
+install(
   FILES ${CMAKE_CURRENT_SOURCE_DIR}/setup/files/sensor_hub.conf
   DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/sensor_hub
   COMPONENT configuration
