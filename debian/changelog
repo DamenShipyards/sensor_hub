@@ -1,5 +1,11 @@
-sensor-hub (0.4.16) UNRELEASED; urgency=medium
+sensor-hub (0.5.0) unreleased; urgency=medium
 
-  * Initial release. (Closes: #XXXXXX)
+  * runwell release. (closes: #xxxxxx)
+
+ -- Jaap Versteegh <jaap.versteegh@damen.com>  Mon, 18 May 2020 14:00:00 +0100
+
+sensor-hub (0.4.16) unreleased; urgency=medium
+
+  * initial release. (closes: #xxxxxx)
 
  -- Jaap Versteegh <jaap.versteegh@damen.com>  Thu, 28 Feb 2020 10:30:00 +0100
