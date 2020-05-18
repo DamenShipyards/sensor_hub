@@ -5,6 +5,10 @@
 @settitle Sensor Hub
 @afourpaper
 @include macros.texi
+@dircategory Sensor data collection daemon
+@direntry
+* Sensor Hub: (sensor_hub.info).		Sensor data collection daemon.
+@end direntry
 @c %**end of header
 
 @copying

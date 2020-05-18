@@ -1,7 +1,8 @@
-Document: sensor_hub
+Document: sensor-hub
 Title: Sensor Hub Manual
 Author: Jaap Versteegh
 Abstract: This manual describes what Sensor Hub is, and how it can be used.
-Section: System
+Section: System/Monitoring
+
 Format: PDF
 Files: /usr/share/doc/sensor-hub/sensor_hub.pdf
