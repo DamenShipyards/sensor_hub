@@ -1,7 +1,23 @@
 #define RAPIDJSON_HAS_STDSTRING 1
 #include <rapidjson/prettywriter.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include "signalk_converter.h"
-std::string signalk_converter::get_delta(const Stamped_quantity& q){
+
+bool SignalK_converter::produces_delta(const Stamped_quantity& q){
+  add_to_cache(q);
+  Quantity quantity = q.quantity;
+  if (quantity == Quantity::la) {
+    return (q.stamp == get_from_cache(Quantity::lo).stamp);
+  } else if (quantity == Quantity::lo) {
+    return (q.stamp == get_from_cache(Quantity::la).stamp);
+  } else {
+    return true;
+  }
+}
+
+std::string SignalK_converter::get_delta(const Stamped_quantity& q){
   using namespace rapidjson;
   StringBuffer sb;
   PrettyWriter<StringBuffer> writer(sb);
@@ -23,7 +39,7 @@ std::string signalk_converter::get_delta(const Stamped_quantity& q){
   return sb.GetString();
 }
 
-std::string signalk_converter::get_path(const Quantity& q){
+std::string SignalK_converter::get_path(const Quantity& q){
   if (q== Quantity::ut) {
     return "navigation.datetime";
   }
@@ -39,11 +55,19 @@ std::string signalk_converter::get_path(const Quantity& q){
 
 }
 
-void signalk_converter::get_value(const Stamped_quantity& q,  rapidjson::Writer<rapidjson::StringBuffer>& writer){
+void SignalK_converter::get_value(const Stamped_quantity& q,  rapidjson::Writer<rapidjson::StringBuffer>& writer){
   Quantity quantity = q.quantity;
   if (quantity == Quantity::ut) {
     std::string time =  timestamp_to_string(q.value) + "Z";
     writer.String(time);
+  }else if (quantity == Quantity::lo || quantity == Quantity::la){
+    double latitude = get_from_cache(Quantity::la).value *180 / M_PI;
+    double longitude = get_from_cache(Quantity::lo).value * 180 / M_PI;
+    writer.StartObject();
+    writer.String("latitude"); writer.Double(latitude);
+    writer.String("longitude"); writer.Double(longitude);
+    writer.EndObject();
+
   }else {
     writer.Double(q.value);
   }

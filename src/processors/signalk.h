@@ -34,13 +34,15 @@
 #include "signalk_converter.h"
 template <class ContextProvider>
 struct SignalK: public Port_processor<tcp_server,ContextProvider> {
-  SignalK(): Port_processor<tcp_server,ContextProvider>(){
+  SignalK(): Port_processor<tcp_server,ContextProvider>(), signalk_converter_(){
   }
 
   void insert_value(const Stamped_quantity& q) override {
     log(level::debug, "SignalK processor received: %", q);
     // log(level::debug, signalk_converter::get_delta(q));
-    this->get_port().send(signalk_converter::get_delta(q) + "\n");
+    if (signalk_converter_.produces_delta(q)) {
+      this->get_port().send(signalk_converter_.get_delta(q) + "\n");
+    }
   }
 
   double operator[](size_t) override {
@@ -68,6 +70,7 @@ struct SignalK: public Port_processor<tcp_server,ContextProvider> {
 
 private:
   std::string context_;
+  SignalK_converter signalk_converter_;
 };  
 
 #endif // SIGNALK_H_
