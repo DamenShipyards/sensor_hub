@@ -40,7 +40,7 @@ std::string SignalK_converter::get_delta(const Stamped_quantity& q){
 }
 
 std::string SignalK_converter::get_path(const Quantity& q){
-  if (q== Quantity::ut) {
+  if (q == Quantity::ut) {
     return "navigation.datetime";
   }
   else if (q == Quantity::la) {
@@ -49,6 +49,19 @@ std::string SignalK_converter::get_path(const Quantity& q){
   else if (q == Quantity::lo) {
     return "navigation.position";
   }
+  else if (q == Quantity::vog) {
+    return "navigation.speedOverGround";
+  }
+  else if (q == Quantity::vtw) {
+    return "navigation.speedThroughWater";
+  }
+  else if (q == Quantity::hdg) {
+    return "navigation.headingTrue";
+  }
+  else if (q == Quantity::crs) {
+    return "navigation.courseOverGroundTrue";
+  }
+
   else {
     return "";
   }
