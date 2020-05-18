@@ -29,7 +29,7 @@ using Runwell = Runwell_device<Socket, Ctx>;
 
 decltype(auto) create() {
   auto device = std::make_shared<Runwell>();
-  device->set_connection_string("127.0.0.1:1999");
+  device->set_connection_string("127.0.0.1:1998");
   return device;
 }
 
@@ -111,7 +111,7 @@ private:
 struct tcp_server {
   tcp_server(asio::io_context& io_context)
     : io_context_(io_context),
-      acceptor_(io_context, tcp::endpoint(tcp::v4(), 1999)),
+      acceptor_(io_context, tcp::endpoint(tcp::v4(), 1998)),
       connection_(nullptr) {
     start_accept();
   }
