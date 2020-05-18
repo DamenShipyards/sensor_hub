@@ -7,6 +7,8 @@ ACTION=="remove", ENV{ID_FS_LABEL}=="sensor_hub", RUN{program}+="/bin/umount -f 
 SUBSYSTEM=="usb", ATTRS{idVendor}=="2639", ACTION=="add", GROUP="plugdev", MODE="0660"
 # Ublox
 SUBSYSTEM=="usb", ATTRS{idVendor}=="1546", ACTION=="add", GROUP="plugdev", MODE="0660"
+# Runwell
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1234", ACTION=="add", GROUP="plugdev", MODE="0660"
 
 # Create symlink in /dev/sensor_hub for serial devices
 # Start by skipping anything that is not an addition of a serial device
@@ -18,8 +20,9 @@ KERNEL!="ttyUSB[0-9]*|ttyACM[0-9]*", GOTO="serial_end"
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="2639", ATTRS{idProduct}=="0300", SYMLINK+="sensor_hub/xsens_mti_usb_serial-$kernel"
 # FTDI MTi serial to USB (FT243XD)
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6015", SYMLINK+="sensor_hub/ftdi_mti_usb_serial-$kernel", RUN{program}+="/bin/setserial $devnode low_latency"
-
 # UBlox NEO M8U
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a8", SYMLINK+="sensor_hub/ublox_neo_m8u-$kernel"
+# Runwell
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1234", ATTRS{idProduct}=="1234", RUN{program}+="/usr/bin/runwell_mac_link $devnode"
 
 LABEL="serial_end"
