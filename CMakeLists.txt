@@ -116,6 +116,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/devices/nmea.cpp
   ${SENSORHUB_SOURCE_DIR}/devices/regex.cpp
   ${SENSORHUB_SOURCE_DIR}/devices/dummy.cpp
+  ${SENSORHUB_SOURCE_DIR}/devices/runwell.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/statistics.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/acceleration_history.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/fusion.cpp
