@@ -330,9 +330,14 @@ bool Lib_usb::open(const std::string& device_str, int seq) {
     log(level::error, "Invalid USB connection string: %", device_str);
     return false;
   }
-  int vendor_id = std::stol(fields[0], 0, 16);
-  int product_id = std::stol(fields[1], 0, 16);
-  return open(vendor_id, product_id, seq);
+  try {
+    int vendor_id = std::stol(fields[0], 0, 16);
+    int product_id = std::stol(fields[1], 0, 16);
+    return open(vendor_id, product_id, seq);
+  } catch (std::exception& e) {
+    log(level::error, "USB configuration error: %", e.what());
+    throw;
+  }
 }
 
 

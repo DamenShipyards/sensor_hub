@@ -74,37 +74,40 @@ struct Serial: public serial_port {
         throw Serial_exception("Empty Serial connection string");
     }
 
-    size_t len = 0;
-    auto baud_rate = serial_port_base::baud_rate(std::stol(baud_rate_s, &len, 10));
-    auto data_bits = serial_port_base::character_size(std::stol(data_bits_s, &len, 10));
-    auto parity = serial_port::parity(serial_port::parity::none);
-    if (parity_s == "E") {
-      parity = serial_port::parity(asio_serial::parity::even);
-    }
-    else if (parity_s == "O") {
-      parity = serial_port::parity(asio_serial::parity::odd);
-    }
-    else if (parity_s != "N") {
-      log(level::error, "Invalid value for Serial parity: %", parity_s);
-      throw Serial_exception("Invalid value for Serial parity");
-    }
-    auto stop_bits = asio_serial::stop_bits(asio_serial::stop_bits::one);
-    if (stop_bits_s == "1.5") {
-      stop_bits = asio_serial::stop_bits(asio_serial::stop_bits::onepointfive);
-    }
-    else if (stop_bits_s == "2") {
-      stop_bits = asio_serial::stop_bits(asio_serial::stop_bits::two);
-    }
-    else if (stop_bits_s != "1") {
-      log(level::error, "Invalid value for Serial stop bits: %", stop_bits_s);
-      throw Serial_exception("Invalid value for Serial stop_bits");
+    try {
+      size_t len = 0;
+      auto baud_rate = serial_port_base::baud_rate(std::stol(baud_rate_s, &len, 10));
+      auto data_bits = serial_port_base::character_size(std::stol(data_bits_s, &len, 10));
+      auto parity = serial_port::parity(serial_port::parity::none);
+      if (parity_s == "E") {
+        parity = serial_port::parity(asio_serial::parity::even);
+      }
+      else if (parity_s == "O") {
+        parity = serial_port::parity(asio_serial::parity::odd);
+      }
+      else if (parity_s != "N") {
+        throw std::runtime_error("Invalid value for Serial parity");
+      }
+      auto stop_bits = asio_serial::stop_bits(asio_serial::stop_bits::one);
+      if (stop_bits_s == "1.5") {
+        stop_bits = asio_serial::stop_bits(asio_serial::stop_bits::onepointfive);
+      }
+      else if (stop_bits_s == "2") {
+        stop_bits = asio_serial::stop_bits(asio_serial::stop_bits::two);
+      }
+      else if (stop_bits_s != "1") {
+        throw std::runtime_error("Invalid value for Serial stop_bits");
+      }
+      serial_port::open(device_s);
+      serial_port::set_option(baud_rate);
+      serial_port::set_option(data_bits);
+      serial_port::set_option(parity);
+      serial_port::set_option(stop_bits);
+    } catch (std::exception& e) {
+      log(level::error, "Invalid serial setting: %", e.what());
+      throw Serial_exception(fmt::format("Invalid serial configuration: {}", e.what()));
     }
 
-    serial_port::open(device_s);
-    serial_port::set_option(baud_rate);
-    serial_port::set_option(data_bits);
-    serial_port::set_option(parity);
-    serial_port::set_option(stop_bits);
     log(level::info, "Succesfully opened Serial port %, %, %, %, %",
         device_s, baud_rate_s, data_bits_s, parity_s, stop_bits_s);
   }
