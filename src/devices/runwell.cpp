@@ -34,9 +34,9 @@ using Runwell_device_serial_factory = Device_factory<Runwell_device_serial>;
 using Runwell_device_socket_factory = Device_factory<Runwell_device_socket>;
 
 static auto& runwell_serial_device_factory =
-    add_device_factory("runwell_device_serial", std::move(std::make_unique<Runwell_device_serial_factory>()));
+    add_device_factory("runwell_driver_serial", std::move(std::make_unique<Runwell_device_serial_factory>()));
 static auto& runwell_socket_device_factory =
-    add_device_factory("runwell_device_socket", std::move(std::make_unique<Runwell_device_socket_factory>()));
+    add_device_factory("runwell_driver_socket", std::move(std::make_unique<Runwell_device_socket_factory>()));
 
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
