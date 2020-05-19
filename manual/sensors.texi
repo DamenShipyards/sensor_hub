@@ -47,8 +47,8 @@ A list of currently available sensors.
 @item regex_device_usb
 @item regex_device_serial
 @item regex_device_tcp
-@item runwell_device_serial
-@item runwell_device_socket
+@item runwell_driver_serial
+@item runwell_driver_socket
 @item ublox_neo_m8u_serial
 @item xsens_mti_g_710_usb
 @item xsens_mti_g_710_serial
