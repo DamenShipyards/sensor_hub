@@ -54,11 +54,16 @@ struct Socket: public tcp_socket {
     }
 
     size_t len = 0;
-    auto host = ip::address::from_string(host_s);
-    auto port = int(std::stol(port_s, &len, 10));
-    auto endpoint = ip::tcp::endpoint(host, port);
+    try {
+      auto host = ip::address::from_string(host_s);
+      auto port = int(std::stol(port_s, &len, 10));
+      auto endpoint = ip::tcp::endpoint(host, port);
+      tcp_socket::connect(endpoint);
+    } catch (std::exception& e) {
+      log(level::error, "Socket configuration error: %", e.what());
+      throw;
+    }
 
-    tcp_socket::connect(endpoint);
     log(level::info, "Succesfully connected TCP socket %:%", host_s, port_s);
   }
 };

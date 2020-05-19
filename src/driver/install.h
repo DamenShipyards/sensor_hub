@@ -42,9 +42,13 @@ inline std::pair<int, int> get_usb_address(const std::string& connection_string)
   boost::split(fields, device_str, [](char c) { return c == ':'; });
   int vendor_id = -1;
   int product_id = -1;
-  if (fields.size() == 2) {
-    vendor_id = std::stol(fields[0], 0, 16);
-    product_id = std::stol(fields[1], 0, 16);
+  try {
+    if (fields.size() == 2) {
+      vendor_id = std::stol(fields[0], 0, 16);
+      product_id = std::stol(fields[1], 0, 16);
+    }
+  } catch (std::exception& e) {
+    log(level::debug, "Failed to get USB address from: %", connection_string);
   }
   return std::pair<int, int>(vendor_id, product_id);
 }
