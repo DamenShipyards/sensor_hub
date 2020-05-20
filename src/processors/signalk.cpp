@@ -24,10 +24,6 @@
 #include "signalk.h"
 
 
-void tcp_connection::start()  {
-    log(level::debug, "start received");
-    server_->add_connection(shared_from_this());
-  }
 //TODO fix this
 // using SignalK_factory = Processor_factory<SignalK<Context_provider>>;
 // static auto& signalk_factory =
