@@ -357,11 +357,13 @@ void Request_handler::handle_request(const Request& req, Reply& rep) {
   if (!content_type.empty()) {
     rep.status = Reply::ok;
     rep.content.append(content);
-    rep.headers.resize(2);
+    rep.headers.resize(3);
     rep.headers[0].name = "Content-Length";
     rep.headers[0].value = std::to_string(rep.content.size());
     rep.headers[1].name = "Content-Type";
     rep.headers[1].value = content_type;
+    rep.headers[2].name = "Access-Control-Allow-Origin";
+    rep.headers[2].value = "*";
   }
   else {
     rep = Reply::stock_reply(Reply::not_found);
