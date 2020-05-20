@@ -69,7 +69,6 @@ struct SignalK: public Port_processor<tcp_server,ContextProvider> {
   }
 
 private:
-  std::string context_;
   SignalK_converter signalk_converter_;
 };  
 

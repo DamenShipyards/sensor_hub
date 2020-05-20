@@ -20,29 +20,15 @@
  */
 
 
-#define RAPIDJSON_HAS_STDSTRING 1
-#include <rapidjson/prettywriter.h>
+
 #include "signalk.h"
-#include "../loop.h"
+
 
 void tcp_connection::start()  {
     log(level::debug, "start received");
     server_->add_connection(shared_from_this());
   }
-
-// template<class S>
-// std::string SignalK<S>::get_json() const {
-//   using namespace rapidjson;
-//   StringBuffer sb;
-//   PrettyWriter<StringBuffer> writer(sb);
-//   writer.StartObject();
-//   writer.String("name"); writer.String(this->get_name());
-//   writer.String("data"); writer.StartObject();
-//   writer.EndObject();
-//   writer.EndObject();
-//   return sb.GetString();
-// }
-
+//TODO fix this
 // using SignalK_factory = Processor_factory<SignalK<Context_provider>>;
 // static auto& signalk_factory =
 //     add_processor_factory("signalk", std::move(std::make_unique<SignalK_factory>()));

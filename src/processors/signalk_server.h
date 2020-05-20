@@ -30,6 +30,9 @@ public:
           boost::asio::placeholders::error,
           boost::asio::placeholders::bytes_transferred));
   }
+  void close() {
+    socket_.close();
+  }
 
 private:
   tcp_connection(boost::asio::io_context& io_context, tcp_server* server)
@@ -51,7 +54,8 @@ class tcp_server
 public:
   tcp_server(boost::asio::io_context& io_context)
     : io_context_(io_context),
-      acceptor_(io_context, tcp::endpoint(tcp::v4(), 4123))
+      acceptor_(io_context, tcp::endpoint(tcp::v4(), 4123)),
+      stopped_(false)
   {
     start_accept();
 
@@ -65,6 +69,14 @@ public:
       connection->send(delta);
     }
   }
+  void stop(){
+    stopped_ = true;
+    for (boost::shared_ptr<tcp_connection> connection : connections_) {
+      connection->close();
+    }
+    acceptor_.cancel();
+    acceptor_.close();
+  }
 
 private:
   void start_accept()
@@ -77,6 +89,7 @@ private:
           boost::asio::placeholders::error));
   }
 
+
   void handle_accept(tcp_connection::pointer new_connection,
       const boost::system::error_code& error)
   {
@@ -85,13 +98,15 @@ private:
     {
       new_connection->start();
     }
-
-    start_accept();
+    if(!stopped_) {
+      start_accept();
+    }
   }
 
   boost::asio::io_context& io_context_;
   tcp::acceptor acceptor_;
   std::list<boost::shared_ptr<tcp_connection> > connections_;
+  bool stopped_;
 };
 
 
