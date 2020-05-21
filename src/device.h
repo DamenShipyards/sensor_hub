@@ -382,18 +382,14 @@ struct Port_device: public Context_device<ContextProvider> {
 
 
   void disconnect() override {
-    static bool is_disconnecting = false;
-    if (this->is_connected() && !is_disconnecting) {
-      is_disconnecting = true;
+    if (this->is_connected()) {
       try {
         port_->close();
-        port_ = std::make_unique<Port>(ContextProvider::get_context());
         this->set_connected(false);
       }
       catch (std::exception& e) {
         log(level::error, "Failed to disconnect: \"%\": %", this->get_name(), e.what());
       }
-      is_disconnecting = false;
     }
   }
 
