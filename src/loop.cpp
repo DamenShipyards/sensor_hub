@@ -398,7 +398,7 @@ int enter_loop() {
     log(level::info, "IO service exited with code: %", result);
   }
   catch (std::exception& e) {
-    log(level::error, "Exception in IO service: %, %", typeid(e).name(), e.what());
+    log(level::fatal, "Exception in IO service: %, %", typeid(e).name(), e.what());
     flush_log();
     abort();
   }

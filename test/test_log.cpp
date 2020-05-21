@@ -9,6 +9,7 @@ BOOST_AUTO_TEST_CASE(log_test) {
   log(level::info, "Test message");
   log(level::warning, "Test format % ?", 88);
   log(level::error, "Test % %", "ERROR", 88.88);
+  log(level::fatal, "Test % %", "FATAL", 88.88);
   set_log_level("info");
   log(level::debug, "SHOULDN'T BE IN THERE");
   set_log_level(level::debug);

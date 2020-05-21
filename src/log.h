@@ -46,6 +46,7 @@ enum class level {
   info,
   warning,
   error,
+  fatal,
 };
 
 extern boost::log::sources::severity_logger_mt<level>& get_log();
