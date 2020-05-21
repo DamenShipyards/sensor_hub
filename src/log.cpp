@@ -56,6 +56,7 @@ static const char* level_strings[] = {
   " - INFO    - ",
   " - WARNING - ",
   " - ERROR   - ",
+  " - FATAL   - ",
 };
 
 
