@@ -345,7 +345,7 @@ struct Port_device: public Context_device<ContextProvider> {
 
   Port_device()
       : Context_device<ContextProvider>(),
-        port_(ContextProvider::get_context()){}
+        port_(std::make_unique<Port>(ContextProvider::get_context())) {}
 
   ~Port_device() {
     disconnect();
@@ -362,7 +362,7 @@ struct Port_device: public Context_device<ContextProvider> {
 
     std::string connection_string = this->get_connection_string();
     try {
-      port_.open(connection_string);
+      port_->open(connection_string);
       log(level::info, "Connected device port: %", connection_string);
     }
     catch (std::exception& e) {
@@ -371,27 +371,35 @@ struct Port_device: public Context_device<ContextProvider> {
       return;	
     }
 
-
     try {
-      Context_device<ContextProvider>::connect(yield);
+      Device::connect(yield);
     }
     catch (std::exception& e) {
       log(level::error, "Failed to connect \"%\": %", this->get_name(), e.what());
-      port_.close();
+      port_->close();
     }
   }
 
 
   void disconnect() override {
-    if (this->is_connected()) {
-      this->set_connected(false);
-      port_.close();
+    static bool is_disconnecting = false;
+    if (this->is_connected() && !is_disconnecting) {
+      is_disconnecting = true;
+      try {
+        port_->close();
+        port_ = std::make_unique<Port>(ContextProvider::get_context());
+        this->set_connected(false);
+      }
+      catch (std::exception& e) {
+        log(level::error, "Failed to disconnect: \"%\": %", this->get_name(), e.what());
+      }
+      is_disconnecting = false;
     }
   }
 
 
   Port& get_port() {
-    return port_;
+    return *port_;
   }
 
 
@@ -500,12 +508,8 @@ struct Port_device: public Context_device<ContextProvider> {
     }
   }
 
-  auto get_executor() {
-    return this->get_port().get_executor();
-  }
-
 protected:
-  Port port_;
+  std::unique_ptr<Port> port_;
 
 };
 
