@@ -260,19 +260,24 @@ struct Service {
       tmr_.expires_from_now(pt::seconds(1));
       asio::spawn(ctx_, boost::bind(&Service::one_second_service, this, _1));
 
-      static int counter = 0;
-      ++counter;
-      if (counter % 10 == 0) {
-        ten_seconds_service(yield);
+      try {
+        static int counter = 0;
+        ++counter;
+        if (counter % 10 == 0) {
+          ten_seconds_service(yield);
+        }
+        if (counter % 60 == 0) {
+          one_minute_service(yield);
+        }
+        if (counter % 300 == 0) {
+          five_minutes_service(yield);
+        }
+        if (counter % 3600 == 0) {
+          hourly_service(yield);
+        }
       }
-      if (counter % 60 == 0) {
-        one_minute_service(yield);
-      }
-      if (counter % 300 == 0) {
-        five_minutes_service(yield);
-      }
-      if (counter % 3600 == 0) {
-        hourly_service(yield);
+      catch (std::exception& e) {
+        log(level::error, "Exception in timer service: %, %", typeid(e).name(), e.what());
       }
       watchdog_.feed();
     }
