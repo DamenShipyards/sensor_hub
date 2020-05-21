@@ -232,6 +232,7 @@ struct Service {
   void connect_devices(asio::yield_context yield) {
     for (auto&& device: devices_) {
       if (device->is_enabled() && !device->is_connected()) {
+        log(level::info, "Attempt to connect device: %", device->get_name());
         device->connect(yield);
       }
     }
