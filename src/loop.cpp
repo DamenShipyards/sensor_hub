@@ -46,6 +46,7 @@
 #include <string>
 #include <memory>
 #include <clocale>
+#include <typeinfo>
 
 
 namespace pt = boost::posix_time;
@@ -397,7 +398,9 @@ int enter_loop() {
     log(level::info, "IO service exited with code: %", result);
   }
   catch (std::exception& e) {
-    log(level::error, "Exception in IO service: %", e.what());
+    log(level::error, "Exception in IO service: %, %", typeid(e).name(), e.what());
+    flush_log();
+    abort();
   }
   stop_loop();
   return result;
