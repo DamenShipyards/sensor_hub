@@ -150,6 +150,11 @@ struct Runwell_device: public regexp::Regex_device<Port, ContextProvider> {
     Regex::set_options(options);
   }
 
+  void disconnect() override {
+    tmr_.cancel();
+    regexp::Regex_device<Port, ContextProvider>::disconnect();
+  }
+
 private:
   int interval_;
   asio::deadline_timer tmr_;
