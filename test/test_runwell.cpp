@@ -142,13 +142,18 @@ private:
 
 tcp_server server(Ctx::get_context());
 
-
 BOOST_FIXTURE_TEST_CASE(full_test, Log, * utf::tolerance(0.00001)) {
   log(level::info, "Starting runwell full test");
   auto dev = create();
   set_options(dev);
   // Connect the device as soon as the context starts running
   asio::spawn(Ctx::get_context(), boost::bind(&Runwell::connect, dev, _1));
+  asio::spawn(Ctx::get_context(), [&] (auto yield) {
+      auto tmr = asio::deadline_timer(Ctx::get_context());
+      tmr.expires_from_now(pt::seconds(2));
+      tmr.async_wait(yield);
+      dev->disconnect();
+      });
   Ctx::run(4);
   BOOST_TEST(dev->get_id() == "runwell_123456789ABC");
   auto value = dev->get_value(Quantity::frq);

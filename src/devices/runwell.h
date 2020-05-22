@@ -139,9 +139,14 @@ struct Runwell_device: public regexp::Regex_device<Port, ContextProvider> {
       // Setup next tick
       tmr_.expires_from_now(pt::seconds(interval_));
       asio::spawn(ContextProvider::get_context(), boost::bind(&Runwell_device::request_data, this, _1));
-      Port& port = this->get_port();
-      std::string command = "l\n";
-      asio::async_write(port, asio::buffer(command), yield);
+      try {
+        Port& port = this->get_port();
+        std::string command = "l\n";
+        asio::async_write(port, asio::buffer(command), yield);
+      }
+      catch (std::exception& e) {
+        log(level::error, "Exception in runwell request: %", e.what());
+      }
     }
   }
 
