@@ -63,5 +63,23 @@ Y pointing to starboard and Z pointing down for ship bound coordinates.
 @item @code{atmp} @tab 56 @tab Air temperature
 @item @code{etmp} @tab 57 @tab Exhaust temperature
 @item @code{otmp} @tab 58 @tab Oil temperature
-
+@item @code{vsup} @tab 59 @tab Supply voltage
+@item @code{isup} @tab 60 @tab Supply current
+@item @code{vset} @tab 61 @tab Voltage set point
+@item @code{vsig} @tab 62 @tab Voltage signal
+@item @code{frq} @tab 63 @tab Cycle frequency
+@item @code{sts0} @tab 64 @tab Status 0, some sensor specific status
+@item @code{sts1} @tab 65 @tab Status 1, some sensor specific status
+@item @code{md0} @tab 66 @tab Mode 0, some sensor specific mode setting
+@item @code{md1} @tab 67 @tab Mode 1, some sensor specific mode setting
+@item @code{md2} @tab 68 @tab Mode 2, some sensor specific mode setting
+@item @code{md3} @tab 69 @tab Mode 3, some sensor specific mode setting
+@item @code{cst0} @tab 70 @tab Custom 0, some sensor specific custom quantity
+@item @code{cst1} @tab 71 @tab Custom 1, some sensor specific custom quantity
+@item @code{cst2} @tab 72 @tab Custom 2, some sensor specific custom quantity
+@item @code{cst3} @tab 73 @tab Custom 3, some sensor specific custom quantity
+@item @code{cst4} @tab 74 @tab Custom 4, some sensor specific custom quantity
+@item @code{cst5} @tab 75 @tab Custom 5, some sensor specific custom quantity
+@item @code{cst6} @tab 76 @tab Custom 6, some sensor specific custom quantity
+@item @code{cst7} @tab 77 @tab Custom 7, some sensor specific custom quantity
 @end multitable
