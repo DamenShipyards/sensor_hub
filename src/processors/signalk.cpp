@@ -25,9 +25,9 @@
 #include "signalk.h"
 
 //TODO fix this
-// using SignalK_processor = SignalK<Context_provider>;
-// using SignalK_factory = Processor_factory<SignalK_processor>;
-// static auto& signalk_factory =
-//     add_processor_factory("signalk", std::move(std::make_unique<SignalK_factory>()));
+using SignalK_processor = SignalK<Context_provider>;
+using SignalK_factory = Processor_factory<SignalK_processor>;
+static auto& signalk_factory =
+    add_processor_factory("signalk", std::move(std::make_unique<SignalK_factory>()));
 
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2
