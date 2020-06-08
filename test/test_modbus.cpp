@@ -1,6 +1,6 @@
 #define BOOST_TEST_MODULE modbus_test
 #include <boost/test/unit_test.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -11,6 +11,7 @@
 
 namespace asio = boost::asio;
 namespace prtr = boost::property_tree;
+using namespace boost::placeholders;
 
 
 static int result1 = 0;

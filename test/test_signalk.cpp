@@ -1,6 +1,6 @@
 #define BOOST_TEST_MODULE fusion_test
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "../src/processor.h" 
 #include "../src/processors/signalk.h" 
@@ -16,6 +16,7 @@
 #include "test_common.h"
 
 namespace posix_time = boost::posix_time;
+using namespace boost::placeholders;
 
 
 

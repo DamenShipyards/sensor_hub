@@ -1,6 +1,6 @@
 #define BOOST_TEST_MODULE log_test
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "../src/device.h" 
 #include "../src/usb.h"
@@ -31,6 +31,7 @@ struct Some_device: public Device {
 };
 
 using My_device = Some_device<Port>;
+using namespace boost::placeholders;
 
 
 BOOST_AUTO_TEST_CASE(container_test) {
