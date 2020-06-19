@@ -28,14 +28,14 @@ std::string SignalK_converter::get_delta(const Stamped_quantity& q){
     StringBuffer sb;
     Writer<StringBuffer> writer(sb);
     writer.StartObject();
-    writer.String("updates"); writer.StartArray();
+    writer.Key("updates"); writer.StartArray();
     writer.StartObject();
-    writer.String("$source"); writer.String("sensor_hub");
-    writer.String("timestamp"); writer.String(timestamp_to_string(q.stamp) + "Z");
-    writer.String("values");  writer.StartArray();
+    writer.Key("$source"); writer.String("sensor_hub");
+    writer.Key("timestamp"); writer.String(timestamp_to_string(q.stamp) + "Z");
+    writer.Key("values");  writer.StartArray();
     writer.StartObject();
-    writer.String("path"); writer.String(get_path(q.quantity));
-    writer.String("value"); get_value(q,writer);
+    writer.Key("path"); writer.String(get_path(q.quantity));
+    writer.Key("value"); get_value(q,writer);
     writer.EndObject();
     writer.EndArray();
     writer.EndObject();
@@ -96,17 +96,17 @@ void SignalK_converter::get_value(const Stamped_quantity& q,  rapidjson::Writer<
         double latitude = get_from_cache(Quantity::la).value *180 / M_PI;
         double longitude = get_from_cache(Quantity::lo).value * 180 / M_PI;
         writer.StartObject();
-        writer.String("latitude"); writer.Double(latitude);
-        writer.String("longitude"); writer.Double(longitude);
+        writer.Key("latitude"); writer.Double(latitude);
+        writer.Key("longitude"); writer.Double(longitude);
         writer.EndObject();
     } else if (quantity == Quantity::ro || quantity == Quantity::pi || quantity == Quantity::ya){
         double roll = get_from_cache(Quantity::ro).value;
         double pitch = get_from_cache(Quantity::pi).value;
         double yaw = get_from_cache(Quantity::ya).value;
         writer.StartObject();
-        writer.String("roll"); writer.Double(roll);
-        writer.String("pitch"); writer.Double(pitch);
-        writer.String("yaw"); writer.Double(yaw);
+        writer.Key("roll"); writer.Double(roll);
+        writer.Key("pitch"); writer.Double(pitch);
+        writer.Key("yaw"); writer.Double(yaw);
         writer.EndObject();
     }else {
         writer.Double(q.value);

@@ -44,6 +44,7 @@ public:
   void add_connection(boost::shared_ptr<tcp_connection> connection);
   void send(std::string delta);
   void stop();
+  std::string get_status() const;
 
 private:
   void start_accept();

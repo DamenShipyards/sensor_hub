@@ -25,6 +25,7 @@
 
 
 #include "../processor.h"
+#include "../log.h"
 
 
 #define RAPIDJSON_HAS_STDSTRING 1
@@ -43,6 +44,7 @@ struct SignalK: public Port_processor<tcp_server,ContextProvider> {
     if (signalk_converter_.produces_delta(q)) {
       this->get_port().send(signalk_converter_.get_delta(q) + "\n");
     }
+    log(level::debug, get_json());
   }
 
   double operator[](size_t) override {
@@ -50,15 +52,16 @@ struct SignalK: public Port_processor<tcp_server,ContextProvider> {
   }
 
   std::string get_json() const override{
-  using namespace rapidjson;
-  StringBuffer sb;
-  PrettyWriter<StringBuffer> writer(sb);
-  writer.StartObject();
-  writer.String("name"); writer.String(this->get_name());
-  writer.String("data"); writer.StartObject();
-  writer.EndObject();
-  writer.EndObject();
-  return sb.GetString();
+    using namespace rapidjson;
+    StringBuffer sb;
+    PrettyWriter<StringBuffer> writer(sb);
+    writer.StartObject();
+    writer.Key("name"); writer.String(this->get_name());
+    writer.Key("data"); writer.StartObject();
+    writer.Key("connections"); writer.String(this->get_port_status());
+    writer.EndObject();
+    writer.EndObject();
+    return sb.GetString();
 }
 
   size_t size() override {

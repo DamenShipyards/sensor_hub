@@ -22,6 +22,11 @@ using boost::asio::ip::tcp;
   {
   }
 
+  
+
+
+
+
   tcp_server::tcp_server(boost::asio::io_context& io_context)
     : io_context_(io_context),
       acceptor_(io_context, tcp::endpoint(tcp::v4(), 4123))
@@ -59,4 +64,7 @@ using boost::asio::ip::tcp;
     }
 
     start_accept();
+  }
+  std::string tcp_server::get_status() const {
+    return std::to_string(connections_.size());
   }

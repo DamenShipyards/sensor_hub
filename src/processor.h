@@ -113,6 +113,10 @@ struct Port_processor: public Processor {
     return port_;
   }
 
+  std::string get_port_status() const {
+    return port_.get_status();
+  }
+
   auto get_executor() {
     return ContextProvider::get_context().get_executor();
   }
