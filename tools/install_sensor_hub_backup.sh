@@ -22,7 +22,7 @@ test -z $devnode && fail "No device node specified"
 /sbin/fsck -y $devnode
 /bin/mkdir -p /media/sensor_hub_backup || fail "Failed to create target directory"
 /usr/bin/systemd-mount --no-block --automount=yes $devnode /media/sensor_hub_backup || failed "Failed to mount backup SD card"
-/usr/bin/systemd-run --no-block --on-active=5 --description=sensor_hub_backup sh -c "cd /media/sensor_hub/device_logs && /usr/bin/rsync -avzPp \`ls -tp *\` /media/sensor_hub_backup/"
+/usr/bin/systemd-run --no-block --on-active=5 --description=sensor_hub_backup sh -c "cd /media/sensor_hub/device_logs && /usr/bin/rsync -avzPp \`ls -tp *\` /media/sensor_hub_backup/ && /bin/sync"
 EOF
 sudo chmod +x /usr/local/bin/sensor_hub_backup.sh
 
