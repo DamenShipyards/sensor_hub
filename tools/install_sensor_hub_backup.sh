@@ -29,15 +29,8 @@ sudo chmod +x /usr/local/bin/sensor_hub_backup.sh
 cat << "EOF" | sudo tee /usr/local/bin/sensor_hub_backup_umount.sh >/dev/null
 #!/bin/sh
 
-fail()
-{
-  msg=$1
-  echo $msg >&2
-  exit 1
-}
-
-/bin/umount -f /media/sensor_hub_backup
-/bin/rm -rf /media/sensor_hub_backup || fail "Failed to remove backup mount point"
+/bin/umount -l -f /media/sensor_hub_backup
+/usr/bin/systemd-run --no-block --on-active=5 --description=sensor_hub_backup_umount /bin/rm -rf /media/sensor_hub_backup
 EOF
 sudo chmod +x /usr/local/bin/sensor_hub_backup_umount.sh
 
