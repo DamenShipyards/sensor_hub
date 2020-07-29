@@ -40,3 +40,5 @@ fail()
 /bin/rm -rf /media/sensor_hub_backup || fail "Failed to remove backup mount point"
 EOF
 sudo chmod +x /usr/local/bin/sensor_hub_backup_umount.sh
+
+sudo systemctl restart udev

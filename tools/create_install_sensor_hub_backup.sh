@@ -17,4 +17,6 @@ echo "#!/bin/sh" > $target
 add /etc/udev/rules.d/99-sensor_hub_backup.rules
 add /usr/local/bin/sensor_hub_backup.sh exec
 add /usr/local/bin/sensor_hub_backup_umount.sh exec
+echo >> $target
+echo "sudo systemctl restart udev" >> $target
 chmod +x $target
