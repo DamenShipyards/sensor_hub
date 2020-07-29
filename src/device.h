@@ -338,7 +338,7 @@ struct Context_device: public Device {
 
 
 /**
- * Device that controls an IO port supporting asio's basic_io_object interface
+ * \brief Device that controls an IO port supporting asio's basic_io_object interface
  */
 template <typename Port, class ContextProvider>
 struct Port_device: public Context_device<ContextProvider> {
@@ -487,7 +487,7 @@ struct Port_device: public Context_device<ContextProvider> {
       }
     }
     catch (std::exception& e) {
-      // Probably a timeout i.e. USB cancelled by timer
+      // Probably a timeout e.g. USB cancelled by timer
       log(level::error, "%: Error executing command: %", this->get_name(), e.what());
       timeout_timer.cancel();
       port.cancel();
