@@ -1,13 +1,14 @@
 #!/bin/sh
 
 target=$1
+prefix=$2
 test -z $target && target=install_sensor_hub_backup.sh
 
 add()
 {
   echo >> $target
   echo "cat << \"EOF\" | sudo tee $1 >/dev/null" >> $target
-  cat $1 >> $target
+  cat $prefix$1 >> $target
   echo EOF >> $target
   test -z $2 || echo "sudo chmod +x $1" >> $target
 }
