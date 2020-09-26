@@ -3,9 +3,7 @@
  * \brief Provide asio objects for commucation with bus interfaces
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright
- * Copyright (C) 2020 Orca Software
- * \license
+ * \copyright Copyright (C) 2020 Orca Software
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
