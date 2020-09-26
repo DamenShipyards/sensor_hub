@@ -335,9 +335,12 @@ struct Context_device: public Device {
 };
 
 
-template <typename Port, class ContextProvider>
+/**
+ * \brief Port timeout
+ */
+template <typename Port>
 struct Port_timeout {
-  Port_timeout(Port& port, int timeout): timeout_timer_(port.get_context(), pt::milliseconds(timeout)) {
+  Port_timeout(Port& port, int timeout): timeout_timer_(port.get_executor(), pt::milliseconds(timeout)) {
     timeout_timer_.async_wait(
         [&](const boost::system::error_code& error) {
           if (!error)
@@ -420,12 +423,7 @@ struct Port_device: public Context_device<ContextProvider> {
     Port& port = this->get_port();
 
     // Set a timeout for the command to complete
-    asio::deadline_timer timeout_timer(ContextProvider::get_context(), pt::milliseconds(timeout));
-    timeout_timer.async_wait(
-        [&](const boost::system::error_code& error) {
-          if (!error)
-            port.cancel();
-        });
+    Port_timeout(port, timeout);
 
     // Write out the command string...
     asio::async_write(port, asio::buffer(command), yield);
@@ -466,7 +464,6 @@ struct Port_device: public Context_device<ContextProvider> {
           else {
             log(level::error, "Received % error", this->get_name());
           }
-          timeout_timer.cancel();
           return false;
         }
         if (response_found >= 0) {
@@ -488,8 +485,6 @@ struct Port_device: public Context_device<ContextProvider> {
         }
       } while (!read_all);
 
-      timeout_timer.cancel();
-
       if (response_found >= 0) {
         if (data != nullptr) {
           data->insert(data->end(), response.begin() + response_found, response.end());
@@ -504,7 +499,6 @@ struct Port_device: public Context_device<ContextProvider> {
     catch (std::exception& e) {
       // Probably a timeout e.g. USB cancelled by timer
       log(level::error, "%: Error executing command: %", this->get_name(), e.what());
-      timeout_timer.cancel();
       port.cancel();
       return false;
     }
