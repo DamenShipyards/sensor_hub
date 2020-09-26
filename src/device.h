@@ -337,6 +337,23 @@ struct Context_device: public Device {
 };
 
 
+template <typename Port, class ContextProvider>
+struct Port_timeout {
+  Port_timeout(Port& port, int timeout): timeout_timer_(port.get_context(), pt::milliseconds(timeout)) {
+    timeout_timer_.async_wait(
+        [&](const boost::system::error_code& error) {
+          if (!error)
+            port.cancel();
+        });
+  }
+  ~Port_timeout() {
+    timeout_timer_.cancel();
+  }
+private:
+  asio::deadline_timer timeout_timer_;
+};
+
+
 /**
  * \brief Device that controls an IO port supporting asio's basic_io_object interface
  */
