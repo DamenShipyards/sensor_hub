@@ -391,6 +391,7 @@ struct Port_device: public Context_device<ContextProvider> {
 
 
     try {
+      // Write out the command
       Context_device<ContextProvider>::connect(yield);
     }
     catch (std::exception& e) {
@@ -413,6 +414,35 @@ struct Port_device: public Context_device<ContextProvider> {
   }
 
 
+  void write(cbytes_t& command, asio::yield_context yield) {
+    Port& port = this->get_port();
+    asio::async_write(port, asio::buffer(command), yield);
+
+    std::stringstream ssc;
+    ssc << command;
+    log(level::debug, "Sent to %: %", this->get_name(), ssc.str());
+  }
+
+
+  void read(bytes_t& response, asio::yield_context yield) {
+    Port& port = this->get_port();
+    asio::streambuf read_buf;
+    size_t bytes_read = port.async_read_some(read_buf.prepare(0x1000), yield);
+    read_buf.commit(bytes_read);
+    auto buf_begin = asio::buffers_begin(read_buf.data());
+    auto buf_end = buf_begin + bytes_read;
+
+    cbytes_t received(buf_begin, buf_end);
+    std::stringstream ssr;
+    ssr << received;
+    log(level::debug, "Received from %: %", this->get_name(), ssr.str());
+
+    response.insert(response.end(), buf_begin, buf_end);
+
+    read_buf.consume(bytes_read);
+  }
+
+
   bool exec_command(
       cbytes_t& command,
       cbytes_t& expected_response,
@@ -425,12 +455,8 @@ struct Port_device: public Context_device<ContextProvider> {
     // Set a timeout for the command to complete
     Port_timeout(port, timeout);
 
-    // Write out the command string...
-    asio::async_write(port, asio::buffer(command), yield);
-
-    std::stringstream ssc;
-    ssc << command;
-    log(level::debug, "Sent to %: %", this->get_name(), ssc.str());
+    // Write out the command
+    write(command, yield);
 
     // ... and look for the expected response
     try {
@@ -439,20 +465,7 @@ struct Port_device: public Context_device<ContextProvider> {
       uint16_t expected_len = static_cast<uint16_t>(expected_response.size());
       bool read_all = false;
       do {
-        asio::streambuf read_buf;
-        size_t bytes_read = port.async_read_some(read_buf.prepare(0x1000), yield);
-        read_buf.commit(bytes_read);
-        auto buf_begin = asio::buffers_begin(read_buf.data());
-        auto buf_end = buf_begin + bytes_read;
-
-        cbytes_t received(buf_begin, buf_end);
-        std::stringstream ssr;
-        ssr << received;
-        log(level::debug, "Received from %: %", this->get_name(), ssr.str());
-
-        response.insert(response.end(), buf_begin, buf_end);
-
-        read_buf.consume(bytes_read);
+        read(response, yield);
         response_found = contains_at(response, expected_response);
         int error_found = contains_at(response, error_response);
         if (error_found >= 0) {
