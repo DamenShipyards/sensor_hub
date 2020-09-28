@@ -128,7 +128,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
         const std::string& message) {
     this->wait(50, yield);
     log(level::info, message);
-    return this->exec_command(
+    return this->command(
         command::packet(mid),
         command::packet(ack),
         command::error_resp, yield);
@@ -138,7 +138,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
         cbytes_t setting, const std::string& message) {
     this->wait(50, yield);
     log(level::info, message);
-    return this->exec_command(
+    return this->command(
         command::packet(mid, setting),
         command::packet_head(ack),
         command::error_resp, yield);
@@ -148,7 +148,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
         cbytes_t setting, const std::string& message) {
     this->wait(50, yield);
     log(level::info, message);
-    return this->exec_command(
+    return this->command(
         command::packet(mid),
         command::packet(ack, setting),
         command::error_resp, yield);
@@ -158,7 +158,7 @@ struct Xsens: public Port_device<Port, ContextProvider>,
       bytes_t* response, const std::string& message) {
     this->wait(50, yield);
     log(level::info, message);
-    return this->exec_command(
+    return this->query(
         command::packet(mid),
         command::packet_head(ack),
         command::error_resp, yield,

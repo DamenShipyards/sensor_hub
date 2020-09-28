@@ -25,6 +25,7 @@
 #include <rapidjson/prettywriter.h>
 
 int Device::seq_ = 0;
+int int_placeholder_ = 0;
 
 using Device_factory_map = std::map<std::string, Device_factory_ptr>;
 
