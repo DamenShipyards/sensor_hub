@@ -25,19 +25,44 @@
 
 
 #include "../processor.h"
+#include "../log.h"
 
 
-struct SignalK: public Processor {
-  SignalK(): Processor() {}
+#define RAPIDJSON_HAS_STDSTRING 1
+#include <rapidjson/prettywriter.h>
 
-  void insert_value(const Stamped_quantity&) override {
+#include "signalk_server.h"
+#include "signalk_converter.h"
+template <class ContextProvider>
+struct SignalK: public Port_processor<tcp_server,ContextProvider> {
+  SignalK(): Port_processor<tcp_server,ContextProvider>(), signalk_converter_(){
+  }
+
+  void insert_value(const Stamped_quantity& q) override {
+    log(level::debug, "SignalK processor received: %", q);
+    // log(level::debug, signalk_converter::get_delta(q));
+    if (signalk_converter_.produces_delta(q)) {
+      this->get_port().send(signalk_converter_.get_delta(q) + "\n");
+    }
+    log(level::debug, get_json());
   }
 
   double operator[](size_t) override {
     return 0.0;
   }
 
-  std::string get_json() const override;
+  std::string get_json() const override{
+    using namespace rapidjson;
+    StringBuffer sb;
+    PrettyWriter<StringBuffer> writer(sb);
+    writer.StartObject();
+    writer.Key("name"); writer.String(this->get_name());
+    writer.Key("data"); writer.StartObject();
+    writer.Key("connections"); writer.String(this->get_port_status());
+    writer.EndObject();
+    writer.EndObject();
+    return sb.GetString();
+}
 
   size_t size() override {
     return 0;
@@ -47,7 +72,8 @@ struct SignalK: public Processor {
   }
 
 private:
-};
+  SignalK_converter signalk_converter_;
+};  
 
 #endif // SIGNALK_H_
 
