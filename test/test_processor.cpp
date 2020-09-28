@@ -1,6 +1,6 @@
 #define BOOST_TEST_MODULE log_test
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "../src/processor.h" 
 #include "../src/processors/statistics.h" 
@@ -18,7 +18,7 @@
 #include "test_common.h"
 
 namespace posix_time = boost::posix_time;
-
+using namespace boost::placeholders;
 
 BOOST_AUTO_TEST_CASE(statistics_test, * ut::tolerance(0.00000001)) {
   Statistics stats;

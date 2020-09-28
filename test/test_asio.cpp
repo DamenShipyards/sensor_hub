@@ -3,8 +3,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/chrono.hpp>
-#include <boost/thread/thread.hpp> 
+#include <boost/thread/thread.hpp>
 
+#include <boost/bind/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/thread.hpp>
@@ -14,7 +15,7 @@
 #include <string>
 
 namespace asio = boost::asio;
-
+using namespace boost::placeholders;
 
 BOOST_AUTO_TEST_CASE(buffer_test) {
   asio::streambuf b;
