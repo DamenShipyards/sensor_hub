@@ -123,6 +123,7 @@ set(CPP_SOURCES
   ${SENSORHUB_SOURCE_DIR}/processors/signalk_converter.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/signalk_server.cpp
   ${SENSORHUB_SOURCE_DIR}/processors/signalk.cpp  
+  ${SENSORHUB_SOURCE_DIR}/processors/tcp_push.cpp
 )
 
 
@@ -221,6 +222,7 @@ new_test(test_fusion datetime.cpp log.cpp modbus.cpp)
 new_test(test_signalk device.cpp datetime.cpp log.cpp processor.cpp processors/signalk_converter.cpp processors/signalk_server.cpp)
 new_test(test_regex device.cpp datetime.cpp types.cpp log.cpp)
 new_test(test_runwell device.cpp datetime.cpp types.cpp log.cpp)
+new_test(test_tcp_push processors/tcp_push.cpp processor.cpp datetime.cpp log.cpp)
 
 install(
   TARGETS sensor_hub

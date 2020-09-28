@@ -22,12 +22,11 @@ namespace posix_time = boost::posix_time;
 
 BOOST_AUTO_TEST_CASE(provider_test, * ut::tolerance(0.00000001)) {
   auto device = dummy::Dummy_gps<Ctx>();
-  auto signalk = std::make_shared<SignalK<Ctx>>();
+  auto signalk = std::make_shared<SignalK_pusher<Ctx>>();
   device.add_processor(signalk);
   asio::spawn(Ctx::get_context(), boost::bind(&dummy::Dummy_gps<Ctx>::connect, &device, _1));
   Ctx::run(5);
 }
-
 
 BOOST_AUTO_TEST_CASE(json_test_time, * ut::tolerance(0.00000001)) {
     auto converter = new SignalK_converter();
@@ -54,6 +53,9 @@ BOOST_AUTO_TEST_CASE(json_test_pos_2, * ut::tolerance(0.00000001)) {
     converter->produces_delta(sq_lo);
     converter->produces_delta(sq_la);
     BOOST_TEST(converter->get_delta(sq_la) == "{\"updates\":[{\"$source\":\"sensor_hub\",\"timestamp\":\"1970-01-01T00:00:01Z\",\"values\":[{\"path\":\"navigation.position\",\"value\":{\"latitude\":-57.29577951308232,\"longitude\":57.29577951308232}}]}]}");
+
+BOOST_AUTO_TEST_CASE(construction_test, * ut::tolerance(0.00000001)) {
+  auto signalk = SignalK_pusher();
 }
 
 BOOST_AUTO_TEST_CASE(produces_delta_test, * ut::tolerance(0.00000001)) {
