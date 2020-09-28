@@ -28,17 +28,28 @@
 
 #ifdef HAVE_VECTOR
 
+/**
+ * \brief Vector that keeps track of which components have been set
+ *
+ * Sensor Hub quantities are scalars, but can be vector components. This
+ * class is intended to collect the individual components into a vector
+ * for calculation purposes.
+ */
+
 struct AssembledVector: public Stamped_vector {
   AssembledVector(const Value_type x, const Value_type y, const Value_type z):
       Stamped_vector(x, y, z), index_bits_((1 << 2) + (1 << 1) + (1 << 0)) {
   }
+
   AssembledVector(): Stamped_vector(), index_bits_() {
   }
+
   AssembledVector& set_value(const int index, const Value_type value) {
     this->operator[](index) = value;
     index_bits_ |= 1 << index;
     return *this;
   }
+
 private:
   byte_t index_bits_;
 };

@@ -20,12 +20,14 @@
  */
 
 
-#define RAPIDJSON_HAS_STDSTRING 1
-#include <rapidjson/prettywriter.h>
+// For context provider
+#include "../loop.h"
 #include "signalk.h"
 
+using SignalK_processor = SignalK_pusher<Context_provider>;
+using SignalK_factory = Processor_factory<SignalK_processor>;
 
-std::string SignalK::get_json() const {
+std::string SignalK_pusher::get_json() const {
   using namespace rapidjson;
   StringBuffer sb;
   PrettyWriter<StringBuffer> writer(sb);
@@ -38,7 +40,7 @@ std::string SignalK::get_json() const {
 }
 
 
-using SignalK_factory = Processor_factory<SignalK>;
+using SignalK_factory = Processor_factory<SignalK_pusher>;
 static auto& signalk_factory =
     add_processor_factory("signalk", std::move(std::make_unique<SignalK_factory>()));
 

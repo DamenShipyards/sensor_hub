@@ -478,7 +478,7 @@ struct Request_parser {
   Request_parser(): state_(method_start) {}
 
   void reset()  {
-	state_ = method_start;
+    state_ = method_start;
   }
 
   enum result_type { good, bad, indeterminate };
@@ -781,7 +781,7 @@ public:
 
   explicit Connection(boost::asio::ip::tcp::socket socket,
                       Connection_manager& manager, Request_handler& handler)
-	  : socket_(std::move(socket)), connection_manager_(manager), request_handler_(handler) {}
+    : socket_(std::move(socket)), connection_manager_(manager), request_handler_(handler) {}
 
   void start() {
     do_read();
@@ -822,19 +822,19 @@ struct Connection_manager {
   Connection_manager(): connections_() {}
 
   void start(Connection_ptr c) {
-	  connections_.insert(c);
-	  c->start();
+    connections_.insert(c);
+    c->start();
   }
 
   void stop(Connection_ptr c) {
-	  connections_.erase(c);
-	  c->stop();
+    connections_.erase(c);
+    c->stop();
   }
 
   void stop_all() {
-	  for (auto c: connections_)
-	    c->stop();
-	  connections_.clear();
+    for (auto c: connections_)
+      c->stop();
+    connections_.clear();
   }
 
 private:
@@ -917,8 +917,8 @@ struct Http_server::Server {
   }
 
   void stop() {
-	  acceptor_.close();
-	  connection_manager_.stop_all();
+    acceptor_.close();
+    connection_manager_.stop_all();
   }
 
   void set_css(const std::string& css) {

@@ -7,9 +7,10 @@
  */
 #define BOOST_TEST_MODULE usb_test
 #define BOOST_COROUTINES_NO_DEPRECATION_WARNING 1
+
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <iostream>
 #include <istream>
 #include <exception>
@@ -29,6 +30,7 @@ typedef const bytes_t cbytes_t;
 
 
 namespace asio = boost::asio;
+using namespace boost::placeholders;
 
 
 static bool read_returned = false;
