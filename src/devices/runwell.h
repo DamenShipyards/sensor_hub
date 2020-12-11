@@ -5,7 +5,6 @@
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
  * \copyright
  * Copyright (C) 2020 Damen Shipyards
- * \license
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -83,8 +82,8 @@ struct Runwell_device: public regexp::Regex_device<Port, ContextProvider> {
     log(level::info, "Runwell get version");
     // Prime the reponse with offset of response length offset in the received data
     const int min_len = 48;
-    bytes_t response = { 0xFF, min_len }; // Mac address
-    bool result = this->exec_command({ 'h', '\n' }, {}, { 'X','X','X' }, yield, &response);
+    bytes_t response; // Mac address
+    bool result = this->query({ 'h', '\n' }, {}, { 'X','X','X' }, yield, &response, min_len);
     if (result) {
       std::string version;
       int j = 0;
@@ -110,8 +109,8 @@ struct Runwell_device: public regexp::Regex_device<Port, ContextProvider> {
     log(level::info, "Runwell get unique identifier");
     // Prime the reponse with offset of response length offset in the received data
     const int min_len = 17;
-    bytes_t response = { 0xFF, min_len }; // Mac address
-    bool result = this->exec_command({'a', '\n' }, {}, {'X','X','X'}, yield, &response);
+    bytes_t response; // Mac address
+    bool result = this->query({'a', '\n' }, {}, {'X','X','X'}, yield, &response, min_len);
     if (result && response.size() >= min_len) {
       std::string mac = "";
       mac += static_cast<char>(response[0]);

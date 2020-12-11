@@ -3,9 +3,7 @@
  * \brief Provide implementation for device base class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright
- * Copyright (C) 2019 Damen Shipyards
- * \license
+ * \copyright Copyright (C) 2019 Damen Shipyards
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -27,6 +25,7 @@
 #include <rapidjson/prettywriter.h>
 
 int Device::seq_ = 0;
+int int_placeholder_ = 0;
 
 using Device_factory_map = std::map<std::string, Device_factory_ptr>;
 

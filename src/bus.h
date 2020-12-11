@@ -1,9 +1,9 @@
 /**
- * \file configuration.h
- * \brief Provide application configuration interface
+ * \file bus.h
+ * \brief Provide asio objects for commucation with bus interfaces
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2020 Orca Software
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -17,19 +17,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef BUS_H_
+#define BUS_H_
 
-#ifndef CONFIGURATION_H_
-#define CONFIGURATION_H_
+struct Bus {
+};
 
-#include <string>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/filesystem/path.hpp>
-
-extern boost::property_tree::ptree& get_config();
-extern void update_config();
-extern boost::filesystem::path get_config_file();
-extern void set_config_file(const boost::filesystem::path config_file, bool reload=false);
-
-#endif  // ifndef CONFIGURATION_H_
-
+#endif  // #define BUS_H_
 // vim: autoindent syntax=cpp expandtab tabstop=2 softtabstop=2 shiftwidth=2

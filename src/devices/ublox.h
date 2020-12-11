@@ -3,9 +3,7 @@
  * \brief Provide interface to ublox device class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright
- * Copyright (C) 2019 Damen Shipyards
- * \license
+ * \copyright Copyright (C) 2019 Damen Shipyards
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -570,16 +568,15 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
   bool setup_ports(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup ports");
-    return this->exec_command(command::cfg_prt_usb, response::ack, response::nak, yield)
-        && this->exec_command(command::cfg_prt_uart, response::ack, response::nak, yield);
+    return this->command(command::cfg_prt_usb, response::ack, response::nak, yield)
+        && this->command(command::cfg_prt_uart, response::ack, response::nak, yield);
   }
 
 
   bool request_version(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U get version info");
-    // Prime the reponse with offset of response length offset in the received data
-    bytes_t response = { command::size_offset, command::size_offset + 1 };
-    bool result = this->exec_command(command::mon_ver, response::mon_ver, response::nak, yield, &response);
+    bytes_t response;
+    bool result = this->query(command::mon_ver, response::mon_ver, response::nak, yield, &response, 0, 0, 1);
     if (result) {
       size_t len = response.size() - command::data_offset;
       constexpr size_t sw_len = 30;
@@ -617,11 +614,10 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
   bool request_id(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U get unique identifier");
-    // Prime the reponse with offset of response length offset in the received data
-    bytes_t response = { command::size_offset, command::size_offset + 1 };
     constexpr size_t min_len = 9;
     constexpr size_t id_offset = 4;
-    bool result = this->exec_command(command::sec_uniqid, response::sec_uniqid, response::nak, yield, &response);
+    bytes_t response;
+    bool result = this->query(command::sec_uniqid, response::sec_uniqid, response::nak, yield, &response, 0, 0, 1);
     if (result && (response.size() - command::data_offset) >= min_len) {
       std::string serial_no = fmt::format("{:02X}{:02X}{:02X}{:02X}{:02X}",
           static_cast<uint8_t>(response[command::data_offset + id_offset + 0]),
@@ -639,7 +635,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
   bool setup_power_management(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup power management");
-    return this->exec_command(command::cfg_pms, response::ack, response::nak, yield);
+    return this->command(command::cfg_pms, response::ack, response::nak, yield);
   }
 
 
@@ -649,7 +645,7 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
     payload[2] = static_cast<byte_t>(dyn_model_);
     log(level::info, "Ublox NEO M8U dynamic model: %", static_cast<int>(dyn_model_));
     bytes_t cfg_nav5 = parser::Data_packet(command::cls_cfg, command::cfg::nav5, payload).get_packet();
-    return this->exec_command(cfg_nav5, response::ack, response::nak, yield)
+    return this->command(cfg_nav5, response::ack, response::nak, yield)
         && gnss_type_ == glonass ? use_glonass(yield):
            gnss_type_ == galileo ? use_galileo(yield):
            gnss_type_ == beidou ? use_beidou(yield): false;  // Use GPS + Glonass by default
@@ -658,35 +654,35 @@ struct NEO_M8U: public Ublox<Port, ContextProvider> {
 
   bool setup_navigation_rate(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup navigation rate");
-    return this->exec_command(command::cfg_rate, response::ack, response::nak, yield)
-        && this->exec_command(command::cfg_hnr, response::ack, response::nak, yield);
+    return this->command(command::cfg_rate, response::ack, response::nak, yield)
+        && this->command(command::cfg_hnr, response::ack, response::nak, yield);
   }
 
 
   bool setup_messages(asio::yield_context yield) override {
     log(level::info, "Ublox NEO M8U setup messages");
-    return this->exec_command(command::cfg_msg_nav_pvt, response::ack, response::nak, yield)
-        && this->exec_command(command::cfg_msg_nav_att, response::ack, response::nak, yield)
-        && this->exec_command(command::cfg_msg_esf_ins, response::ack, response::nak, yield)
-        && this->exec_command(command::cfg_msg_esf_raw, response::ack, response::nak, yield);
+    return this->command(command::cfg_msg_nav_pvt, response::ack, response::nak, yield)
+        && this->command(command::cfg_msg_nav_att, response::ack, response::nak, yield)
+        && this->command(command::cfg_msg_esf_ins, response::ack, response::nak, yield)
+        && this->command(command::cfg_msg_esf_raw, response::ack, response::nak, yield);
   }
 
 
   bool use_glonass(asio::yield_context yield) {
     log(level::info, "Ublox NEO M8U use GLONASS");
-    return this->exec_command(command::cfg_gnss_glonass, response::ack, response::nak, yield);
+    return this->command(command::cfg_gnss_glonass, response::ack, response::nak, yield);
   }
 
 
   bool use_galileo(asio::yield_context yield) {
     log(level::info, "Ublox NEO M8U use Galileo");
-    return this->exec_command(command::cfg_gnss_galileo, response::ack, response::nak, yield);
+    return this->command(command::cfg_gnss_galileo, response::ack, response::nak, yield);
   }
 
 
   bool use_beidou(asio::yield_context yield) {
     log(level::info, "Ublox NEO M8U use Beidou");
-    return this->exec_command(command::cfg_gnss_beidou, response::ack, response::nak, yield);
+    return this->command(command::cfg_gnss_beidou, response::ack, response::nak, yield);
   }
 
 private:

@@ -3,9 +3,7 @@
  * \brief Provide interface to device base class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright
- * Copyright (C) 2019 Damen Shipyards
- * \license
+ * \copyright Copyright (C) 2019 Damen Shipyards
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -338,7 +336,28 @@ struct Context_device: public Device {
 
 
 /**
- * Device that controls an IO port supporting asio's basic_io_object interface
+ * \brief Port timeout
+ */
+template <typename Port>
+struct Port_timeout {
+  Port_timeout(Port& port, int timeout): timeout_timer_(port.get_executor(), pt::milliseconds(timeout)) {
+    timeout_timer_.async_wait(
+        [&](const boost::system::error_code& error) {
+          if (!error)
+            port.cancel();
+        });
+  }
+  ~Port_timeout() {
+    timeout_timer_.cancel();
+  }
+private:
+  asio::deadline_timer timeout_timer_;
+};
+
+extern int int_placeholder_;
+
+/**
+ * \brief Device that controls an IO port supporting asio's basic_io_object interface
  */
 template <typename Port, class ContextProvider>
 struct Port_device: public Context_device<ContextProvider> {
@@ -372,7 +391,8 @@ struct Port_device: public Context_device<ContextProvider> {
     }
 
     try {
-      Device::connect(yield);
+      // Write out the command
+      Context_device<ContextProvider>::connect(yield);
     }
     catch (std::exception& e) {
       log(level::error, "Failed to connect \"%\": %", this->get_name(), e.what());
@@ -399,113 +419,155 @@ struct Port_device: public Context_device<ContextProvider> {
   }
 
 
-  bool exec_command(
-      cbytes_t& command,
-      cbytes_t& expected_response,
-      cbytes_t& error_response,
-      asio::yield_context yield,
-      bytes_t* data=nullptr,
-      int timeout=1000) {
+  void write(cbytes_t& command, asio::yield_context yield) {
     Port& port = this->get_port();
-
-    // Set a timeout for the command to complete
-    asio::deadline_timer timeout_timer(ContextProvider::get_context(), pt::milliseconds(timeout));
-    timeout_timer.async_wait(
-        [&](const boost::system::error_code& error) {
-          if (!error)
-            port.cancel();
-        });
-
-    // Write out the command string...
     asio::async_write(port, asio::buffer(command), yield);
 
     std::stringstream ssc;
     ssc << command;
     log(level::debug, "Sent to %: %", this->get_name(), ssc.str());
+  }
+
+
+  void read(bytes_t& response, asio::yield_context yield, size_t len=0x1000) {
+    Port& port = this->get_port();
+    asio::streambuf read_buf;
+    size_t bytes_read = port.async_read_some(read_buf.prepare(len), yield);
+    read_buf.commit(bytes_read);
+    auto buf_begin = asio::buffers_begin(read_buf.data());
+    auto buf_end = buf_begin + bytes_read;
+
+    cbytes_t received(buf_begin, buf_end);
+    std::stringstream ssr;
+    ssr << received;
+    log(level::debug, "Received from %: %", this->get_name(), ssr.str());
+
+    response.insert(response.end(), buf_begin, buf_end);
+
+    read_buf.consume(bytes_read);
+  }
+
+
+  bool command(
+      cbytes_t& command,
+      cbytes_t& expected_response,
+      cbytes_t& error_response,
+      asio::yield_context yield,
+      int timeout=1000) {
+    Port& port = this->get_port();
+
+    // Set a timeout for the command to complete
+    Port_timeout(port, timeout);
+
+    // Write out the command
+    write(command, yield);
 
     // ... and look for the expected response
     try {
       bytes_t response;
-      int response_found = -1;
-      uint16_t expected_len = static_cast<uint16_t>(expected_response.size());
-      bool read_all = false;
-      do {
-        asio::streambuf read_buf;
-        size_t bytes_read = port.async_read_some(read_buf.prepare(0x1000), yield);
-        read_buf.commit(bytes_read);
-        auto buf_begin = asio::buffers_begin(read_buf.data());
-        auto buf_end = buf_begin + bytes_read;
-
-        cbytes_t received(buf_begin, buf_end);
-        std::stringstream ssr;
-        ssr << received;
-        log(level::debug, "Received from %: %", this->get_name(), ssr.str());
-
-        response.insert(response.end(), buf_begin, buf_end);
-
-        read_buf.consume(bytes_read);
-        response_found = contains_at(response, expected_response);
-        int error_found = contains_at(response, error_response);
-        if (error_found >= 0) {
-          int error_code_offset = static_cast<int>(error_response.size());
-          if ((error_found + error_code_offset) < static_cast<int>(response.size())) {
-            log(level::error, "Received % error: %", this->get_name(),
-                static_cast<int>(response[error_found + error_code_offset]));
-          }
-          else {
-            log(level::error, "Received % error", this->get_name());
-          }
-          timeout_timer.cancel();
+      for(;;) {
+        read(response, yield);
+        if (find_error_(response, error_response)) {
           return false;
         }
-        if (response_found >= 0) {
-          if (data != nullptr && data->size() > 0) {
-            // Get a length indicator for data in the response
-            if ((*data)[0] == 0xFF && data->size() > 1) {
-              expected_len = static_cast<uint16_t>((*data)[1]);
-            }
-            else {
-              size_t len_offset_1 = (*data)[0] + response_found;
-              size_t len_offset_2  = (data->size() > 1) ? (*data)[1] + response_found: -1;
-              expected_len = response.size() > len_offset_1 ? response[len_offset_1] : 0;
-              expected_len += len_offset_2 >= 0 && response.size() > len_offset_2 ?
-                  response[len_offset_2] << 8: 0;
-              // Add length of item upto lenght indicator for total length
-              expected_len += static_cast<uint16_t>(std::max(len_offset_1, len_offset_2)) + 1;
-            }
-            log(level::debug, "Expecting % bytes", expected_len);
-            data->clear();
-          }
-          // ... and indicate whether we have read enough data (i.e. equal to or more than len)
-          // starting from the first byte after the offset of the length indicator
-          read_all = response.size() >= expected_len;
+        if (find_response_(response, expected_response)) {
+          return true;
         }
-      } while (!read_all);
-
-      timeout_timer.cancel();
-
-      if (response_found >= 0) {
-        if (data != nullptr) {
-          data->insert(data->end(), response.begin() + response_found, response.end());
-        }
-        return true;
-      }
-      else {
-        log(level::error, "% didn't receive expected command response", this->get_name());
-        return false;
       }
     }
     catch (std::exception& e) {
-      // Probably a timeout i.e. USB cancelled by timer
+      // Probably a timeout e.g. port cancelled by timer
       log(level::error, "%: Error executing command: %", this->get_name(), e.what());
-      timeout_timer.cancel();
-      port.cancel();
       return false;
     }
   }
 
-protected:
+  bool query(
+      cbytes_t& command,
+      cbytes_t& expected_response,
+      cbytes_t& error_response,
+      asio::yield_context yield,
+      bytes_t* response,
+      size_t expected_len=0,
+      int len_offset_ls=-1,
+      int len_offset_ms=-1,
+      int timeout=1000) {
+    if (expected_len == 0) {
+      size_t next_offset = static_cast<size_t>(std::max(len_offset_ls, len_offset_ms) + 1);
+      expected_len = expected_response.size() + next_offset;
+    }
+
+    Port& port = this->get_port();
+
+    // Set a timeout for the command to complete
+    Port_timeout(port, timeout);
+
+    // Write out the command
+    write(command, yield);
+
+    // ... and look for the expected response
+    try {
+      bytes_t data;
+      int response_offset=-1;
+      for(;;) {
+        read(data, yield);
+
+        if (find_error_(data, error_response)) {
+          return false;
+        }
+
+        if (find_response_(data, expected_response, response_offset)) {
+          if (response_offset > 0) {
+            data.erase(data.begin(), data.begin() + response_offset);
+          }
+          if (data.size() >= expected_len) {
+            if (len_offset_ls >= 0) {
+              expected_len += static_cast<size_t>(
+                  data[expected_response.size() + len_offset_ls]);
+              if (len_offset_ms >= 0) {
+                expected_len += static_cast<size_t>(
+                    data[expected_response.size() + len_offset_ms]) << 8;
+              }
+            }
+          }
+          log(level::debug, "Expecting % bytes", expected_len);
+          while (data.size() < expected_len) {
+            read(data, yield, expected_len - data.size());
+          }
+          response->insert(response->end(), data.begin(), data.begin() + expected_len);
+          return true;
+        }
+      }
+    }
+    catch (std::exception& e) {
+      // Probably a timeout e.g. port cancelled by timer
+      log(level::error, "%: Error executing query: %", this->get_name(), e.what());
+      return false;
+    }
+  }
+
+private:
   std::unique_ptr<Port> port_;
+
+  inline bool find_error_(cbytes_t& response, cbytes_t& error_response) {
+    int error_offset = contains_at(response, error_response);
+    if (error_offset >= 0) {
+      int error_code_offset = static_cast<int>(error_response.size());
+      if ((error_offset + error_code_offset) < static_cast<int>(response.size())) {
+        log(level::error, "Received % error: %", this->get_name(),
+            static_cast<int>(response[error_offset + error_code_offset]));
+      }
+      else {
+        log(level::error, "Received % error", this->get_name());
+      }
+    }
+    return error_offset >= 0;
+  }
+
+  inline bool find_response_(cbytes_t& response, cbytes_t& expected_response, int& response_offset=int_placeholder_) {
+    response_offset = contains_at(response, expected_response);
+    return response_offset >= 0;
+  }
 
 };
 
