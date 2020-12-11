@@ -51,7 +51,7 @@ struct SignalK_pusher: public Port_processor<tcp_server,ContextProvider> {
     return 0.0;
   }
 
-  std::string get_json() const override{
+  std::string get_json() const override {
     using namespace rapidjson;
     StringBuffer sb;
     PrettyWriter<StringBuffer> writer(sb);
@@ -62,7 +62,7 @@ struct SignalK_pusher: public Port_processor<tcp_server,ContextProvider> {
     writer.EndObject();
     writer.EndObject();
     return sb.GetString();
-}
+  }
 
   size_t size() override {
     return 0;
