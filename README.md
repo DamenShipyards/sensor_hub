@@ -1,4 +1,4 @@
-Damen Sensor Hub
+Sensor Hub
 ================
 
 Introduction
