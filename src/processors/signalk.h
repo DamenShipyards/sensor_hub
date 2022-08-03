@@ -33,6 +33,7 @@
 
 #include "signalk_server.h"
 #include "signalk_converter.h"
+
 template <class ContextProvider>
 struct SignalK_pusher: public Port_processor<tcp_server,ContextProvider> {
   SignalK_pusher(): Port_processor<tcp_server,ContextProvider>(), signalk_converter_() {

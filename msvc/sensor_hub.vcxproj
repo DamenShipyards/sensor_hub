@@ -10,12 +10,12 @@
     <ProjectName>Sensor Hub</ProjectName>
     <ProjectGuid>{ff0a1cb2-8c0b-11e8-a9d8-408d5cb38438}</ProjectGuid>
     <RootNamespace>sensor_hub</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
@@ -35,7 +35,7 @@
     <LinkIncremental>false</LinkIncremental>
     <TargetName>sensor_hub</TargetName>
     <IncludePath>..\depends\fmt\include;..\depends\libusb\include;..\depends\libwdi\include;..\depends\rapidjson\include;..\depends\modbus\include;..\depends\xsens\include;C:\boost;$(IncludePath)</IncludePath>
-    <LibraryPath>..\depends\libusb\lib;..\depends\libwdi\lib;C:\boost\lib64-msvc-14.1;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\depends\libusb\lib;..\depends\libwdi\lib;C:\boost\lib64-msvc-14.3;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -78,6 +78,8 @@
     <ClCompile Include="..\src\processors\acceleration_history.cpp" />
     <ClCompile Include="..\src\processors\fusion.cpp" />
     <ClCompile Include="..\src\processors\signalk.cpp" />
+    <ClCompile Include="..\src\processors\signalk_converter.cpp" />
+    <ClCompile Include="..\src\processors\signalk_server.cpp" />
     <ClCompile Include="..\src\processors\statistics.cpp" />
     <ClCompile Include="..\src\types.cpp" />
     <ClCompile Include="..\src\usb.cpp" />
