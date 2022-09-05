@@ -26,7 +26,6 @@ using SignalK_processor = SignalK_pusher<Context_provider>;
 using SignalK_factory = Processor_factory<SignalK_processor>;
 
 
-using SignalK_factory = Processor_factory<SignalK_processor>;
 static auto& signalk_factory =
     add_processor_factory("signalk", std::move(std::make_unique<SignalK_factory>()));
 

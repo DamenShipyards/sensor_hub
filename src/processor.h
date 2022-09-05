@@ -87,7 +87,7 @@ struct Processor {
         double val = std::stod(keyval[1]);
         set_param(keyval[0], val);
       }
-      catch (std::exception& e) {
+      catch (std::exception&) {
         set_param(keyval[0], keyval[1]);
       }
     }

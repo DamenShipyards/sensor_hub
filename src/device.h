@@ -41,8 +41,9 @@
 
 namespace asio = boost::asio;
 namespace prtr = boost::property_tree;
-
+using namespace boost::placeholders;
 using std::runtime_error;
+
 
 
 class Device_exception: public runtime_error {
