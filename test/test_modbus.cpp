@@ -1,11 +1,11 @@
 #define BOOST_TEST_MODULE modbus_test
-#include <boost/test/unit_test.hpp>
 #include <boost/bind/bind.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/asio.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "../src/modbus.h" 
-#include "../src/device.h" 
+#include "../src/modbus.h"
+#include "../src/device.h"
 #include "../src/processor.h"
 #include "../depends/modbus/include/modbus/client.hpp"
 
@@ -21,8 +21,8 @@ struct Client: public modbus::Client {
   using modbus::Client::Client;
 
   void on_read_reply(
-      modbus::tcp_mbap const &, 
-      modbus::response::read_holding_registers const & response, 
+      modbus::tcp_mbap const &,
+      modbus::response::read_holding_registers const & response,
       boost::system::error_code const & error ) {
     if (!error) {
       if (response.values.size() == 2) {
@@ -33,17 +33,17 @@ struct Client: public modbus::Client {
   }
 
   void on_write_reply(
-      modbus::tcp_mbap const &, 
-      modbus::response::write_multiple_registers const &, 
+      modbus::tcp_mbap const &,
+      modbus::response::write_multiple_registers const &,
       boost::system::error_code const & error) {
     if (!error)
-      read_holding_registers(0, 128, 2, 
+      read_holding_registers(0, 128, 2,
           boost::bind(&Client::on_read_reply, this, _1, _2, _3));
   }
 
   void on_connect(boost::system::error_code const & error) {
     if (!error)
-      write_multiple_registers(0, 128, {1234, 4321}, 
+      write_multiple_registers(0, 128, {1234, 4321},
           boost::bind(&Client::on_write_reply, this, _1, _2, _3));
   }
 };

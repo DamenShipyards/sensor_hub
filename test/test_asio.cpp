@@ -82,8 +82,8 @@ struct Test_io {
 
     std::cout << "Starting completion thread" << std::endl;
     boost::thread thr(boost::bind(
-          &Test_io::thread_fun<completion_handler_t, MutableBufferSequence>, 
-          this, 
+          &Test_io::thread_fun<completion_handler_t, MutableBufferSequence>,
+          this,
           init.completion_handler,
           buffers));
 

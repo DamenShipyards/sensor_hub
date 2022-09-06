@@ -1,9 +1,9 @@
 #define BOOST_TEST_MODULE fusion_test
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
-#include "../src/processor.h" 
-#include "../src/processors/tcp_push.h" 
+#include "../src/processor.h"
+#include "../src/processors/tcp_push.h"
 
 #include <iostream>
 #include <typeinfo>
@@ -17,6 +17,7 @@
 
 namespace posix_time = boost::posix_time;
 
+using namespace boost::placeholders;
 
 
 BOOST_AUTO_TEST_CASE(construction_test, * ut::tolerance(0.00000001)) {
