@@ -3,7 +3,9 @@
  * \brief Provide tcp push service processor
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2020 Damen Shipyards
+ * \copyright Copyright (C) 2020 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -49,7 +51,7 @@ struct Tcp_pusher: public Processor {
     }
   }
 
-  void set_param(const std::string& name, const double& value) override { 
+  void set_param(const std::string& name, const double& value) override {
     if (name == "port") {
       _port = round(value);
     }
@@ -58,7 +60,7 @@ struct Tcp_pusher: public Processor {
 private:
   int _port;
   std::string _address;
-  
+
 };
 
 #endif

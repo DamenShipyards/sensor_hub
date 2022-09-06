@@ -3,7 +3,9 @@
  * \brief Provide interface to application main loop
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -37,20 +39,20 @@ namespace asio = boost::asio;
  */
 
 /**
- * Enter the application main loop. 
+ * Enter the application main loop.
  *
- * This will first setup all devices from the application configuration and 
+ * This will first setup all devices from the application configuration and
  * then execute boost::asio::io_context::run() which will block until
  * #stop_loop() will be called
  */
 extern int enter_loop();
 
 /**
- * Stop the application main loop. 
+ * Stop the application main loop.
  *
- * This will first close all devices and services and then call 
+ * This will first close all devices and services and then call
  * boost::asio::io_context::stop(). When all devices and services closed
- * in an orderly fashion, the latter will not have been redundant. 
+ * in an orderly fashion, the latter will not have been redundant.
  */
 extern void stop_loop();
 

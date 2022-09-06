@@ -1,3 +1,24 @@
+/**
+ * \file signalk_server.h
+ * \brief Provide SignalK server interfacer
+ *
+ * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef SIGNALK_SERVER_H_
 #define SIGNALK_SERVER_H_
 
@@ -48,7 +69,7 @@ public:
 
 private:
   void start_accept();
-  
+
   void handle_accept(tcp_connection::pointer new_connection,
       const boost::system::error_code& error);
 

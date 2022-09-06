@@ -3,7 +3,9 @@
  * \brief Provide convenience header for asio::ip::tcp::socket
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2020 Damen Shipyards
+ * \copyright Copyright (C) 2020 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.

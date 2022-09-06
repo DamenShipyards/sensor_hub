@@ -3,7 +3,9 @@
  * \brief Provide acceleration history processor
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -73,8 +75,8 @@ struct Acceleration_history: public Processor {
   static constexpr unsigned z_dir = 4;
 
   Acceleration_history()
-    : current_(), peaks_(), 
-      value_threshold_(1.0), duration_threshold_(1.0), item_count_(10), direction_(x_dir | y_dir), 
+    : current_(), peaks_(),
+      value_threshold_(1.0), duration_threshold_(1.0), item_count_(10), direction_(x_dir | y_dir),
       fax_(), fay_(), faz_() {}
 
 
@@ -82,9 +84,9 @@ struct Acceleration_history: public Processor {
     if ((direction_ & x_dir) && (value.quantity == Quantity::fax)) {
       if (fax_.stamp != 0) {
         handle_value();
-      } 
+      }
       fax_ = value;
-    } 
+    }
     else if ((direction_ & y_dir) && (value.quantity == Quantity::fay)) {
       if (fay_.stamp != 0) {
         handle_value();
@@ -115,7 +117,7 @@ struct Acceleration_history: public Processor {
     return Acceleration_peak::size() * peaks_.size();
   }
 
-  void set_param(const std::string& name, const double& value) override { 
+  void set_param(const std::string& name, const double& value) override {
     if (name == "value_threshold") {
       value_threshold_ = value;
       log(level::info, "Setting value_threshold to % for %", value_threshold_, get_name());

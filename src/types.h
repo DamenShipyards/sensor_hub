@@ -3,7 +3,9 @@
  * \brief Provide simple common types
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -72,7 +74,7 @@ private:
   template <typename T>
   void append (T value) {
     if (order_ == endian::order::little) {
-      endian::endian_buffer<endian::order::little, T, sizeof(T) * 8> buf; 
+      endian::endian_buffer<endian::order::little, T, sizeof(T) * 8> buf;
       buf = value;
       insert(end(), buf.data(), buf.data() + sizeof(T));
     }

@@ -3,7 +3,9 @@
  * \brief Provide generic tools
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -47,13 +49,13 @@ struct Enum_iter {
     return result;
   }
   E operator*() { return static_cast<E>(val_); }
-  static const Enum_iter& begin() { 
+  static const Enum_iter& begin() {
     static const Enum_iter b(begin_val);
-    return b; 
+    return b;
   }
-  static const Enum_iter& end() { 
+  static const Enum_iter& end() {
     static const Enum_iter e(end_val);
-    return e; 
+    return e;
   }
   bool operator!=(const Enum_iter& i) { return val_ != i.val_; }
   bool operator==(const Enum_iter& i) { return val_ == i.val_; }

@@ -3,7 +3,9 @@
  * \brief Provide webserver implementation
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -410,7 +412,7 @@ std::string Request_handler::get_content(const std::string& path, std::string& c
           i,
           processor.get_name());
     }
-    content = fmt::format(html, css_, icon, 
+    content = fmt::format(html, css_, icon,
         fmt::format(home, devices, processors, STRINGIFY(VERSION), STRINGIFY(GITREV)));
     return "text/html";
   }

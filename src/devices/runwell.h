@@ -3,8 +3,9 @@
  * \brief Provide interface for runwell device
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright
- * Copyright (C) 2020 Damen Shipyards
+ * \copyright Copyright (C) 2020 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -34,21 +35,21 @@ struct Runwell_device: public regexp::Regex_device<Port, ContextProvider> {
   Runwell_device(): Regex(),
       interval_(60), tmr_(ContextProvider::get_context()) {
     prtr::ptree regex_options;
-    regex_options.put( "md0.filter", 
+    regex_options.put( "md0.filter",
         "^([0-2]),[0-2],[0-9]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+$");
-    regex_options.put( "md1.filter", 
+    regex_options.put( "md1.filter",
         "^[0-2],([0-2]),[0-9]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+$");
-    regex_options.put("sts0.filter", 
+    regex_options.put("sts0.filter",
         "^[0-2],[0-2],([0-9]+),[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+$");
-    regex_options.put( "frq.filter", 
+    regex_options.put( "frq.filter",
         "^[0-2],[0-2],[0-9]+,([0-9\\-.]+),[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+$");
-    regex_options.put("vset.filter", 
+    regex_options.put("vset.filter",
         "^[0-2],[0-2],[0-9]+,[0-9\\-.]+,([0-9\\-.]+),[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+$");
-    regex_options.put("vsig.filter", 
+    regex_options.put("vsig.filter",
         "^[0-2],[0-2],[0-9]+,[0-9\\-.]+,[0-9\\-.]+,([0-9\\-.]+),[0-9\\-.]+,[0-9\\-.]+$");
-    regex_options.put("vsup.filter", 
+    regex_options.put("vsup.filter",
         "^[0-2],[0-2],[0-9]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,([0-9\\-.]+),[0-9\\-.]+$");
-    regex_options.put("isup.filter", 
+    regex_options.put("isup.filter",
         "^[0-2],[0-2],[0-9]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,[0-9\\-.]+,([0-9\\-.]+)$");
     Regex::set_options(regex_options);
   }

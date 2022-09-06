@@ -3,7 +3,9 @@
  * \brief Provide centralized quantity information
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -43,7 +45,7 @@ inline double compose_time_value(
     const int nanosecond) {
   pt::ptime t(
       gregorian::date(year, month, day),
-      pt::hours(hour) + pt::minutes(minute) + pt::seconds(second) 
+      pt::hours(hour) + pt::minutes(minute) + pt::seconds(second)
       + pt::microseconds(nanosecond/1000)
   );
   // Return a Unix Time value

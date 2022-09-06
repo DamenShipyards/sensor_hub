@@ -3,7 +3,9 @@
  * \brief Provide webserver interface
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -53,9 +55,9 @@ private:
 
 struct Http_server {
   explicit Http_server(
-      boost::asio::io_context& ctx, 
+      boost::asio::io_context& ctx,
       std::shared_ptr<Request_handler> handler,
-      const std::string& address, 
+      const std::string& address,
       const int port);
   ~Http_server();
   void stop();

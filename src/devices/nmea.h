@@ -3,7 +3,9 @@
  * \brief Provide generic nmea device
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -31,7 +33,7 @@
 namespace nmea {
 
 template <class Port, class ContextProvider>
-struct Generic_NMEA: public Port_device<Port, ContextProvider>, 
+struct Generic_NMEA: public Port_device<Port, ContextProvider>,
     public Polling_mixin<Generic_NMEA<Port, ContextProvider> > {
 
   bool initialize(asio::yield_context yield) override {

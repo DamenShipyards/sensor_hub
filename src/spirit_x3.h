@@ -3,7 +3,9 @@
  * \brief Includes for using spirit X3 parser
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -96,7 +98,7 @@ template<> inline double endian_reverse<double>(double x) BOOST_NOEXCEPT {
 #error "When using boost < 1.71, this file should be included before types.h"
 #endif
 
-// Inject missing endian_reverse into boost::endian namepace 
+// Inject missing endian_reverse into boost::endian namepace
 // so floating point parsing in spirit works
 namespace boost { namespace endian {
 

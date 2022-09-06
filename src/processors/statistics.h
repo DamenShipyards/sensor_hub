@@ -3,7 +3,9 @@
  * \brief Provide statistics processor
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -95,17 +97,17 @@ struct Statistics: public Processor {
       return;
 
     // As value we won't use the sample value itself, but the average over the last interval i.e.
-    // 0.5 * (new_sample + previous_sample). 
+    // 0.5 * (new_sample + previous_sample).
     // This is implemented as:
     // new_sample - 0.5 * (new_sample - previous_sample)
     // to avoid funny business with angles. Consider 0.5*(359+1) vs. 359-0.5*(value_diff(359,1)=-2)!
     double avg = value_norm(quantity, value.value - 0.5 * value_diff(value, list.back().value));
     double old_mean = stat.mean;
-    stat.mean = value_norm(quantity, old_mean + 
+    stat.mean = value_norm(quantity, old_mean +
         value_diff(quantity, avg, old_mean) * interval / (interval + span));
     double mean_shift_2 = sqr(value_diff(quantity, old_mean, stat.mean));
     double mean_diff_2 = sqr(value_diff(quantity, avg, stat.mean));
-    stat.variance = (span * (stat.variance + mean_shift_2) + interval * mean_diff_2) / (span + interval); 
+    stat.variance = (span * (stat.variance + mean_shift_2) + interval * mean_diff_2) / (span + interval);
     list.push_back(value);
 
     // Drop values from the back that have expired "period"
@@ -153,7 +155,7 @@ struct Statistics: public Processor {
     return Statistic::size() * static_cast<size_t>(Quantity::end);
   }
 
-  void set_param(const std::string& name, const double& value) override { 
+  void set_param(const std::string& name, const double& value) override {
     if (name == "period") {
       period_ = value;
       log(level::info, "Set period to % for %", value, get_name());

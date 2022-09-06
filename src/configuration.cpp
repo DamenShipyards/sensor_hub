@@ -3,7 +3,9 @@
  * \brief Provide application configuration implementation
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -39,7 +41,7 @@ namespace fs = boost::filesystem;
 struct Config_file {
 
   static Config_file& get_instance() {
-    static Config_file instance{}; 
+    static Config_file instance{};
     return instance;
   }
 
@@ -93,7 +95,7 @@ struct Config {
 
 
   static Config& get_instance() {
-    static Config instance{}; 
+    static Config instance{};
     return instance;
   }
 
@@ -132,7 +134,7 @@ private:
       else {
         log(level::warning, "Configuration file % doesn't exist", p);
       }
-      set_defaults();      
+      set_defaults();
       loaded_ = p;
     }
   }

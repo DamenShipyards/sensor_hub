@@ -3,7 +3,9 @@
  * \brief Provide implementation for time handling
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -28,8 +30,8 @@
  *
  * Clock that returns a POSIX/unix timestamp (seconds since 1970-01-01 00:00:00.000 UTC)
  * in double format. The clock is monotonous and can be gradually adjusted to indicate
- * a time from another source than the system clock while still keeping the system 
- * clock pace. 
+ * a time from another source than the system clock while still keeping the system
+ * clock pace.
  */
 struct Clock {
   Clock(Clock const&) = delete;
@@ -61,7 +63,7 @@ private:
   Clock(): value_(0), offset_(0), adjust_rate_(DEFAULT_ADJUST_RATE) {
     auto dt_now = date_time::microsec_clock<pt::ptime>::universal_time();
     auto sys_now = chrono::system_clock::now().time_since_epoch();
-    
+
     double secs_since_epoch = to_timestamp(dt_now);
     double sys_since_epoch = static_cast<double>(sys_now.count()) * rate_;
     offset_ = secs_since_epoch - sys_since_epoch;
@@ -86,7 +88,7 @@ private:
 };
 
 
-const pt::ptime unix_epoch{pt::time_from_string("1970-01-01 00:00:00.000")}; 
+const pt::ptime unix_epoch{pt::time_from_string("1970-01-01 00:00:00.000")};
 const double Clock::rate_{static_cast<double>(chrono::system_clock::duration::period::num) /
                           static_cast<double>(chrono::system_clock::duration::period::den)};
 

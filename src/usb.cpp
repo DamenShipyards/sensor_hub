@@ -3,7 +3,9 @@
  * \brief Provide interface to libusb-1.0
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -183,17 +185,17 @@ struct Lib_usb::Usb_descriptors {
     std::string manufacturer = get_string_descriptor(descriptor_.iManufacturer);
     std::string product = get_string_descriptor(descriptor_.iProduct);
     std::string serial = get_string_descriptor(descriptor_.iSerialNumber);
-    log(level::info, 
+    log(level::info,
         "USB device: Manufacturer: %, Product: %, Serial: %, Configs: %, " \
         "Class: %, SubClass: %, Protocol: %",
         manufacturer, product, serial, static_cast<int>(descriptor_.bNumConfigurations),
-        get_usb_class_string(descriptor_.bDeviceClass), 
+        get_usb_class_string(descriptor_.bDeviceClass),
         static_cast<int>(descriptor_.bDeviceSubClass),
         static_cast<int>(descriptor_.bDeviceProtocol));
     std::string config_name = get_string_descriptor(active_config_->iConfiguration);
     log(level::info, "  Device configuration: %, Attributes %, Interfaces: %",
-        config_name, 
-        static_cast<int>(active_config_->bmAttributes), 
+        config_name,
+        static_cast<int>(active_config_->bmAttributes),
         static_cast<int>(active_config_->bNumInterfaces));
     for (int i = 0; i < active_config_->bNumInterfaces; ++i) {
       libusb_interface iface = active_config_->interface[i];
@@ -202,8 +204,8 @@ struct Lib_usb::Usb_descriptors {
         std::string iface_name = get_string_descriptor(iface_desc.iInterface);
         log(level::info, "    Interface: %, %, Endpoints: %, Class: %, SubClass: %, " \
             "Protocol: %",
-            static_cast<int>(iface_desc.bInterfaceNumber), 
-            iface_name, 
+            static_cast<int>(iface_desc.bInterfaceNumber),
+            iface_name,
             static_cast<int>(iface_desc.bNumEndpoints),
             get_usb_class_string(iface_desc.bInterfaceClass),
             static_cast<int>(iface_desc.bInterfaceSubClass),

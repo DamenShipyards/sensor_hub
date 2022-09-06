@@ -3,7 +3,9 @@
  * \brief Implementation details for Xsens device base class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -331,34 +333,34 @@ private:
 
 
 // Define specific data packet type for each data type received from sensor
-template<bool FLIP> using AccelerationT = 
+template<bool FLIP> using AccelerationT =
   Data_value<XDI_Acceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ax, IdentityConverter, FLIP>;
 using Acceleration = AccelerationT<false>;
 using Acceleration_flipped = AccelerationT<true>;
-template<bool FLIP> using Free_accelerationT = 
+template<bool FLIP> using Free_accelerationT =
   Data_value<XDI_FreeAcceleration, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::fax, IdentityConverter, FLIP>;
 using Free_acceleration = Free_accelerationT<false>;
 using Free_acceleration_flipped = Free_accelerationT<true>;
-template<bool FLIP> using Rate_of_turnT = 
+template<bool FLIP> using Rate_of_turnT =
   Data_value<XDI_RateOfTurn, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::rr, IdentityConverter, FLIP>;
 using Rate_of_turn = Rate_of_turnT<false>;
 using Rate_of_turn_flipped = Rate_of_turnT<true>;
 using Lat_lon = Data_value<XDI_LatLon, XDI_CoordSysEnu, XDI_SubFormatDouble, 2, Quantity::la, RadConverter>;
-template<bool FLIP> using Magnetic_fluxT = 
+template<bool FLIP> using Magnetic_fluxT =
   Data_value<XDI_MagneticField, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::mx, TeslaConverter, FLIP>;
 using Magnetic_flux = Magnetic_fluxT<false>;
 using Magnetic_flux_flipped = Magnetic_fluxT<true>;
-template<bool FLIP> using VelocityT = 
+template<bool FLIP> using VelocityT =
   Data_value<XDI_VelocityXYZ, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::vx, IdentityConverter, FLIP>;
 using Velocity = VelocityT<false>;
 using Velocity_flipped = VelocityT<true>;
 using Altitude_ellipsoid = Data_value<XDI_AltitudeEllipsoid, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::hg84>;
 using Altitude_msl = Data_value<XDI_AltitudeMsl, XDI_CoordSysEnu, XDI_SubFormatFloat, 1, Quantity::hmsl>;
-template<bool FLIP> using Euler_anglesT = 
+template<bool FLIP> using Euler_anglesT =
   Data_value<XDI_EulerAngles, XDI_CoordSysEnu, XDI_SubFormatFloat, 3, Quantity::ro, RadConverter, FLIP>;
 using Euler_angles = Euler_anglesT<false>;
 using Euler_angles_flipped = Euler_anglesT<true>;
-template<bool FLIP> using QuaternionT = 
+template<bool FLIP> using QuaternionT =
   Data_value<XDI_Quaternion, XDI_CoordSysEnu, XDI_SubFormatFloat, 4, Quantity::q1, IdentityConverter, FLIP>;
 using Quaternion = QuaternionT<false>;
 using Quaternion_flipped = QuaternionT<true>;

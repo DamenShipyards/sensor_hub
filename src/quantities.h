@@ -3,7 +3,9 @@
  * \brief Provide centralized quantity information
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -55,7 +57,7 @@ struct Quantity_not_available: public std::exception {
  *
  * Note the following ship and earth related conventions:
  * With respect to ships, the X coordinate is longitudinal and positive
- * pointing to the bow. Y coordinate is transverse and positive 
+ * pointing to the bow. Y coordinate is transverse and positive
  * pointing to starboard. Z coordinate is vertical and positive pointing
  * down. Heights are positive pointing up, so Z = -40 == H = 40.
  * With respect to the earth, the X axis points north, the Y axis east
@@ -66,7 +68,7 @@ enum class Quantity {
   ut,  ///<  0: Unix/POSIX time
   la,  ///<  1: Latitude with respect to WGS84 ellipsoid (GPS)
   lo,  ///<  2: Longitude with respect to WGS84 ellipsoid (GPS)
-  hg84,///<  3: Height with respect to WGS84 ellipsoid (GPS) 
+  hg84,///<  3: Height with respect to WGS84 ellipsoid (GPS)
   hmsl,///<  4: Height with respect to MSL/EGM2008
   vog, ///<  5: Absolute value of speed vector over ground
   vtw, ///<  6: Absolute value of speed vector through water
@@ -382,7 +384,7 @@ struct Stamped_value: public Data_value, public Data_stamp {
     return index == 0 ? value : index == 1 ? stamp : 0.0;
   }
   bool operator==(const Stamped_value& other) const {
-    return Data_value::operator==(other) 
+    return Data_value::operator==(other)
            && Data_stamp::operator==(other);
   }
 };
@@ -398,11 +400,11 @@ struct Stamped_quantity: public Stamped_value, Data_quantity {
   using Stamped_value::operator==;
   using Data_quantity::operator==;
   double operator[](const int index) const {
-    return index == 0 ? value : index == 1 ? stamp : index == 2 ? 
+    return index == 0 ? value : index == 1 ? stamp : index == 2 ?
       static_cast<double>(quantity) : 0.0;
   }
   bool operator==(const Stamped_quantity& other) const {
-    return Data_quantity::operator==(other) 
+    return Data_quantity::operator==(other)
            && Stamped_value::operator==(other);
   }
 };
@@ -416,7 +418,7 @@ using Data_list_map = std::map<Quantity, Data_list>;
 inline double value_norm(Quantity quantity, double value) {
   switch (quantity) {
     case Quantity::lo:
-    case Quantity::ro: 
+    case Quantity::ro:
     case Quantity::pi:
     case Quantity::ya:
       while (value >= M_PI)
@@ -425,7 +427,7 @@ inline double value_norm(Quantity quantity, double value) {
         value += 2 * M_PI;
       return value;
     case Quantity::hdg:
-    case Quantity::crs: 
+    case Quantity::crs:
       while (value >= 2 * M_PI)
         value -= 2 * M_PI;
       while (value < 0)
@@ -441,8 +443,8 @@ inline double value_diff(Quantity quantity, const double& value1, const double& 
   switch (quantity) {
     case Quantity::lo:
     case Quantity::hdg:
-    case Quantity::crs: 
-    case Quantity::ro: 
+    case Quantity::crs:
+    case Quantity::ro:
     case Quantity::pi:
     case Quantity::ya:
       while (result >= M_PI)
@@ -499,7 +501,7 @@ struct Scale {
 };
 
 static constexpr char const* def_config_data = R"RAW(
-{ 
+{
   "ut": { "min": 0, "max": 4294967296 },
   "la": { "min": -3.1415926535897931, "max": 3.1415926535897931},
   "lo": { "min": -3.1415926535897931, "max": 3.1415926535897931},
@@ -610,7 +612,7 @@ struct Def_config {
 };
 
 static Def_config def_config;
- 
+
 template<typename T>
 static T get_def_config(Quantity q, const std::string& type, const T def) {
   return def_config.tree.get(fmt::format("{}.{}", get_quantity_name(q), type), def);
@@ -666,8 +668,8 @@ struct Base_scale {
       value /= max - min;
       value *= type_range<T>();
 
-      value = value < std::numeric_limits<T>::lowest() ? std::numeric_limits<T>::lowest() : value; 
-      value = value >= std::numeric_limits<T>::max() ? std::numeric_limits<T>::max() : value; 
+      value = value < std::numeric_limits<T>::lowest() ? std::numeric_limits<T>::lowest() : value;
+      value = value >= std::numeric_limits<T>::max() ? std::numeric_limits<T>::max() : value;
 
       result = static_cast<T>(value);
 

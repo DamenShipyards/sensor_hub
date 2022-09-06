@@ -3,7 +3,9 @@
  * \brief Provide interface to logging facility
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -49,7 +51,7 @@ enum class level {
 
 extern boost::log::sources::severity_logger_mt<level>& get_log();
 extern boost::log::sources::logger& get_device_log();
-extern bool init_device_log(const std::string& device_id, const std::string& device_name, 
+extern bool init_device_log(const std::string& device_id, const std::string& device_name,
     const int max_files=32, const size_t file_size=64*1024*1024);
 extern void set_log_level(level lvl);
 extern void set_device_log_dir(const fs::path& dir);

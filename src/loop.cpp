@@ -3,7 +3,9 @@
  * \brief Provide application mainloop implementation
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -171,7 +173,7 @@ struct Service {
       auto usb_address = get_usb_address(connection_string);
       check_install_usb_driver(usb_address.first, usb_address.second);
       device->set_connection_string(connection_string);
-      prtr::ptree options{}; 
+      prtr::ptree options{};
       std::stringstream option_stream(device_cfg.get("options", "{}"));
       prtr::read_json(option_stream, options);
       device->set_options(options);
@@ -335,7 +337,7 @@ private:
    * Private default constructor for singleton
    */
   Service()
-      : ctx_(), 
+      : ctx_(),
         tmr_(ctx_),
         signals_(ctx_, SIGINT, SIGTERM),
         http_server_(nullptr),

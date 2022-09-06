@@ -3,7 +3,9 @@
  * \brief Provide interface to device base class
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -104,8 +106,8 @@ private:
 struct Device: public Named_object {
 
   Device(): Named_object(fmt::format("id_{:d}", seq_), fmt::format("device_{:d}", seq_)),
-            connected_(false), data_(), 
-            enable_logging_(false), max_log_files_(32), max_log_size_(64 * 1024 * 1024), 
+            connected_(false), data_(),
+            enable_logging_(false), max_log_files_(32), max_log_size_(64 * 1024 * 1024),
             device_log_initialized_(false), processors_() {
     log(level::debug, "Constructing Device");
     ++seq_;
@@ -246,7 +248,7 @@ protected:
   void setup_device_log() {
     if (!enable_logging_ || device_log_initialized_)
       return;
-    device_log_initialized_ = init_device_log(this->get_id(), this->get_name(), 
+    device_log_initialized_ = init_device_log(this->get_id(), this->get_name(),
         max_log_files_, max_log_size_);
     if (device_log_initialized_) {
       log(level::info, "Device log started: %", this->get_name());
@@ -388,7 +390,7 @@ struct Port_device: public Context_device<ContextProvider> {
     catch (std::exception& e) {
       log(level::error, "Failed to connect \"%\" using \"%\": \"%\"",
           this->get_name(), connection_string, e.what());
-      return;	
+      return;
     }
 
     try {

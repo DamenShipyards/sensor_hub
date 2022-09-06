@@ -3,7 +3,9 @@
  * \brief Provide interface to libusb-1.0
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -298,7 +300,7 @@ struct Usb: public Lib_usb {
   async_read_some(const MutableBufferSequence& buffers,
       BOOST_ASIO_MOVE_ARG(ReadHandler) handler) {
     BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
-    log(level::debug, "Doing Usb::async_read_some for % bytes", 
+    log(level::debug, "Doing Usb::async_read_some for % bytes",
         boost::asio::buffer_size(buffers));
 
     typedef boost::asio::async_completion<ReadHandler, void (boost::system::error_code, std::size_t)> Init;
@@ -319,7 +321,7 @@ struct Usb: public Lib_usb {
       BOOST_ASIO_MOVE_ARG(WriteHandler) handler)
   {
     BOOST_ASIO_WRITE_HANDLER_CHECK(WriteHandler, handler) type_check;
-    log(level::debug, "Doing Usb::async_write_some for % bytes", 
+    log(level::debug, "Doing Usb::async_write_some for % bytes",
         boost::asio::buffer_size(buffers));
 
     typedef boost::asio::async_completion<WriteHandler, void (boost::system::error_code, std::size_t)> Init;

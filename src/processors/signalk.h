@@ -3,7 +3,9 @@
  * \brief Provide signalk data provider
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -67,12 +69,12 @@ struct SignalK_pusher: public Port_processor<tcp_server,ContextProvider> {
     return 0;
   }
 
-  void set_param(const std::string&, const double&) override { 
+  void set_param(const std::string&, const double&) override {
   }
 
 private:
   SignalK_converter signalk_converter_;
-};  
+};
 
 #endif // SIGNALK_H_
 

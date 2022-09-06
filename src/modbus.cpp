@@ -3,7 +3,9 @@
  * \brief Provide implementation for modbus server
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -33,7 +35,7 @@ static constexpr uint16_t const plain_base_address = 10000;
 static constexpr uint16_t const processor_base_address = 20000;
 
 
-void Modbus_handler::plain_map(const Device& device, 
+void Modbus_handler::plain_map(const Device& device,
     int reg_index, const int count, response::read_input_registers& resp) {
   Quantity curq = Quantity::end;
   Stamped_value sample;
@@ -56,7 +58,7 @@ void Modbus_handler::plain_map(const Device& device,
 }
 
 
-void Modbus_handler::base_map(const Device& device, 
+void Modbus_handler::base_map(const Device& device,
     int reg_index, const int count, response::read_input_registers& resp) {
 
   for (int index = 0; index < count; ++index) {
@@ -76,7 +78,7 @@ void Modbus_handler::base_map(const Device& device,
         }
         break;
       case 1:
-      case 2: 
+      case 2:
         q = Quantity::ut;
         if (device.get_value(q, value)) {
           uint32_t t = scaler_.scale_to<uint32_t>(q, value);
@@ -84,7 +86,7 @@ void Modbus_handler::base_map(const Device& device,
         }
         break;
       case 3:
-      case 4: 
+      case 4:
         q = Quantity::la;
         if (device.get_value(q, value)) {
           uint32_t v = scaler_.scale_to<uint32_t>(q, value);
@@ -99,7 +101,7 @@ void Modbus_handler::base_map(const Device& device,
           resp.values[index] = reg_index == 5 ? v >> 16 : v & 0xFFFF;
         }
         break;
-      default: 
+      default:
         q = static_cast<Quantity>(reg_index - 4);
         if (device.get_value(q, value)) {
           resp.values[index] = scaler_.scale_to<uint16_t>(q, value);
@@ -130,7 +132,7 @@ response::read_input_registers Modbus_handler::handle(uint8_t unit_id, const req
       processor_map(processor, req.address - processor_base_address, req.count, resp);
     }
   }
-  else if (unit_id < devices_.size()) { 
+  else if (unit_id < devices_.size()) {
     const Device& device = *devices_[unit_id];
     log(level::debug, "Returning values for device %", device.get_name());
     if (req.address >= plain_base_address) {

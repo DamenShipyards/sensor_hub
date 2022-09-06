@@ -3,7 +3,9 @@
  * \brief Provide generic regular expression parsing device
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -46,7 +48,7 @@ namespace parser {
 
 struct Quantity_filter {
   Quantity_filter(const std::string& filter): expression(filter), multipliers(), offsets(), formats() {}
-  Quantity_filter(const Quantity_filter& value) = default; 
+  Quantity_filter(const Quantity_filter& value) = default;
   boost::regex expression;
   std::vector<double> multipliers;
   std::vector<double> offsets;

@@ -3,7 +3,9 @@
  * \brief Provide interface for modbus server
  *
  * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
- * \copyright Copyright (C) 2019 Damen Shipyards
+ * \copyright Copyright (C) 2019 Damen Shipyards\n
+ *            Copyright (C) 2020-2022 Orca Software
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3
  * as published by the Free Software Foundation.
@@ -37,7 +39,7 @@ struct Modbus_handler: public modbus::Default_handler {
 private:
   void plain_map(const Device& device, int reg_index, int count, modbus::response::read_input_registers& resp);
   void base_map(const Device& device, int reg_index, int count, modbus::response::read_input_registers& resp);
-  void processor_map(const Processor& processor, 
+  void processor_map(const Processor& processor,
       int reg_index, int count, modbus::response::read_input_registers& resp);
   const Devices& devices_;
   const Processors& processors_;
