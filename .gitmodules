@@ -7,3 +7,6 @@
 [submodule "depends/rapidjson"]
 	path = depends/rapidjson
 	url = https://github.com/orca-software/rapidjson
+[submodule "depends/cgal"]
+	path = depends/cgal
+	url = https://github.com/CGAL/cgal.git

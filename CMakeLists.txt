@@ -63,6 +63,8 @@ set(BUILD_MANUAL ${HAVE_TEXI2DVI} AND ${HAVE_ASCIIDOC} AND ${HAVE_XSLTPROC})
 
 # Optional
 find_package(Eigen3 QUIET)
+include(${CMAKE_CURRENT_LIST_DIR}/depends/cgal/CGALConfig.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/depends/cgal/CGALConfigVersion.cmake)
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
 find_package(CGAL QUIET)
 
