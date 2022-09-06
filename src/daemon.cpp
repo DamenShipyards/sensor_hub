@@ -1,3 +1,23 @@
+/**
+ * \file daemon.cpp
+ * \brief Provide main through a unix daemon
+ *
+ * \author J.R. Versteegh <j.r.versteegh@orca-st.com>
+ * \copyright Copyright (C) 2022 Orca Software
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
 #include <exception>
 #include <chrono>
 #include <thread>
@@ -22,7 +42,7 @@ namespace fs = boost::filesystem;
 
 void print_usage(po::options_description& options_description) {
   std::cout << "Usage: sensor_hub [<options>] <command>" << std::endl;
-  std::cout << "Start, stop or restart the Damen Sensor Hub daemon." << std::endl;
+  std::cout << "Start, stop or restart the Sensor Hub daemon." << std::endl;
   std::cout << std::endl;
   std::cout << "Command:" << std::endl;
   std::cout << "  start                 start a daemon" << std::endl;
@@ -53,9 +73,9 @@ struct Pid_file {
       close(fd_);
       switch (err) {
         case EWOULDBLOCK:
-          throw Pid_error("Pid file locked. Daemon already running?"); 
+          throw Pid_error("Pid file locked. Daemon already running?");
         default:
-          throw Pid_error("Failed to get pid file lock."); 
+          throw Pid_error("Failed to get pid file lock.");
       }
     }
     pid_t pid = getpid();
@@ -93,12 +113,12 @@ int main(int argc, char* argv[])
 
     po::options_description desc_args{"Options"};
     desc_args.add_options()
-      ("configuration,c", 
-           po::value<std::string>()->default_value(get_config_file().string()), 
+      ("configuration,c",
+           po::value<std::string>()->default_value(get_config_file().string()),
            "configuration file")
       ("help,h", "display this help and exit")
-      ("pidfile,p", 
-           po::value<std::string>()->default_value(pid_file_default), 
+      ("pidfile,p",
+           po::value<std::string>()->default_value(pid_file_default),
            "alternative to default pid file")
       ("version,v", "display version info and exit");
 
@@ -142,7 +162,7 @@ int main(int argc, char* argv[])
 
     if (vm.count("help") != 0 || argc == 1) {
       print_usage(desc_args);
-      return vm.count("help") != 0 ? PROGRAM_SUCCESS : INVALID_COMMAND_LINE; 
+      return vm.count("help") != 0 ? PROGRAM_SUCCESS : INVALID_COMMAND_LINE;
     }
 
     if (stop) {
@@ -253,7 +273,7 @@ int main(int argc, char* argv[])
       int result = enter_loop();
       log(level::info, "Daemon stopped: result %", result);
       return result;
-    } 
+    }
   }
   catch(Pid_error& pe) {
     log(level::error, "Pid file error: %", pe.what());

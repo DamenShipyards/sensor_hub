@@ -39,7 +39,7 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv);
 VOID WINAPI ServiceCtrlHandler (DWORD);
 DWORD WINAPI ServiceWorkerThread (LPVOID lpParam);
 
-#define SERVICE_NAME  _T("Damen Sensor Hub")
+#define SERVICE_NAME  _T("Sensor Hub")
 #define SERVICE_DESCR _T("Processes and redistributes sensor data")
 #define check_error(var) \
   if ((var) == 0) { \
@@ -169,7 +169,7 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
   g_ServiceStatus.dwCurrentState = SERVICE_RUNNING;
   g_ServiceStatus.dwWin32ExitCode = 0;
   g_ServiceStatus.dwCheckPoint = 0;
-  ReportStatus(EVENTLOG_SUCCESS, "Damen Sensor Hub started.\n");
+  ReportStatus(EVENTLOG_SUCCESS, "Sensor Hub started.\n");
   log(level::info, "Service started");
   SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
 
@@ -183,7 +183,7 @@ VOID WINAPI ServiceMain (DWORD argc, LPTSTR *argv)
   g_ServiceStatus.dwCurrentState = SERVICE_STOPPED;
   g_ServiceStatus.dwWin32ExitCode = 0;
   g_ServiceStatus.dwCheckPoint = 3;
-  ReportStatus(EVENTLOG_SUCCESS, "Damen Sensor Hub stopped.\n");
+  ReportStatus(EVENTLOG_SUCCESS, "Sensor Hub stopped.\n");
   log(level::info, "Service stopped");
   SetServiceStatus(g_StatusHandle, &g_ServiceStatus);
 }
@@ -229,7 +229,7 @@ DWORD WINAPI ServiceWorkerThread (LPVOID lpParam)
   }
   catch (std::exception& e) {
     log(level::error, "Exception from main loop: %", e.what());
-    ReportStatus(EVENTLOG_ERROR_TYPE, "Unexpected error in Damen Sensor Hub: %s", e.what());
+    ReportStatus(EVENTLOG_ERROR_TYPE, "Unexpected error in Sensor Hub: %s", e.what());
     result = ERROR_EXCEPTION_IN_SERVICE;
   }
 
@@ -331,7 +331,7 @@ static int InstallService(LPCTSTR inName, LPCTSTR inDisplayName, LPCTSTR inDescr
   ok = StartService( service, 0, NULL );
   check_error(ok);
 
-  ReportStatus(EVENTLOG_SUCCESS, "Installed Damen Sensor Hub service\n" );
+  ReportStatus(EVENTLOG_SUCCESS, "Installed Sensor Hub service\n" );
 
 exit:
   if(service)
@@ -374,7 +374,7 @@ static int RemoveService(LPCTSTR inName)
   ok = DeleteService(service);
   check_error(ok);
 
-  ReportStatus(EVENTLOG_SUCCESS, "Removed Damen Sensor Hub service\n");
+  ReportStatus(EVENTLOG_SUCCESS, "Removed Sensor Hub service\n");
   ret = ERROR_SUCCESS;
 
 exit:
